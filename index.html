@@ -84,6 +84,9 @@
 </head>
 <body class="bg-slate-950 text-white min-h-[100dvh] flex flex-col justify-between overflow-x-hidden selection:bg-amber-400 selection:text-black">
 
+  <!-- PERSISTENT WEBCAM DECODER (Placed off-screen so Chrome decodes frames without bleeding into background) -->
+  <video id="live-webcam-feed" playsinline autoplay muted class="fixed -top-[9999px] -left-[9999px] w-[320px] h-[240px] pointer-events-none opacity-0 z-[-1]"></video>
+
   <!-- Top Arcade HUD -->
   <header class="w-full bg-gradient-to-r from-red-600 via-amber-500 to-indigo-700 px-3 py-2 sm:py-2.5 shadow-2xl border-b-4 border-amber-300 z-30 flex items-center justify-between">
     <div class="flex items-center gap-2 sm:gap-3">
@@ -182,33 +185,44 @@
         </div>
       </div>
 
+      <!-- Permission Alert Banner (Hidden by default, shown if Chrome blocks camera) -->
+      <div id="cam-perm-warning" class="w-full bg-red-950/90 border-2 border-red-500 rounded-2xl p-3 mb-3 text-left hidden">
+        <div class="flex items-start gap-2.5 text-xs sm:text-sm text-red-200">
+          <i class="fa-solid fa-triangle-exclamation text-yellow-400 text-base mt-0.5 flex-shrink-0"></i>
+          <div>
+            <b class="text-yellow-300 block mb-0.5">Camera Permission Blocked in Chrome</b>
+            <span id="cam-perm-msg">Click the <b>lock / tune icon (🔒)</b> on the left of your browser address bar at the top, switch <b>Camera to 'Allow'</b>, then click the button below.</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Action Panel & Direct Camera Preview Box -->
       <div class="w-full bg-slate-950/90 p-3 sm:p-4 rounded-2xl border-2 border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3">
         <div class="flex items-center gap-3 text-left w-full sm:w-auto">
-          <!-- Live Camera Mirror Preview Thumbnail -->
-          <div class="relative w-18 h-18 sm:w-22 sm:h-22 rounded-2xl overflow-hidden bg-slate-900 border-3 border-amber-400 shadow-md flex-shrink-0 flex items-center justify-center">
-            <video id="menu-cam-preview" playsinline autoplay muted class="w-full h-full object-cover transform -scale-x-100 hidden"></video>
+          <!-- Live Camera Mirror Preview Thumbnail (Confined strictly to this Cam Standby area) -->
+          <div id="cam-standby-box" class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-slate-900 border-4 border-amber-400 shadow-xl flex-shrink-0 flex items-center justify-center">
+            <canvas id="menu-cam-canvas" class="w-full h-full object-cover transform -scale-x-100 hidden"></canvas>
             <div id="menu-cam-placeholder" class="flex flex-col items-center justify-center text-amber-400 text-2xl p-2 text-center">
               <i class="fa-solid fa-video"></i>
-              <span class="text-[9px] text-gray-400 mt-1 font-bold">Cam Standby</span>
+              <span class="text-[10px] text-gray-400 mt-1 font-bold">Cam Standby</span>
             </div>
-            <div id="menu-cam-fist-pill" class="absolute bottom-1 px-1.5 py-0.5 rounded bg-black/85 text-[10px] font-black text-yellow-300 hidden border border-yellow-400">
+            <div id="menu-cam-fist-pill" class="absolute bottom-1.5 px-2 py-0.5 rounded-full bg-black/90 text-[10px] font-black text-yellow-300 hidden border border-yellow-400 shadow">
               ✊ GESTURE!
             </div>
           </div>
           <div>
             <div id="start-cam-title" class="text-sm sm:text-base font-black text-white flex items-center gap-2">
-              <i class="fa-solid fa-camera text-amber-400"></i> Camera Ready To Start
+              <i class="fa-solid fa-camera text-amber-400"></i> Camera Ready To Activate
             </div>
             <div id="start-cam-desc" class="text-xs text-gray-300 font-medium">
-              Click Start to launch! If prompt appears, click <b>"Allow"</b>. Works with touch/click too!
+              Click <b>"Connect Camera"</b> to enable webcam gesture control! Touch/click punch also ready.
             </div>
           </div>
         </div>
 
         <div class="flex gap-2 w-full sm:w-auto justify-end">
-          <button id="btn-force-cam" onclick="startCameraDirect(true)" class="px-3.5 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm rounded-xl shadow transition flex items-center justify-center gap-1.5">
-            <i class="fa-solid fa-arrows-rotate"></i> Connect Cam
+          <button id="btn-force-cam" onclick="handleUserActivateCamera()" class="px-4 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm rounded-xl shadow-lg transition flex items-center justify-center gap-1.5 active:scale-95">
+            <i class="fa-solid fa-video"></i> <span id="btn-force-cam-text">Connect Camera</span>
           </button>
           <button id="btn-start-hero" onclick="startMission()" class="flex-1 sm:flex-initial px-8 py-3.5 bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-400 hover:to-green-400 text-slate-950 font-arcade text-2xl sm:text-3xl tracking-wider rounded-xl shadow-2xl transform active:scale-95 transition border-b-4 border-green-800 flex items-center justify-center gap-2">
             <i class="fa-solid fa-play"></i> START GAME!
@@ -218,10 +232,11 @@
     </div>
 
     <!-- 2. IN-GAME ARENA & THREE.JS 3D CANVAS -->
-    <div id="arena-screen" class="hidden relative w-full h-[76dvh] max-h-[780px] min-h-[480px] bg-slate-950 rounded-3xl overflow-hidden border-4 border-amber-400 shadow-2xl flex flex-col justify-between">
+    <div id="arena-screen" class="hidden relative w-full h-[76dvh] max-h-[780px] min-h-[480px] bg-slate-950/80 rounded-3xl overflow-hidden border-4 border-amber-400 shadow-2xl flex flex-col justify-between">
       
-      <!-- Video Element: Live Mirrored User Webcam Feed (Always Decodes Reliably) -->
-      <video id="live-webcam-feed" playsinline autoplay muted class="absolute inset-0 w-full h-full object-cover transform -scale-x-100 opacity-35 z-0 pointer-events-none"></video>
+      <!-- Live Mirrored In-Game Camera Background (Player sees themselves in action!) -->
+      <canvas id="arena-webcam-canvas" class="absolute inset-0 w-full h-full object-cover transform -scale-x-100 z-0 pointer-events-none opacity-60"></canvas>
+      <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-slate-950/80 z-0 pointer-events-none"></div>
 
       <!-- Three.js 3D Monster WebGL Canvas -->
       <canvas id="three-canvas" class="absolute inset-0 w-full h-full z-10 pointer-events-none"></canvas>
@@ -774,11 +789,13 @@
       deviceId: null,
       handsInstance: null,
       isProcessing: false,
-      cameraStarted: false
+      cameraStarted: false,
+      permissionState: 'unknown'
     };
 
     const liveVideo = document.getElementById('live-webcam-feed');
-    const menuPreviewVideo = document.getElementById('menu-cam-preview');
+    const menuCamCanvas = document.getElementById('menu-cam-canvas');
+    const menuCamCtx = menuCamCanvas ? menuCamCanvas.getContext('2d') : null;
     const modalPreviewVideo = document.getElementById('modal-preview-video');
     const hudCanvas = document.getElementById('hud-vfx-canvas');
     const hudCtx = hudCanvas.getContext('2d');
@@ -787,65 +804,142 @@
     const vfxParticles = [];
     const slashTrails = [];
 
-    // Prioritized camera acquisition with auto-recovery
+    async function checkCameraPermissions() {
+      if (navigator.permissions && navigator.permissions.query) {
+        try {
+          const result = await navigator.permissions.query({ name: 'camera' });
+          cameraState.permissionState = result.state;
+          
+          result.onchange = () => {
+            cameraState.permissionState = result.state;
+            if (result.state === 'granted' && !cameraState.cameraStarted) {
+              startCameraDirect(true);
+            } else if (result.state === 'denied') {
+              showPermissionBlockedUI();
+            }
+          };
+
+          if (result.state === 'granted') {
+            // Permission already granted previously, safe to start automatically
+            startCameraDirect(false);
+          } else if (result.state === 'denied') {
+            showPermissionBlockedUI();
+          }
+        } catch(e) {
+          // Permissions API might not support 'camera' query on some browsers; fallback to direct prompt
+          cameraState.permissionState = 'prompt';
+        }
+      }
+    }
+
+    function showPermissionBlockedUI(customMsg) {
+      const banner = document.getElementById('cam-perm-warning');
+      const msg = document.getElementById('cam-perm-msg');
+      if (banner) banner.classList.remove('hidden');
+      if (msg && customMsg) msg.innerHTML = customMsg;
+      
+      const statusDot = document.getElementById('cam-status-dot');
+      const statusLabel = document.getElementById('cam-status-label');
+      if (statusDot) statusDot.className = "w-3 h-3 rounded-full bg-red-500";
+      if (statusLabel) statusLabel.innerText = "Cam Blocked";
+
+      const title = document.getElementById('start-cam-title');
+      const desc = document.getElementById('start-cam-desc');
+      if (title) title.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-400"></i> Camera Blocked';
+      if (desc) desc.innerText = "Click the lock icon in the Chrome URL bar to allow camera, or play with touch/click!";
+    }
+
+    function handleUserActivateCamera() {
+      // Triggered by direct user interaction to satisfy Chrome gesture requirement
+      startCameraDirect(true);
+    }
+
+    // Direct camera acquisition with multi-stage fallback and graceful recovery
     async function startCameraDirect(userInitiated = false) {
       const statusDot = document.getElementById('cam-status-dot');
       const statusLabel = document.getElementById('cam-status-label');
       const menuPlaceholder = document.getElementById('menu-cam-placeholder');
       const diagStream = document.getElementById('diag-stream');
+      const warningBanner = document.getElementById('cam-perm-warning');
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showPermissionBlockedUI("Camera API is not supported in this browser context (requires HTTPS).");
+        return;
+      }
 
       statusDot.className = "w-3 h-3 rounded-full bg-yellow-400 animate-ping";
       statusLabel.innerText = "Connecting...";
 
-      // Stop previous tracks cleanly
+      // Stop previous stream tracks cleanly
       if (cameraState.stream) {
         try {
           cameraState.stream.getTracks().forEach(t => t.stop());
         } catch(e){}
         cameraState.stream = null;
-        await new Promise(r => setTimeout(r, 150));
+        await new Promise(r => setTimeout(r, 200));
       }
 
-      const constraintVariants = [
-        { video: { facingMode: "user", width: { ideal: 960 }, height: { ideal: 540 } }, audio: false },
-        { video: { facingMode: "user" }, audio: false },
-        { video: true, audio: false }
-      ];
-
+      const constraintVariants = [];
       if (cameraState.deviceId) {
-        constraintVariants.unshift({
+        constraintVariants.push({
           video: { deviceId: { exact: cameraState.deviceId } },
           audio: false
         });
       }
+      constraintVariants.push(
+        { video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }, audio: false },
+        { video: { facingMode: "user" }, audio: false },
+        { video: true, audio: false }
+      );
 
       let activeStream = null;
+      let lastError = null;
+
       for (const constraints of constraintVariants) {
         try {
           activeStream = await navigator.mediaDevices.getUserMedia(constraints);
           if (activeStream) break;
         } catch(err) {
-          console.warn("Retrying constraints:", err);
+          lastError = err;
+          console.warn("Retrying constraint variant:", err);
         }
       }
 
       if (activeStream) {
+        if (warningBanner) warningBanner.classList.add('hidden');
         cameraState.stream = activeStream;
         cameraState.cameraStarted = true;
 
-        // Feed stream to live game video and preview thumbnails
-        [liveVideo, menuPreviewVideo, modalPreviewVideo].forEach(v => {
-          if (v) {
-            v.srcObject = activeStream;
-            v.muted = true;
-            v.playsInline = true;
-            v.play().catch(() => {});
-          }
-        });
+        // Feed persistent video
+        liveVideo.srcObject = activeStream;
+        liveVideo.muted = true;
+        liveVideo.playsInline = true;
+        liveVideo.setAttribute('playsinline', '');
+        liveVideo.setAttribute('muted', '');
+        
+        try {
+          await liveVideo.play();
+        } catch(playErr) {
+          console.warn("Autoplay promise warning:", playErr);
+        }
 
-        if (menuPreviewVideo) menuPreviewVideo.classList.remove('hidden');
+        // Show canvas mirror strictly inside menu preview & arena PIP
+        if (menuCamCanvas) {
+          menuCamCanvas.classList.remove('hidden');
+          menuCamCanvas.width = 240;
+          menuCamCanvas.height = 240;
+        }
+        const arenaWebcamCanvas = document.getElementById('arena-webcam-canvas');
+        const arenaScreen = document.getElementById('arena-screen');
+        if (arenaWebcamCanvas && arenaScreen) {
+          arenaWebcamCanvas.width = arenaScreen.clientWidth || 640;
+          arenaWebcamCanvas.height = arenaScreen.clientHeight || 480;
+        }
+        if (modalPreviewVideo) {
+          modalPreviewVideo.srcObject = activeStream;
+        }
         if (menuPlaceholder) menuPlaceholder.classList.add('hidden');
-        document.getElementById('modal-preview-placeholder').classList.add('hidden');
+        document.getElementById('modal-preview-placeholder')?.classList.add('hidden');
 
         statusDot.className = "w-3 h-3 rounded-full bg-emerald-400";
         statusLabel.innerText = "Cam Live ✊";
@@ -854,745 +948,24 @@
           diagStream.className = "font-bold text-emerald-400";
         }
 
-        document.getElementById('start-cam-title').innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400"></i> Camera Connected!';
+        document.getElementById('start-cam-title').innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400"></i> Camera Active!';
         document.getElementById('start-cam-desc').innerText = "Stand or sit back! Make a Genggam Fist ✊, Karate Slice 🖐️, or Flick 👆!";
+        const btnText = document.getElementById('btn-force-cam-text');
+        if (btnText) btnText.innerText = "Camera Active";
 
         await populateCameraDevices();
         initMediaPipeHands();
       } else {
-        statusDot.className = "w-3 h-3 rounded-full bg-red-400";
-        statusLabel.innerText = "Cam Standby";
-        if (diagStream) {
-          diagStream.innerText = "Denied / Blocked (Using Touch/Mouse)";
-          diagStream.className = "font-bold text-amber-400";
-        }
-        document.getElementById('start-cam-title').innerText = "Hero Virtual Glove Active";
-        document.getElementById('start-cam-desc').innerText = "Webcam not available. You can punch/slice monsters directly via Touch or Click!";
-      }
-    }
+        const isDenied = lastError && (lastError.name === 'NotAllowedError' || lastError.name === 'PermissionDeniedError');
+        const isInUse = lastError && (lastError.name === 'NotReadableError' || lastError.name === 'TrackStartError');
 
-    async function populateCameraDevices() {
-      try {
-        const select = document.getElementById('camera-device-select');
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoInputs = devices.filter(d => d.kind === 'videoinput');
-
-        select.innerHTML = '';
-        if (videoInputs.length === 0) {
-          select.innerHTML = '<option value="">Default Web Camera</option>';
-          return;
-        }
-
-        videoInputs.forEach((dev, idx) => {
-          const opt = document.createElement('option');
-          opt.value = dev.deviceId;
-          opt.text = dev.label || `Camera ${idx + 1}`;
-          if (dev.deviceId === cameraState.deviceId) opt.selected = true;
-          select.appendChild(opt);
-        });
-      } catch (err) {}
-    }
-
-    async function changeCameraDevice(devId) {
-      cameraState.deviceId = devId;
-      await startCameraDirect(true);
-    }
-
-    /* MediaPipe Hands Initialization */
-    function initMediaPipeHands() {
-      const diagVision = document.getElementById('diag-vision');
-      if (typeof Hands === 'undefined') {
-        if (diagVision) diagVision.innerText = "Using Touch/Mouse Backup";
-        return;
-      }
-
-      try {
-        if (!cameraState.handsInstance) {
-          const hands = new Hands({
-            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${file}`
-          });
-
-          hands.setOptions({
-            maxNumHands: 2,
-            modelComplexity: 1,
-            minDetectionConfidence: 0.55,
-            minTrackingConfidence: 0.5
-          });
-
-          hands.onResults(processHandLandmarks);
-          cameraState.handsInstance = hands;
-        }
-
-        if (diagVision) {
-          diagVision.innerText = "Tracking Gestures Active";
-          diagVision.className = "font-bold text-emerald-400";
-        }
-      } catch (e) {
-        console.warn("MediaPipe init fallback:", e);
-      }
-    }
-
-    // Previous hand landmark positions for velocity calculations (Slice / Flick)
-    let prevLandmarks = null;
-    let prevTimestamp = 0;
-
-    function processHandLandmarks(results) {
-      const hands = results.multiHandLandmarks || [];
-      const now = performance.now();
-      const dt = Math.max(16, now - prevTimestamp);
-
-      let detectedFist = false;
-      let detectedSlice = false;
-      let detectedFlick = false;
-
-      if (hands.length > 0) {
-        hands.forEach((landmarks) => {
-          const wrist = landmarks[0];
-          const indexTip = landmarks[8];
-          const middleTip = landmarks[12];
-          const ringTip = landmarks[16];
-          const pinkyTip = landmarks[20];
-
-          // Screen-space Hand Center (mirrored horizontally)
-          const palmX = (1 - (landmarks[0].x + landmarks[9].x) / 2) * hudCanvas.width;
-          const palmY = ((landmarks[0].y + landmarks[9].y) / 2) * hudCanvas.height;
-
-          // 1. GENGGAM FIST PUNCH DETECTION
-          const fingers = [
-            { tip: 8, pip: 6 },
-            { tip: 12, pip: 10 },
-            { tip: 16, pip: 14 },
-            { tip: 20, pip: 18 }
-          ];
-          let foldedCount = 0;
-          for (let f of fingers) {
-            const dTip = Math.hypot(landmarks[f.tip].x - wrist.x, landmarks[f.tip].y - wrist.y);
-            const dPip = Math.hypot(landmarks[f.pip].x - wrist.x, landmarks[f.pip].y - wrist.y);
-            if (dTip < dPip * 1.08) foldedCount++;
-          }
-          if (foldedCount >= 3) {
-            detectedFist = true;
-            checkHitCollision(palmX, palmY, 'PUNCH');
-          }
-
-          // 2. KATANA SLICE DETECTION (Open hand sweeping across screen with high velocity)
-          if (prevLandmarks) {
-            const prevPalmX = (1 - (prevLandmarks[0].x + prevLandmarks[9].x) / 2) * hudCanvas.width;
-            const prevPalmY = ((prevLandmarks[0].y + prevLandmarks[9].y) / 2) * hudCanvas.height;
-            const handSpeed = Math.hypot(palmX - prevPalmX, palmY - prevPalmY) / dt;
-
-            // Open hand (foldedCount <= 1) and fast motion
-            if (foldedCount <= 1 && handSpeed > 0.85) {
-              detectedSlice = true;
-              addSlashTrail(prevPalmX, prevPalmY, palmX, palmY);
-              checkHitCollision(palmX, palmY, 'SLICE');
-            }
-
-            // 3. FINGER FLICK DETECTION (Index finger tip velocity shooting outwards from curled position)
-            const prevIndexX = (1 - prevLandmarks[8].x) * hudCanvas.width;
-            const prevIndexY = prevLandmarks[8].y * hudCanvas.height;
-            const currIndexX = (1 - landmarks[8].x) * hudCanvas.width;
-            const currIndexY = landmarks[8].y * hudCanvas.height;
-            const indexSpeed = Math.hypot(currIndexX - prevIndexX, currIndexY - prevIndexY) / dt;
-
-            if (indexSpeed > 1.25) {
-              detectedFlick = true;
-              checkHitCollision(currIndexX, currIndexY, 'FLICK');
-            }
-          }
-
-          prevLandmarks = landmarks;
-          prevTimestamp = now;
-
-          // Render Hand Target Ring on HUD
-          drawHandReticle(palmX, palmY, detectedFist ? 'FIST' : (detectedSlice ? 'SLICE' : 'OPEN'));
-        });
-      }
-
-      gameState.isFistActive = detectedFist;
-      gameState.isSliceActive = detectedSlice;
-      gameState.isFlickActive = detectedFlick;
-
-      // Update gesture indicator pill
-      const hint = document.getElementById('gesture-hint-label');
-      const pulseDot = document.getElementById('gesture-pulse-dot');
-      const menuFistPill = document.getElementById('menu-cam-fist-pill');
-
-      if (detectedFist) {
-        if (hint) hint.innerHTML = "<span class='text-red-400 font-black animate-pulse'>⚡ FIST CLENCHED! PUNCHING! ⚡</span>";
-        if (pulseDot) pulseDot.className = "w-3 h-3 rounded-full bg-red-500 animate-ping";
-        if (menuFistPill) menuFistPill.classList.remove('hidden');
-      } else if (detectedSlice) {
-        if (hint) hint.innerHTML = "<span class='text-cyan-300 font-black animate-pulse'>⚔️ KATANA SLICE ACTIVE! ⚔️</span>";
-        if (pulseDot) pulseDot.className = "w-3 h-3 rounded-full bg-cyan-400 animate-ping";
-      } else if (detectedFlick) {
-        if (hint) hint.innerHTML = "<span class='text-pink-300 font-black animate-pulse'>💥 FINGER FLICK SMASH! 💥</span>";
-      } else {
-        if (hint) hint.innerHTML = "Aim hand & <b class='text-yellow-300'>GENGGAM FIST ✊</b> or <b class='text-cyan-300'>SLICE 🖐️</b> to hit!";
-        if (pulseDot) pulseDot.className = "w-3 h-3 rounded-full bg-emerald-400 animate-ping";
-        if (menuFistPill) menuFistPill.classList.add('hidden');
-      }
-    }
-
-    function addSlashTrail(x1, y1, x2, y2) {
-      slashTrails.push({ x1, y1, x2, y2, life: 1.0 });
-    }
-  </script>
-
-  <script>
-    let scene, camera, renderer;
-    let monsters3D = [];
-    let bossMonster3D = null;
-    let clock = new THREE.Clock();
-
-    function initThreeJS() {
-      const arena = document.getElementById('arena-screen');
-      const threeCanvas = document.getElementById('three-canvas');
-      const width = arena.clientWidth || 800;
-      const height = arena.clientHeight || 500;
-
-      scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-      camera.position.set(0, 0, 8.5);
-
-      renderer = new THREE.WebGLRenderer({ canvas: threeCanvas, alpha: true, antialias: true });
-      renderer.setSize(width, height);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-      // Comic Arcade Studio Lights
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
-      scene.add(ambientLight);
-
-      const dirLight = new THREE.DirectionalLight(0xfff7ed, 1.2);
-      dirLight.position.set(4, 8, 6);
-      scene.add(dirLight);
-
-      const rimLight = new THREE.DirectionalLight(0x38bdf8, 0.8);
-      rimLight.position.set(-5, -4, 3);
-      scene.add(rimLight);
-
-      // Build 3 distinct cute cartoon monsters
-      buildCuteMonsters();
-
-      // Build Titan Boss Monster (for Level 10)
-      buildTitanBoss();
-
-      window.addEventListener('resize', onResizeThree);
-      onResizeThree();
-    }
-
-    function onResizeThree() {
-      const arena = document.getElementById('arena-screen');
-      if (!arena || !renderer) return;
-      const w = arena.clientWidth;
-      const h = arena.clientHeight;
-
-      camera.aspect = w / h;
-      // On mobile screens, back camera up slightly so all 3 monsters stay comfortably visible
-      camera.position.z = w < 640 ? 10.5 : 8.5;
-      camera.updateProjectionMatrix();
-
-      renderer.setSize(w, h);
-      hudCanvas.width = w;
-      hudCanvas.height = h;
-    }
-
-    // 1. Pink Bunny Mochi, 2. Minty Dino, 3. Golden Star Critter
-    function buildCuteMonsters() {
-      // Clean existing
-      monsters3D.forEach(m => scene.remove(m.mesh));
-      monsters3D = [];
-
-      const monsterConfigs = [
-        { color: 0xff4d88, hornColor: 0xffffff, eyeColor: 0x0f172a, type: 'bunny', xBase: -3.2 },
-        { color: 0x10b981, hornColor: 0xfacc15, eyeColor: 0x0f172a, type: 'dino', xBase: 0.0 },
-        { color: 0xf59e0b, hornColor: 0xec4899, eyeColor: 0x0f172a, type: 'star', xBase: 3.2 }
-      ];
-
-      monsterConfigs.forEach((cfg, idx) => {
-        const group = new THREE.Group();
-
-        // Shiny Toon Body
-        const bodyGeo = new THREE.SphereGeometry(1.05, 32, 32);
-        bodyGeo.scale(1.0, 1.15, 0.95);
-        const bodyMat = new THREE.MeshToonMaterial({
-          color: cfg.color,
-          emissive: cfg.color,
-          emissiveIntensity: 0.12
-        });
-        const body = new THREE.Mesh(bodyGeo, bodyMat);
-        group.add(body);
-
-        // Cute Big Anime Eyes (White Sclera + Dark Pupils + Catchlights)
-        const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-        const pupilMat = new THREE.MeshBasicMaterial({ color: cfg.eyeColor });
-        const glintMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-
-        [-0.34, 0.34].forEach(eyeX => {
-          const eye = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 16), eyeMat);
-          eye.position.set(eyeX, 0.32, 0.88);
-          eye.scale.set(1, 1.25, 0.4);
-
-          const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.14, 16, 16), pupilMat);
-          pupil.position.set(eyeX > 0 ? 0.04 : -0.04, 0, 0.14);
-
-          const glint = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), glintMat);
-          glint.position.set(0.04, 0.05, 0.1);
-
-          pupil.add(glint);
-          eye.add(pupil);
-          group.add(eye);
-        });
-
-        // Rosy Blushing Cheeks
-        const blushMat = new THREE.MeshBasicMaterial({ color: 0xff2d55, transparent: true, opacity: 0.65 });
-        [-0.52, 0.52].forEach(bX => {
-          const blush = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 12), blushMat);
-          blush.position.set(bX, 0.05, 0.84);
-          blush.scale.set(1.4, 0.7, 0.2);
-          group.add(blush);
-        });
-
-        // Ears / Horns according to cute type
-        if (cfg.type === 'bunny') {
-          const earGeo = new THREE.CylinderGeometry(0.12, 0.22, 1.1, 16);
-          const earMat = new THREE.MeshToonMaterial({ color: 0xff7597 });
-          [-0.38, 0.38].forEach(eX => {
-            const ear = new THREE.Mesh(earGeo, earMat);
-            ear.position.set(eX, 1.45, 0);
-            ear.rotation.z = eX > 0 ? -0.2 : 0.2;
-            group.add(ear);
-          });
-        } else if (cfg.type === 'dino') {
-          const hornGeo = new THREE.ConeGeometry(0.26, 0.65, 16);
-          const hornMat = new THREE.MeshToonMaterial({ color: cfg.hornColor });
-          const horn = new THREE.Mesh(hornGeo, hornMat);
-          horn.position.set(0, 1.35, 0.2);
-          group.add(horn);
+        if (isDenied) {
+          showPermissionBlockedUI("Camera permission was denied. Please click the <b>lock icon 🔒</b> at top left of the address bar and set Camera to <b>Allow</b>, then refresh.");
+        } else if (isInUse) {
+          showPermissionBlockedUI("Camera is in use by another application (e.g. Zoom, Meet, or another tab). Close other camera apps and click retry.");
         } else {
-          // Cute Star antenna
-          const antGeo = new THREE.SphereGeometry(0.3, 16, 16);
-          const antMat = new THREE.MeshToonMaterial({ color: cfg.hornColor });
-          const starTop = new THREE.Mesh(antGeo, antMat);
-          starTop.position.set(0, 1.45, 0);
-          group.add(starTop);
-        }
-
-        group.position.set(cfg.xBase, 0, 0);
-        scene.add(group);
-
-        monsters3D.push({
-          mesh: group,
-          xBase: cfg.xBase,
-          knockedOut: false,
-          knockVelocity: new THREE.Vector3(0, 0, 0),
-          rotVelocity: new THREE.Vector3(0, 0, 0),
-          bounceOffset: idx * 1.5
-        });
-      });
-    }
-
-    // Level 10 Titan Boss Model
-    function buildTitanBoss() {
-      const bossGroup = new THREE.Group();
-
-      const mainGeo = new THREE.DodecahedronGeometry(2.3, 1);
-      const mainMat = new THREE.MeshToonMaterial({
-        color: 0x9333ea,
-        emissive: 0x6b21a8,
-        emissiveIntensity: 0.3
-      });
-      const core = new THREE.Mesh(mainGeo, mainMat);
-      bossGroup.add(core);
-
-      // Glowing menacing yellow eyes
-      const eyeMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
-      [-0.7, 0.7].forEach(eX => {
-        const eye = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), eyeMat);
-        eye.position.set(eX, 0.5, 2.0);
-        eye.scale.set(1.5, 0.7, 0.4);
-        bossGroup.add(eye);
-      });
-
-      // Spikes / Horns
-      const spikeGeo = new THREE.ConeGeometry(0.4, 1.2, 8);
-      const spikeMat = new THREE.MeshToonMaterial({ color: 0xef4444 });
-      for (let i = 0; i < 6; i++) {
-        const ang = (i * Math.PI) / 3;
-        const spike = new THREE.Mesh(spikeGeo, spikeMat);
-        spike.position.set(Math.cos(ang) * 2.2, Math.sin(ang) * 2.2, 0);
-        spike.rotation.z = ang - Math.PI / 2;
-        bossGroup.add(spike);
-      }
-
-      bossGroup.position.set(0, 0.4, 0);
-      bossGroup.visible = false;
-      scene.add(bossGroup);
-
-      bossMonster3D = {
-        mesh: bossGroup,
-        knockedOut: false,
-        pulseSpeed: 3.5
-      };
-    }
-
-    function resetMonstersPositions() {
-      const isMobile = window.innerWidth < 640;
-      const xSpan = isMobile ? 1.85 : 3.0;
-
-      monsters3D.forEach((m, idx) => {
-        m.knockedOut = false;
-        m.knockVelocity.set(0, 0, 0);
-        m.rotVelocity.set(0, 0, 0);
-        m.mesh.rotation.set(0, 0, 0);
-        m.mesh.scale.set(1, 1, 1);
-        m.xBase = (idx - 1) * xSpan;
-        m.mesh.position.set(m.xBase, 0, 0);
-        m.mesh.visible = !gameState.isBossBattle;
-      });
-
-      if (bossMonster3D) {
-        bossMonster3D.mesh.visible = gameState.isBossBattle;
-        bossMonster3D.mesh.position.set(0, 0.4, 0);
-        bossMonster3D.mesh.rotation.set(0, 0, 0);
-      }
-    }
-  </script>
-
-  <script>
-    let currentOptionsData = [];
-
-    function updateMonstersPlacards() {
-      const container = document.getElementById('monsters-3d-labels');
-      container.innerHTML = '';
-
-      if (gameState.isBossBattle) {
-        // Boss Battle: Render 3 Minion Word Orbs floating in front of Boss
-        currentOptionsData.forEach((opt, idx) => {
-          const pill = document.createElement('div');
-          pill.id = `monster-placard-${idx}`;
-          pill.className = `monster-placard absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer pointer-events-auto flex flex-col items-center justify-center p-3 sm:p-5 rounded-3xl bg-gradient-to-b from-amber-400 via-yellow-400 to-amber-500 border-4 border-slate-950 shadow-2xl`;
-          pill.setAttribute('data-index', idx);
-
-          pill.onpointerdown = (e) => {
-            e.preventDefault();
-            const rect = pill.getBoundingClientRect();
-            triggerHitOnIndex(idx, rect.left + rect.width / 2, rect.top + rect.height / 2, 'PUNCH');
-          };
-
-          pill.innerHTML = `
-            <span class="text-xs sm:text-sm font-black text-slate-950 uppercase tracking-wider mb-0.5">
-              <i class="fa-solid fa-crosshairs"></i> TARGET
-            </span>
-            <span class="font-arcade text-2xl sm:text-4xl text-slate-950 tracking-wider block uppercase px-2 py-0.5">
-              ${opt.text}
-            </span>
-            <div class="mt-1 text-[11px] sm:text-xs bg-red-600 text-white font-extrabold px-3 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow">
-              <i class="fa-solid fa-hand-fist"></i> PUNCH / SLICE
-            </div>
-          `;
-          container.appendChild(pill);
-        });
-        return;
-      }
-
-      // Normal Levels 1-9: Mount high-contrast placard onto each 3D monster chest
-      currentOptionsData.forEach((opt, idx) => {
-        const pill = document.createElement('div');
-        pill.id = `monster-placard-${idx}`;
-        pill.className = `monster-placard absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer pointer-events-auto flex flex-col items-center justify-center p-2.5 sm:p-4 rounded-3xl bg-slate-950/95 border-4 ${
-          idx === 0 ? 'border-pink-400' : (idx === 1 ? 'border-emerald-400' : 'border-amber-400')
-        } shadow-2xl min-w-[120px] sm:min-w-[190px]`;
-        pill.setAttribute('data-index', idx);
-
-        pill.onpointerdown = (e) => {
-          e.preventDefault();
-          const rect = pill.getBoundingClientRect();
-          triggerHitOnIndex(idx, rect.left + rect.width / 2, rect.top + rect.height / 2, 'PUNCH');
-        };
-
-        // Words are extra-large, ultra-bold, and high-contrast for standing play
-        pill.innerHTML = `
-          <div class="w-full bg-gradient-to-r ${
-            idx === 0 ? 'from-pink-500 to-rose-600' : (idx === 1 ? 'from-emerald-500 to-teal-600' : 'from-amber-500 to-yellow-500')
-          } text-slate-950 font-arcade text-2xl sm:text-4xl text-center py-2 px-3 rounded-2xl tracking-wider shadow-inner uppercase">
-            ${opt.text}
-          </div>
-          <div class="mt-1 text-[11px] sm:text-xs text-white font-black uppercase tracking-wider flex items-center gap-1">
-            <i class="fa-solid fa-bolt text-yellow-300"></i> SMASH
-          </div>
-        `;
-
-        container.appendChild(pill);
-      });
-    }
-
-    // Projects 3D monster chest coordinates into screen CSS pixels
-    function syncPlacardsTo3D() {
-      const arena = document.getElementById('arena-screen');
-      if (!arena || !camera) return;
-      const arenaW = arena.clientWidth;
-      const arenaH = arena.clientHeight;
-
-      if (gameState.isBossBattle) {
-        // Place 3 minion targets evenly across lower half of arena
-        const count = currentOptionsData.length;
-        for (let i = 0; i < count; i++) {
-          const pill = document.getElementById(`monster-placard-${i}`);
-          if (pill) {
-            const posX = (arenaW / (count + 1)) * (i + 1);
-            const posY = arenaH * 0.65;
-            pill.style.left = `${posX}px`;
-            pill.style.top = `${posY}px`;
-          }
-        }
-        return;
-      }
-
-      monsters3D.forEach((m, idx) => {
-        const pill = document.getElementById(`monster-placard-${idx}`);
-        if (!pill) return;
-
-        if (m.knockedOut) {
-          pill.style.opacity = '0';
-          pill.style.pointerEvents = 'none';
-          return;
-        }
-
-        // Chest position in 3D
-        const chestPos = m.mesh.position.clone();
-        chestPos.y -= 0.15;
-        chestPos.z += 0.6;
-
-        chestPos.project(camera);
-
-        const screenX = ((chestPos.x + 1) / 2) * arenaW;
-        const screenY = ((-chestPos.y + 1) / 2) * arenaH;
-
-        pill.style.left = `${screenX}px`;
-        pill.style.top = `${screenY}px`;
-        pill.style.opacity = '1';
-        pill.style.pointerEvents = 'auto';
-      });
-    }
-  </script>
-
-  <script>
-    let currentLevelData = null;
-
-    function renderCategoryMenu() {
-      const grid = document.getElementById('category-grid');
-      grid.innerHTML = '';
-
-      Object.keys(CURRICULUM).forEach((key) => {
-        const cat = CURRICULUM[key];
-        const isSelected = gameState.categoryKey === key;
-        const card = document.createElement('div');
-
-        card.className = `cursor-pointer p-3 sm:p-4 rounded-2xl border-3 transition-all duration-200 transform hover:scale-105 flex flex-col items-center justify-center gap-1 ${
-          isSelected 
-            ? 'bg-gradient-to-br ' + cat.theme + ' border-yellow-300 shadow-2xl ring-4 ring-yellow-400' 
-            : 'bg-slate-800/90 border-slate-700 hover:border-slate-500'
-        }`;
-
-        card.onclick = () => {
-          sound.init();
-          sound.playTick();
-          gameState.categoryKey = key;
-          renderCategoryMenu();
-        };
-
-        card.innerHTML = `
-          <div class="text-2xl sm:text-3xl ${isSelected ? 'text-white' : 'text-amber-400'}">
-            <i class="${cat.icon}"></i>
-          </div>
-          <div class="font-arcade text-base sm:text-xl tracking-wider text-center leading-tight">
-            ${cat.name.split(' ')[0]}
-          </div>
-          <span class="text-[11px] font-black px-2.5 py-0.5 rounded-full ${isSelected ? 'bg-slate-950/70 text-white' : 'bg-slate-700 text-gray-300'}">
-            10 Levels + Boss
-          </span>
-        `;
-        grid.appendChild(card);
-      });
-    }
-
-    function startMission() {
-      sound.init();
-      sound.playVictory();
-
-      gameState.levelIdx = 0;
-      gameState.score = 0;
-      gameState.streak = 0;
-      gameState.maxStreak = 0;
-      gameState.lives = 3;
-      gameState.correctCount = 0;
-      gameState.totalCount = 0;
-      gameState.isLocked = false;
-      gameState.isBossBattle = false;
-
-      document.getElementById('start-screen').classList.add('hidden');
-      document.getElementById('endgame-screen').classList.add('hidden');
-      document.getElementById('arena-screen').classList.remove('hidden');
-      document.getElementById('game-hud').classList.remove('hidden');
-
-      onResizeThree();
-      updateHUD();
-      loadLevelQuestion();
-
-      // Ensure camera is active
-      if (!cameraState.stream) {
-        startCameraDirect(true);
-      }
-    }
-
-    function quitToMainMenu() {
-      clearInterval(gameState.timerId);
-      document.getElementById('arena-screen').classList.add('hidden');
-      document.getElementById('endgame-screen').classList.add('hidden');
-      document.getElementById('game-hud').classList.add('hidden');
-      document.getElementById('start-screen').classList.remove('hidden');
-      renderCategoryMenu();
-    }
-
-    function restartMission() {
-      startMission();
-    }
-
-    function updateHUD() {
-      document.getElementById('hud-score').innerText = gameState.score;
-      document.getElementById('hud-level-num').innerText = (gameState.levelIdx + 1);
-
-      const streakBadge = document.getElementById('hud-streak');
-      if (gameState.streak >= 2) {
-        streakBadge.innerText = `COMBO x${gameState.streak}`;
-        streakBadge.classList.remove('hidden');
-      } else {
-        streakBadge.classList.add('hidden');
-      }
-
-      const heartsWrap = document.getElementById('lives-container');
-      heartsWrap.innerHTML = '';
-      for (let i = 0; i < 3; i++) {
-        const heart = document.createElement('i');
-        if (i < gameState.lives) {
-          heart.className = 'fa-solid fa-heart animate-pulse text-red-500';
-        } else {
-          heart.className = 'fa-solid fa-heart-crack text-slate-600';
-        }
-        heartsWrap.appendChild(heart);
-      }
-    }
-
-    function loadLevelQuestion() {
-      const cat = CURRICULUM[gameState.categoryKey];
-      if (!cat) return;
-
-      const level = cat.levels[gameState.levelIdx];
-      if (!level) {
-        triggerVictory();
-        return;
-      }
-
-      currentLevelData = level;
-      gameState.isLocked = false;
-      gameState.isBossBattle = !!level.isBoss;
-
-      const bossHpWrap = document.getElementById('boss-hp-wrap');
-      const timerWrap = document.getElementById('timer-bar-wrap');
-      document.getElementById('arena-category-badge').innerText = cat.tag;
-
-      if (gameState.isBossBattle) {
-        bossHpWrap.classList.remove('hidden');
-        document.getElementById('boss-title-name').innerHTML = `<i class="fa-solid fa-dragon"></i> ${cat.bossName}`;
-        gameState.bossHpMax = level.bossHp || 5;
-        gameState.bossHpCurrent = gameState.bossHpMax;
-        gameState.bossQuestionsLeft = [...level.pool];
-        document.getElementById('boss-hp-text').innerText = '100%';
-        document.getElementById('boss-hp-bar').style.width = '100%';
-        document.getElementById('arena-question-text').innerText = level.prompt;
-        loadBossWave();
-      } else {
-        bossHpWrap.classList.add('hidden');
-        document.getElementById('arena-question-text').innerText = level.prompt;
-
-        currentOptionsData = [
-          { text: level.correct, isCorrect: true },
-          { text: level.distractors[0], isCorrect: false },
-          { text: level.distractors[1], isCorrect: false }
-        ];
-        shuffleList(currentOptionsData);
-
-        resetMonstersPositions();
-        updateMonstersPlacards();
-        startCountdownTimer(12);
-      }
-    }
-
-    function loadBossWave() {
-      if (gameState.bossQuestionsLeft.length === 0) {
-        triggerVictory();
-        return;
-      }
-
-      const wave = gameState.bossQuestionsLeft.pop();
-      currentOptionsData = [
-        { text: wave.correct, isCorrect: true },
-        { text: wave.distractors[0], isCorrect: false },
-        { text: wave.distractors[1], isCorrect: false }
-      ];
-      shuffleList(currentOptionsData);
-
-      resetMonstersPositions();
-      updateMonstersPlacards();
-      startCountdownTimer(15);
-    }
-
-    function startCountdownTimer(seconds) {
-      clearInterval(gameState.timerId);
-      gameState.timerMax = seconds;
-      gameState.timerCurrent = seconds;
-      const bar = document.getElementById('arena-timer-bar');
-      bar.style.width = '100%';
-
-      gameState.timerId = setInterval(() => {
-        gameState.timerCurrent -= 0.1;
-        const pct = Math.max(0, (gameState.timerCurrent / gameState.timerMax) * 100);
-        bar.style.width = `${pct}%`;
-
-        if (gameState.timerCurrent <= 3 && Math.floor(gameState.timerCurrent * 10) % 10 === 0) {
-          sound.playTick();
-        }
-
-        if (gameState.timerCurrent <= 0) {
-          clearInterval(gameState.timerId);
-          handleTimeExpired();
-        }
-      }, 100);
-    }
-
-    // Check hit collision against 3D placards
-    function checkHitCollision(x, y, gestureType) {
-      if (gameState.isLocked) return;
-      const now = performance.now();
-      if (now - gameState.lastGestureTime < 450) return; // Debounce gesture
-
-      const count = currentOptionsData.length;
-      for (let i = 0; i < count; i++) {
-        const pill = document.getElementById(`monster-placard-${i}`);
-        if (!pill || pill.style.opacity === '0') continue;
-
-        const rect = pill.getBoundingClientRect();
-        const arenaRect = document.getElementById('arena-screen').getBoundingClientRect();
-        const pillCenterX = (rect.left - arenaRect.left) + rect.width / 2;
-        const pillCenterY = (rect.top - arenaRect.top) + rect.height / 2;
-
-        const dist = Math.hypot(x - pillCenterX, y - pillCenterY);
-
-        if (dist < (rect.width * 0.65 + 30)) {
-          gameState.lastGestureTime = now;
-          triggerHitOnIndex(i, pillCenterX, pillCenterY, gestureType);
-          break;
+          statusDot.className = "w-3 h-3 rounded-full bg-amber-400";
+          statusLabel.innerText = "Cam Standby";
         }
       }
     }
@@ -1863,6 +1236,599 @@
         startCameraDirect(true);
       }
     }
+
+    let scene, camera, renderer;
+    const clock = new THREE.Clock();
+    const monsters3D = [];
+    let bossMonster3D = null;
+    let currentOptionsData = [];
+    let currentLevelData = null;
+
+    function renderCategoryMenu() {
+      const grid = document.getElementById('category-grid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      Object.keys(CURRICULUM).forEach((key) => {
+        const cat = CURRICULUM[key];
+        const isSelected = gameState.categoryKey === key;
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.onclick = () => selectCategory(key);
+        card.className = `p-2.5 sm:p-3 rounded-2xl border-3 text-left transition transform active:scale-95 flex items-center gap-2.5 sm:gap-3 ${
+          isSelected 
+            ? 'bg-gradient-to-r ' + cat.theme + ' border-amber-300 shadow-lg scale-[1.02]' 
+            : 'bg-slate-800/90 border-slate-700 hover:border-slate-500'
+        }`;
+
+        card.innerHTML = `
+          <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-slate-950/80 flex items-center justify-center text-amber-300 text-lg sm:text-xl flex-shrink-0 border border-slate-700 shadow-inner">
+            <i class="${cat.icon}"></i>
+          </div>
+          <div class="overflow-hidden">
+            <div class="font-arcade text-xs sm:text-sm text-yellow-300 truncate">${cat.name}</div>
+            <div class="text-[10px] sm:text-xs text-slate-300 font-bold">10 Levels • Titan Boss</div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function selectCategory(key) {
+      sound.init();
+      sound.playTick();
+      gameState.categoryKey = key;
+      renderCategoryMenu();
+    }
+
+    function initThreeJS() {
+      const canvas = document.getElementById('three-canvas');
+      if (!canvas) return;
+
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
+      camera.position.set(0, 0, 9);
+
+      renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+
+      // Ambient and directional lighting for cute toon gloss
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+      scene.add(ambientLight);
+
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+      dirLight.position.set(5, 10, 7);
+      scene.add(dirLight);
+
+      const rimLight = new THREE.PointLight(0x38bdf8, 0.6, 20);
+      rimLight.position.set(-4, -2, 4);
+      scene.add(rimLight);
+
+      setupCute3DMonsters();
+      setupBossMonster();
+
+      window.addEventListener('resize', handleCanvasResize);
+      handleCanvasResize();
+    }
+
+    function setupCute3DMonsters() {
+      monsters3D.length = 0;
+
+      const monsterDefs = [
+        { color: 0xf472b6, xOffset: -3.0, type: 'bunny', name: 'Pink Mochi' },
+        { color: 0x2dd4bf, xOffset: 0.0, type: 'dino', name: 'Minty Dino' },
+        { color: 0xfacc15, xOffset: 3.0, type: 'chick', name: 'Star Chick' }
+      ];
+
+      monsterDefs.forEach((def, idx) => {
+        const group = new THREE.Group();
+
+        // 1. Glossy Toon Body
+        const bodyMat = new THREE.MeshToonMaterial({ color: def.color });
+        const bodyGeo = new THREE.SphereGeometry(1.0, 32, 32);
+        const body = new THREE.Mesh(bodyGeo, bodyMat);
+        group.add(body);
+
+        // 2. Shiny Anime Eyes
+        const eyeMat = new THREE.MeshBasicMaterial({ color: 0x0f172a });
+        const specMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        [-0.32, 0.32].forEach((xEye) => {
+          const eye = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 16), eyeMat);
+          eye.position.set(xEye, 0.22, 0.88);
+          eye.scale.set(1, 1.2, 0.6);
+          group.add(eye);
+
+          const spec = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), specMat);
+          spec.position.set(xEye + 0.04, 0.28, 0.98);
+          group.add(spec);
+        });
+
+        // 3. Cute Blushing Cheeks
+        const blushMat = new THREE.MeshBasicMaterial({ color: 0xf43f5e, transparent: true, opacity: 0.65 });
+        [-0.52, 0.52].forEach((xBlush) => {
+          const blush = new THREE.Mesh(new THREE.CircleGeometry(0.14, 16), blushMat);
+          blush.position.set(xBlush, 0.02, 0.91);
+          group.add(blush);
+        });
+
+        // 4. Character-Specific Appendages
+        if (def.type === 'bunny') {
+          const earMat = new THREE.MeshToonMaterial({ color: 0xf472b6 });
+          [-0.35, 0.35].forEach((xEar) => {
+            const ear = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 0.8, 16), earMat);
+            ear.position.set(xEar, 1.25, 0);
+            ear.rotation.z = xEar > 0 ? -0.2 : 0.2;
+            group.add(ear);
+          });
+        } else if (def.type === 'dino') {
+          const hornMat = new THREE.MeshToonMaterial({ color: 0xfde047 });
+          [-0.35, 0.35].forEach((xHorn) => {
+            const horn = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.5, 16), hornMat);
+            horn.position.set(xHorn, 1.05, 0.1);
+            horn.rotation.z = xHorn > 0 ? -0.25 : 0.25;
+            group.add(horn);
+          });
+        } else if (def.type === 'chick') {
+          const beakMat = new THREE.MeshToonMaterial({ color: 0xf97316 });
+          const beak = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.35, 16), beakMat);
+          beak.position.set(0, 0.05, 1.05);
+          beak.rotation.x = Math.PI / 2;
+          group.add(beak);
+        }
+
+        group.position.set(def.xOffset, 0, 0);
+        scene.add(group);
+
+        monsters3D.push({
+          mesh: group,
+          baseX: def.xOffset,
+          bounceOffset: idx * 1.5,
+          knockedOut: false,
+          knockVelocity: new THREE.Vector3(),
+          rotVelocity: new THREE.Vector3()
+        });
+      });
+    }
+
+    function setupBossMonster() {
+      const bossGroup = new THREE.Group();
+
+      const coreMat = new THREE.MeshToonMaterial({ color: 0x9333ea });
+      const core = new THREE.Mesh(new THREE.DodecahedronGeometry(1.7, 1), coreMat);
+      bossGroup.add(core);
+
+      const ringMat = new THREE.MeshBasicMaterial({ color: 0xfacc15, wireframe: true });
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(2.3, 0.08, 16, 64), ringMat);
+      ring.rotation.x = Math.PI / 3;
+      bossGroup.add(ring);
+
+      const eyeMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), eyeMat);
+      eye.position.set(0, 0.3, 1.5);
+      bossGroup.add(eye);
+
+      bossGroup.position.set(0, 0.3, 0);
+      bossGroup.visible = false;
+      scene.add(bossGroup);
+
+      bossMonster3D = {
+        mesh: bossGroup,
+        pulseSpeed: 4.0
+      };
+    }
+
+    function handleCanvasResize() {
+      const arena = document.getElementById('arena-screen');
+      const canvas = document.getElementById('three-canvas');
+      const hud = document.getElementById('hud-vfx-canvas');
+      if (!arena || !canvas || !renderer || !camera) return;
+
+      const w = arena.clientWidth;
+      const h = arena.clientHeight;
+
+      camera.aspect = w / h;
+      // Adjust camera distance on narrow mobile displays
+      if (w < 640) {
+        camera.position.z = 11.5;
+        monsters3D.forEach((m, idx) => {
+          m.mesh.position.x = (idx - 1) * 2.1;
+        });
+      } else {
+        camera.position.z = 9.0;
+        monsters3D.forEach((m, idx) => {
+          m.mesh.position.x = (idx - 1) * 3.0;
+        });
+      }
+      camera.updateProjectionMatrix();
+
+      renderer.setSize(w, h);
+      if (hud) {
+        hud.width = w;
+        hud.height = h;
+      }
+      const arenaWebcamCanvas = document.getElementById('arena-webcam-canvas');
+      if (arenaWebcamCanvas) {
+        arenaWebcamCanvas.width = w;
+        arenaWebcamCanvas.height = h;
+      }
+    }
+
+    async function populateCameraDevices() {
+      const select = document.getElementById('camera-device-select');
+      if (!select || !navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(d => d.kind === 'videoinput');
+        select.innerHTML = '';
+
+        if (videoDevices.length === 0) {
+          select.innerHTML = '<option value="">Default Web Camera</option>';
+          return;
+        }
+
+        videoDevices.forEach((dev, idx) => {
+          const opt = document.createElement('option');
+          opt.value = dev.deviceId;
+          opt.text = dev.label || `Camera Device ${idx + 1}`;
+          if (cameraState.deviceId === dev.deviceId) opt.selected = true;
+          select.appendChild(opt);
+        });
+      } catch(err) {
+        console.warn("Could not enumerate camera devices:", err);
+      }
+    }
+
+    function changeCameraDevice(deviceId) {
+      cameraState.deviceId = deviceId;
+      startCameraDirect(true);
+    }
+
+    function initMediaPipeHands() {
+      if (cameraState.handsInstance) return;
+      const diagVision = document.getElementById('diag-vision');
+
+      try {
+        const hands = new Hands({
+          locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${file}`
+        });
+
+        hands.setOptions({
+          maxNumHands: 2,
+          modelComplexity: 1,
+          minDetectionConfidence: 0.5,
+          minTrackingConfidence: 0.5
+        });
+
+        hands.onResults(handleMediaPipeResults);
+        cameraState.handsInstance = hands;
+
+        if (diagVision) {
+          diagVision.innerText = "Loaded & Ready";
+          diagVision.className = "font-bold text-emerald-400";
+        }
+      } catch(err) {
+        console.warn("MediaPipe Hands initialization notice:", err);
+        if (diagVision) {
+          diagVision.innerText = "Fallback Mode";
+          diagVision.className = "font-bold text-yellow-400";
+        }
+      }
+    }
+
+    function handleMediaPipeResults(results) {
+      const arena = document.getElementById('arena-screen');
+      const menuFistPill = document.getElementById('menu-cam-fist-pill');
+      if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
+        if (menuFistPill) menuFistPill.classList.add('hidden');
+        return;
+      }
+
+      const landmarks = results.multiHandLandmarks[0];
+      const wrist = landmarks[0];
+
+      // Gesture Classification: Fist (Genggam), Slice (Karate Chop), or Flick (Finger snap)
+      // Clenched fist: all 4 fingertip distances to wrist are shorter than their corresponding PIP knuckle joints
+      const fingerTips = [8, 12, 16, 20];
+      const fingerPips = [6, 10, 14, 18];
+      let curledFingers = 0;
+
+      for (let i = 0; i < 4; i++) {
+        const tipDist = Math.hypot(landmarks[fingerTips[i]].x - wrist.x, landmarks[fingerTips[i]].y - wrist.y);
+        const pipDist = Math.hypot(landmarks[fingerPips[i]].x - wrist.x, landmarks[fingerPips[i]].y - wrist.y);
+        if (tipDist < pipDist * 0.95) {
+          curledFingers++;
+        }
+      }
+
+      const isFist = curledFingers >= 3;
+      const isIndexExtended = (Math.hypot(landmarks[8].x - wrist.x, landmarks[8].y - wrist.y) > Math.hypot(landmarks[6].x - wrist.x, landmarks[6].y - wrist.y) * 1.1) && curledFingers >= 2;
+
+      // Update menu preview indicator
+      if (menuFistPill) {
+        if (isFist) {
+          menuFistPill.innerText = "✊ FIST DETECTED!";
+          menuFistPill.classList.remove('hidden');
+        } else {
+          menuFistPill.innerText = "✋ OPEN HAND";
+          menuFistPill.classList.remove('hidden');
+        }
+      }
+
+      if (!arena || arena.classList.contains('hidden')) return;
+
+      const rect = arena.getBoundingClientRect();
+      // Mirror x-coordinate so player movements correspond intuitively
+      const handScreenX = (1.0 - landmarks[9].x) * rect.width;
+      const handScreenY = landmarks[9].y * rect.height;
+
+      // Draw active reticle
+      drawHandReticle(handScreenX, handScreenY, isFist ? 'FIST' : (isIndexExtended ? 'FLICK' : 'OPEN'));
+
+      // Check hit collision
+      const now = performance.now();
+      if (isFist && now - gameState.lastGestureTime > 550) {
+        gameState.lastGestureTime = now;
+        checkHitCollision(handScreenX, handScreenY, 'PUNCH');
+      } else if (isIndexExtended && now - gameState.lastGestureTime > 500) {
+        gameState.lastGestureTime = now;
+        checkHitCollision(handScreenX, handScreenY, 'FLICK');
+      }
+    }
+
+    function checkHitCollision(x, y, gestureType) {
+      if (gameState.isLocked) return;
+      const placards = document.querySelectorAll('.monster-placard');
+
+      placards.forEach((placard, idx) => {
+        const pRect = placard.getBoundingClientRect();
+        const arenaRect = document.getElementById('arena-screen').getBoundingClientRect();
+        const relativeLeft = pRect.left - arenaRect.left;
+        const relativeTop = pRect.top - arenaRect.top;
+
+        // Expanded hitbox around monster placard for fluid gestures
+        const hitMargin = 35;
+        if (
+          x >= relativeLeft - hitMargin &&
+          x <= relativeLeft + pRect.width + hitMargin &&
+          y >= relativeTop - hitMargin &&
+          y <= relativeTop + pRect.height + hitMargin
+        ) {
+          triggerHitOnIndex(idx, x, y, gestureType);
+        }
+      });
+    }
+
+    function startMission() {
+      sound.init();
+      sound.playCorrect();
+
+      document.getElementById('start-screen').classList.add('hidden');
+      document.getElementById('arena-screen').classList.remove('hidden');
+      document.getElementById('game-hud').classList.remove('hidden');
+      document.getElementById('endgame-screen').classList.add('hidden');
+
+      gameState.levelIdx = 0;
+      gameState.score = 0;
+      gameState.streak = 0;
+      gameState.maxStreak = 0;
+      gameState.lives = 3;
+      gameState.correctCount = 0;
+      gameState.totalCount = 0;
+      gameState.isLocked = false;
+      gameState.isBossBattle = false;
+
+      updateHUD();
+      handleCanvasResize();
+      loadLevelQuestion();
+    }
+
+    function updateHUD() {
+      document.getElementById('hud-score').innerText = gameState.score;
+      document.getElementById('hud-level-num').innerText = gameState.levelIdx + 1;
+
+      // Combo streak pill
+      const streakEl = document.getElementById('hud-streak');
+      if (gameState.streak >= 2) {
+        streakEl.innerText = `COMBO x${gameState.streak}`;
+        streakEl.classList.remove('hidden');
+      } else {
+        streakEl.classList.add('hidden');
+      }
+
+      // Lives Hearts
+      const livesWrap = document.getElementById('lives-container');
+      livesWrap.innerHTML = '';
+      for (let i = 0; i < 3; i++) {
+        const heart = document.createElement('i');
+        heart.className = i < gameState.lives 
+          ? "fa-solid fa-heart animate-pulse text-red-500" 
+          : "fa-regular fa-heart text-gray-600";
+        livesWrap.appendChild(heart);
+      }
+    }
+
+    function loadLevelQuestion() {
+      const cat = CURRICULUM[gameState.categoryKey];
+      const level = cat.levels[gameState.levelIdx];
+      currentLevelData = level;
+      gameState.isLocked = false;
+
+      // Check for Level 10 Titan Boss
+      if (level.isBoss) {
+        gameState.isBossBattle = true;
+        gameState.bossHpMax = level.bossHp || 5;
+        gameState.bossHpCurrent = gameState.bossHpMax;
+        gameState.bossQuestionsLeft = shuffleList([...level.pool]);
+        loadBossWave();
+        return;
+      }
+
+      gameState.isBossBattle = false;
+      document.getElementById('boss-hp-wrap').classList.add('hidden');
+
+      // Make 3 standard monsters visible, hide boss
+      monsters3D.forEach(m => {
+        m.mesh.visible = true;
+        m.knockedOut = false;
+        m.mesh.position.set(m.baseX, 0, 0);
+        m.mesh.rotation.set(0, 0, 0);
+      });
+      if (bossMonster3D) bossMonster3D.mesh.visible = false;
+
+      // Update Question Header
+      document.getElementById('arena-category-badge').innerText = cat.tag;
+      document.getElementById('arena-question-text').innerText = level.prompt;
+
+      // Prepare 3 Answers (1 Correct + 2 Distractors)
+      const options = [
+        { text: level.correct, isCorrect: true },
+        { text: level.distractors[0], isCorrect: false },
+        { text: level.distractors[1], isCorrect: false }
+      ];
+      currentOptionsData = shuffleList(options);
+
+      render3DMonsterPlacards(currentOptionsData);
+      startLevelTimer(12);
+    }
+
+    function loadBossWave() {
+      const cat = CURRICULUM[gameState.categoryKey];
+      document.getElementById('boss-hp-wrap').classList.remove('hidden');
+      document.getElementById('boss-title-name').innerHTML = `<i class="fa-solid fa-dragon"></i> ${cat.bossName}`;
+
+      const pct = Math.max(0, Math.round((gameState.bossHpCurrent / gameState.bossHpMax) * 100));
+      document.getElementById('boss-hp-bar').style.width = `${pct}%`;
+      document.getElementById('boss-hp-text').innerText = `${pct}%`;
+
+      // Show Boss, hide normal 3 monsters
+      monsters3D.forEach(m => m.mesh.visible = false);
+      if (bossMonster3D) {
+        bossMonster3D.mesh.visible = true;
+        bossMonster3D.mesh.position.set(0, 0.3, 0);
+      }
+
+      if (gameState.bossQuestionsLeft.length === 0) {
+        gameState.bossQuestionsLeft = shuffleList([...currentLevelData.pool]);
+      }
+      const q = gameState.bossQuestionsLeft.pop();
+
+      document.getElementById('arena-category-badge').innerText = "BOSS RUSH";
+      document.getElementById('arena-question-text').innerText = `STRIKE THE ${cat.tag} TO DAMAGE THE BOSS!`;
+
+      const options = [
+        { text: q.correct, isCorrect: true },
+        { text: q.distractors[0], isCorrect: false },
+        { text: q.distractors[1], isCorrect: false }
+      ];
+      currentOptionsData = shuffleList(options);
+
+      render3DMonsterPlacards(currentOptionsData);
+      startLevelTimer(9);
+    }
+
+    function render3DMonsterPlacards(options) {
+      const container = document.getElementById('monsters-3d-labels');
+      container.innerHTML = '';
+
+      options.forEach((opt, idx) => {
+        const placard = document.createElement('div');
+        placard.className = 'monster-placard absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-30 select-none';
+        placard.style.left = '50%';
+        placard.style.top = '50%';
+
+        placard.innerHTML = `
+          <div class="px-4 py-2 sm:px-6 sm:py-3 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 border-4 border-slate-950 shadow-2xl flex items-center gap-2 group hover:scale-105 transition-all">
+            <span class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-slate-950 text-yellow-300 flex items-center justify-center font-arcade text-xs sm:text-sm font-bold flex-shrink-0">
+              ${idx + 1}
+            </span>
+            <span class="font-arcade text-lg sm:text-2xl md:text-3xl text-slate-950 font-black tracking-wide leading-none">
+              ${opt.text}
+            </span>
+          </div>
+        `;
+
+        placard.onclick = (e) => {
+          e.stopPropagation();
+          sound.init();
+          triggerHitOnIndex(idx, e.clientX, e.clientY, 'PUNCH');
+        };
+
+        container.appendChild(placard);
+      });
+    }
+
+    function syncPlacardsTo3D() {
+      const placards = document.querySelectorAll('.monster-placard');
+      const arena = document.getElementById('arena-screen');
+      if (!arena || !camera) return;
+
+      const w = arena.clientWidth;
+      const h = arena.clientHeight;
+
+      placards.forEach((placard, idx) => {
+        let worldPos = new THREE.Vector3();
+
+        if (!gameState.isBossBattle && monsters3D[idx]) {
+          monsters3D[idx].mesh.getWorldPosition(worldPos);
+          worldPos.y -= 0.65; // Position on monster belly
+        } else if (gameState.isBossBattle && bossMonster3D) {
+          bossMonster3D.mesh.getWorldPosition(worldPos);
+          // Distribute placards evenly across boss front
+          worldPos.x += (idx - 1) * 2.4;
+          worldPos.y -= 0.75;
+        }
+
+        worldPos.project(camera);
+        const screenX = (worldPos.x * 0.5 + 0.5) * w;
+        const screenY = (-(worldPos.y * 0.5) + 0.5) * h;
+
+        placard.style.left = `${screenX}px`;
+        placard.style.top = `${screenY}px`;
+      });
+    }
+
+    function startLevelTimer(seconds) {
+      clearInterval(gameState.timerId);
+      gameState.timerMax = seconds;
+      gameState.timerCurrent = seconds;
+
+      const timerBar = document.getElementById('arena-timer-bar');
+      timerBar.style.width = '100%';
+
+      gameState.timerId = setInterval(() => {
+        gameState.timerCurrent -= 0.1;
+        const pct = Math.max(0, (gameState.timerCurrent / gameState.timerMax) * 100);
+        timerBar.style.width = `${pct}%`;
+
+        if (gameState.timerCurrent <= 3.0 && gameState.timerCurrent > 0) {
+          if (Math.floor(gameState.timerCurrent * 10) % 5 === 0) sound.playTick();
+        }
+
+        if (gameState.timerCurrent <= 0) {
+          clearInterval(gameState.timerId);
+          handleTimeExpired();
+        }
+      }, 100);
+    }
+
+    function quitToMainMenu() {
+      clearInterval(gameState.timerId);
+      document.getElementById('arena-screen').classList.add('hidden');
+      document.getElementById('game-hud').classList.add('hidden');
+      document.getElementById('endgame-screen').classList.add('hidden');
+      document.getElementById('start-screen').classList.remove('hidden');
+      renderCategoryMenu();
+    }
+
+    function restartMission() {
+      startMission();
+    }
+
+    function addSlashTrail(x1, y1, x2, y2) {
+      slashTrails.push({ x1, y1, x2, y2, life: 1.0 });
+    }
   </script>
 
   <script>
@@ -1872,10 +1838,36 @@
       const delta = clock.getDelta();
       const elapsedTime = clock.getElapsedTime();
 
-      // 1. Process WebCam Frames through MediaPipe smoothly
+      // Mirror video feed based on current view:
+      // - In Start Menu: strictly inside Cam Standby area canvas (no background spill)
+      // - In Arena Game: across the arena background canvas so player sees themselves in action
+      if (cameraState.cameraStarted && liveVideo && liveVideo.readyState >= 2) {
+        const startScreen = document.getElementById('start-screen');
+        const arenaScreen = document.getElementById('arena-screen');
+
+        if (startScreen && !startScreen.classList.contains('hidden')) {
+          if (menuCamCtx && menuCamCanvas && !menuCamCanvas.classList.contains('hidden')) {
+            menuCamCtx.drawImage(liveVideo, 0, 0, menuCamCanvas.width, menuCamCanvas.height);
+          }
+        }
+
+        if (arenaScreen && !arenaScreen.classList.contains('hidden')) {
+          const arenaWebcamCanvas = document.getElementById('arena-webcam-canvas');
+          if (arenaWebcamCanvas) {
+            const aCtx = arenaWebcamCanvas.getContext('2d');
+            if (arenaWebcamCanvas.width !== arenaScreen.clientWidth || arenaWebcamCanvas.height !== arenaScreen.clientHeight) {
+              arenaWebcamCanvas.width = arenaScreen.clientWidth;
+              arenaWebcamCanvas.height = arenaScreen.clientHeight;
+            }
+            aCtx.drawImage(liveVideo, 0, 0, arenaWebcamCanvas.width, arenaWebcamCanvas.height);
+          }
+        }
+      }
+
+      // 1. Process Persistent WebCam Frames through MediaPipe
       const now = performance.now();
       if (cameraState.handsInstance && liveVideo && liveVideo.readyState >= 2 && !cameraState.isProcessing) {
-        if (now - lastMediaPipeCheck > 45) { // ~22 FPS vision inference keeps WebGL silky 60 FPS
+        if (now - lastMediaPipeCheck > 40) { // ~25 FPS inference guarantees silky 60 FPS Three.js
           lastMediaPipeCheck = now;
           cameraState.isProcessing = true;
           cameraState.handsInstance.send({ image: liveVideo }).catch(() => {}).finally(() => {
@@ -1983,8 +1975,8 @@
       // Start rendering loop immediately
       requestAnimationFrame(mainAnimationLoop);
 
-      // Attempt immediate seamless camera start
-      startCameraDirect(false);
+      // Inspect permission status first without auto-triggering unauthorized prompts
+      checkCameraPermissions();
 
       // Mouse / Touch Event Listeners for backup
       const arena = document.getElementById('arena-screen');
