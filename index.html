@@ -1025,8 +1025,10 @@
        CAMERA & MEDIAPIPE GESTURE DETECTION (DUAL HANDS ✊ MULTI-TRACKING)
        ========================================================================== */
     let handsInstance = null;
-    let cameraUtilInstance = null;
     let isProcessingFrame = false;
+    let cameraAnimId = null;
+    let lastVideoW = 0;
+    let lastVideoH = 0;
     let feedbackAutoTimer = null;
     let feedbackAutoInterval = null;
 
@@ -1037,10 +1039,10 @@
             locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
           });
           handsInstance.setOptions({
-            maxNumHands: 2, // Enable two hands for simultaneous punching!
+            maxNumHands: 2,
             modelComplexity: 0,
-            minDetectionConfidence: 0.55,
-            minTrackingConfidence: 0.55
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
           });
           handsInstance.onResults(onHandResults);
         }
@@ -1055,12 +1057,17 @@
       if (!video) return;
 
       try {
+        if (video.srcObject) {
+          const tracks = video.srcObject.getTracks();
+          tracks.forEach(t => t.stop());
+        }
+
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
           audio: false
         });
         video.srcObject = stream;
-        video.play();
+        await video.play();
         gameState.cameraActive = true;
 
         document.getElementById('cam-status-text').textContent = 'Cam Active';
@@ -1068,8 +1075,8 @@
         const placeholder = document.getElementById('standby-placeholder');
         if (placeholder) placeholder.classList.add('hidden');
 
-        // Start processing video frames
-        processVideoFrames();
+        // Start unified camera & gesture processing
+        startVideoProcessingLoop();
       } catch (err) {
         console.warn("Camera access denied or unavailable:", err);
         document.getElementById('cam-status-text').textContent = 'Touch / Mouse Mode';
@@ -1077,39 +1084,55 @@
       }
     }
 
-    function processVideoFrames() {
+    function startVideoProcessingLoop() {
+      if (cameraAnimId) {
+        cancelAnimationFrame(cameraAnimId);
+        cameraAnimId = null;
+      }
+
       const video = document.getElementById('live-webcam-feed');
       const menuCanvas = document.getElementById('menu-webcam-canvas');
       const arenaCanvas = document.getElementById('arena-webcam-canvas');
 
       function drawFrame() {
-        if (video.readyState >= 2) {
-          // 1. Draw to menu standby box if visible
-          if (!document.getElementById('home-screen').classList.contains('hidden') && menuCanvas) {
-            const ctx = menuCanvas.getContext('2d');
-            menuCanvas.width = video.videoWidth || 320;
-            menuCanvas.height = video.videoHeight || 240;
-            ctx.drawImage(video, 0, 0, menuCanvas.width, menuCanvas.height);
+        if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
+          // Adjust canvas dimensions once when video size changes
+          if (video.videoWidth !== lastVideoW || video.videoHeight !== lastVideoH) {
+            lastVideoW = video.videoWidth;
+            lastVideoH = video.videoHeight;
+            if (menuCanvas) {
+              menuCanvas.width = lastVideoW;
+              menuCanvas.height = lastVideoH;
+            }
+            if (arenaCanvas) {
+              arenaCanvas.width = lastVideoW;
+              arenaCanvas.height = lastVideoH;
+            }
           }
-          // 2. Draw to arena background if in-game
-          if (!document.getElementById('arena-screen').classList.contains('hidden') && arenaCanvas) {
+
+          const isHomeVisible = !document.getElementById('home-screen').classList.contains('hidden');
+          const isArenaVisible = !document.getElementById('arena-screen').classList.contains('hidden');
+
+          // Render only onto the active view
+          if (isHomeVisible && menuCanvas) {
+            const ctx = menuCanvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, menuCanvas.width, menuCanvas.height);
+          } else if (isArenaVisible && arenaCanvas) {
             const ctx = arenaCanvas.getContext('2d');
-            arenaCanvas.width = video.videoWidth || 640;
-            arenaCanvas.height = video.videoHeight || 480;
             ctx.drawImage(video, 0, 0, arenaCanvas.width, arenaCanvas.height);
           }
 
-          // 3. Process hand landmarks with MediaPipe
+          // Process hand landmarks if ready and not busy
           if (handsInstance && !isProcessingFrame) {
             isProcessingFrame = true;
-            handsInstance.send({ image: video }).finally(() => {
-              isProcessingFrame = false;
-            });
+            handsInstance.send({ image: video })
+              .catch((e) => console.warn("Hands send error:", e))
+              .finally(() => { isProcessingFrame = false; });
           }
         }
-        requestAnimationFrame(drawFrame);
+        cameraAnimId = requestAnimationFrame(drawFrame);
       }
-      requestAnimationFrame(drawFrame);
+      cameraAnimId = requestAnimationFrame(drawFrame);
     }
 
     function onHandResults(results) {
@@ -1118,47 +1141,70 @@
       const glove0 = document.getElementById('gesture-glove-0');
       const glove1 = document.getElementById('gesture-glove-1');
       const gloveEls = [glove0, glove1];
+      const gloveInners = [document.getElementById('glove-inner-0'), document.getElementById('glove-inner-1')];
+      const gloveIcons = [document.getElementById('glove-icon-0'), document.getElementById('glove-icon-1')];
 
-      // Reset visibility
+      // Reset arena glove visibility
       gloveEls.forEach(g => { if (g) g.classList.add('hidden'); });
+
+      const isHomeVisible = !document.getElementById('home-screen').classList.contains('hidden');
+      const isArenaVisible = !document.getElementById('arena-screen').classList.contains('hidden');
+      const menuCanvas = document.getElementById('menu-webcam-canvas');
 
       if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
         if (fistPill) {
           fistPill.textContent = 'NO HAND';
           fistPill.className = 'text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-md font-mono';
         }
-        if (arenaFistPill) arenaFistPill.textContent = 'FISTS: WAITING';
+        if (arenaFistPill) {
+          arenaFistPill.textContent = 'FISTS: WAITING';
+          arenaFistPill.className = 'bg-slate-900 border border-slate-700 px-2 py-0.5 rounded-lg text-slate-400 font-mono text-[10px]';
+        }
         gameState.fistDetected = false;
         return;
       }
 
       const container = document.getElementById('arena-viewport');
-      const isArenaVisible = container && !document.getElementById('arena-screen').classList.contains('hidden');
       const width = container ? container.clientWidth : 800;
       const height = container ? container.clientHeight : 450;
 
       let fistCount = 0;
-      const totalHands = results.multiHandLandmarks.length;
+      const totalHands = Math.min(2, results.multiHandLandmarks.length);
 
-      results.multiHandLandmarks.forEach((landmarks, hIdx) => {
-        if (hIdx > 1) return; // Support up to 2 hands
+      // If on Home Standby Screen, draw tracking dots on the standby canvas
+      if (isHomeVisible && menuCanvas) {
+        const ctx = menuCanvas.getContext('2d');
+        results.multiHandLandmarks.forEach((landmarks) => {
+          ctx.fillStyle = '#fde047';
+          landmarks.forEach((pt, pIdx) => {
+            if ([0, 4, 8, 12, 16, 20].includes(pIdx)) {
+              ctx.beginPath();
+              ctx.arc(pt.x * menuCanvas.width, pt.y * menuCanvas.height, 6, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          });
+        });
+      }
 
+      for (let hIdx = 0; hIdx < totalHands; hIdx++) {
+        const landmarks = results.multiHandLandmarks[hIdx];
         const wrist = landmarks[0];
-        // Fist Detection: Check curled finger tips relative to wrist vs knuckles
+
+        // Fist Detection: Check if fingertips are curled toward wrist
         const isCurled = (tipIdx, pipIdx) => {
           const dWrist = Math.hypot(landmarks[tipIdx].x - wrist.x, landmarks[tipIdx].y - wrist.y);
           const dPip = Math.hypot(landmarks[pipIdx].x - wrist.x, landmarks[pipIdx].y - wrist.y);
           return dWrist < dPip * 1.15;
         };
 
-        const curledCount = [
-          isCurled(8, 6),
-          isCurled(12, 10),
-          isCurled(16, 14),
-          isCurled(20, 18)
+        const curledFingers = [
+          isCurled(8, 6),   // Index
+          isCurled(12, 10), // Middle
+          isCurled(16, 14), // Ring
+          isCurled(20, 18)  // Pinky
         ].filter(Boolean).length;
 
-        const isFist = curledCount >= 3;
+        const isFist = curledFingers >= 3;
         if (isFist) fistCount++;
 
         // Mirrored coordinate calculation
@@ -1169,17 +1215,37 @@
 
         // Render matching glove in arena
         const glove = gloveEls[hIdx];
+        const inner = gloveInners[hIdx];
+        const icon = gloveIcons[hIdx];
+
         if (isArenaVisible && glove) {
           glove.classList.remove('hidden');
           glove.style.left = `${gloveX}px`;
           glove.style.top = `${gloveY}px`;
 
-          // If this hand is clenched into a fist, test punch collision
-          if (isFist && !gameState.isPaused && !gameState.isGameOver && document.getElementById('feedback-modal').classList.contains('hidden')) {
-            checkHitCollision(gloveX, gloveY);
+          // Visual feedback for Open Hand vs. Clenched Fist
+          if (isFist) {
+            if (inner) {
+              inner.className = hIdx === 0
+                ? 'w-full h-full rounded-full bg-amber-400/80 border-2 border-yellow-200 flex items-center justify-center shadow-lg shadow-amber-500 scale-125 transition-transform'
+                : 'w-full h-full rounded-full bg-cyan-400/80 border-2 border-cyan-200 flex items-center justify-center shadow-lg shadow-cyan-500 scale-125 transition-transform';
+            }
+            if (icon) icon.className = 'fa-solid fa-hand-back-fist text-2xl text-slate-950 animate-bounce';
+
+            // Execute punch collision
+            if (!gameState.isPaused && !gameState.isGameOver && document.getElementById('feedback-modal').classList.contains('hidden')) {
+              checkHitCollision(gloveX, gloveY);
+            }
+          } else {
+            if (inner) {
+              inner.className = hIdx === 0
+                ? 'w-full h-full rounded-full bg-amber-400/20 border-2 border-amber-300 flex items-center justify-center shadow-md'
+                : 'w-full h-full rounded-full bg-cyan-400/20 border-2 border-cyan-300 flex items-center justify-center shadow-md';
+            }
+            if (icon) icon.className = `fa-solid fa-hand text-2xl ${hIdx === 0 ? 'text-yellow-300' : 'text-cyan-300'}`;
           }
         }
-      });
+      }
 
       gameState.fistDetected = fistCount > 0;
 
@@ -1197,7 +1263,7 @@
         }
       }
 
-      // Update In-Arena status indicator
+      // Update Arena HUD indicator
       if (arenaFistPill) {
         if (fistCount >= 2) {
           arenaFistPill.textContent = '✊✊ DUAL PUNCH READY!';
@@ -1206,7 +1272,7 @@
           arenaFistPill.textContent = '✊ 1 PUNCH READY!';
           arenaFistPill.className = 'bg-amber-400 text-slate-950 px-2 py-0.5 rounded-lg font-bold font-mono text-[10px]';
         } else {
-          arenaFistPill.textContent = `✋ ${totalHands} HAND(S) DETECTED`;
+          arenaFistPill.textContent = `✋ ${totalHands} HAND(S) TRACKED`;
           arenaFistPill.className = 'bg-slate-900 border border-slate-700 px-2 py-0.5 rounded-lg text-slate-400 font-mono text-[10px]';
         }
       }
@@ -1225,7 +1291,7 @@
         const plY = rect.top - containerRect.top + rect.height / 2;
 
         const dist = Math.hypot(x - plX, y - plY);
-        if (dist < 75) {
+        if (dist < 80) {
           executePunchOnOption(idx, plX, plY);
         }
       });
@@ -1233,7 +1299,7 @@
 
     function executePunchOnOption(optIndex, hitX, hitY) {
       gameState.isHitCooldown = true;
-      setTimeout(() => { gameState.isHitCooldown = false; }, 850);
+      setTimeout(() => { gameState.isHitCooldown = false; }, 400);
 
       const option = gameState.currentOptions[optIndex];
       if (!option) return;
