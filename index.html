@@ -469,183 +469,195 @@
   <script>
     /* ==========================================================================
        CURRICULUM & VOCABULARY DICTIONARY (12 Official Parts of Speech)
-       Categorized from high-frequency to low-frequency with bilingual definitions
+       English-only curriculum with concise definitions
        ========================================================================== */
     const CURRICULUM = {
       nouns: {
-        name: "Nouns (Kata Nama)",
-        tag: "Kata Nama",
+        name: "Nouns",
+        tag: "Noun",
+        badge: "Nouns Master",
         icon: "fa-cubes",
         color: "from-amber-500 to-yellow-400",
         words: [
-          { w: "cat", bm: "kucing", def_bm: "Haiwan peliharaan berkaki empat.", def_en: "A small domesticated carnivorous mammal." },
-          { w: "apple", bm: "epal", def_bm: "Sejenis buah manis dan rangup.", def_en: "A round fruit with red or green skin." },
-          { w: "book", bm: "buku", def_bm: "Himpunan kertas berjilid untuk membaca.", def_en: "A written work published in printed pages." },
-          { w: "school", bm: "sekolah", def_bm: "Tempat menuntut ilmu dan belajar.", def_en: "An institution for educating students." },
-          { w: "bicycle", bm: "basikal", def_bm: "Kenderaan dua roda yang dikayuh.", def_en: "A two-wheeled vehicle pedaled by foot." },
-          { w: "elephant", bm: "gajah", def_bm: "Haiwan darat yang paling besar berbelalai.", def_en: "A very large mammal with a trunk." },
-          { w: "doctor", bm: "doktor", def_bm: "Pakar perubatan yang merawat pesakit.", def_en: "A person qualified to treat sick people." },
-          { w: "computer", bm: "komputer", def_bm: "Alat elektronik untuk memproses data.", def_en: "An electronic device for storing data." },
-          { w: "dinosaur", bm: "dinasour", def_bm: "Reptilia purba yang telah pupus.", def_en: "An extinct prehistoric reptile." },
-          { w: "astronaut", bm: "angkasawan", def_bm: "Orang yang dilatih menjelajah angkasa.", def_en: "A person trained to travel in a spacecraft." },
-          { w: "microscope", bm: "mikroskop", def_bm: "Alat untuk melihat objek seni.", def_en: "An instrument used to view tiny objects." },
-          { w: "architecture", bm: "seni bina", def_bm: "Seni mereka bentuk bangunan.", def_en: "The art or practice of designing buildings." }
+          { w: "cat", def: "A small domesticated carnivorous mammal." },
+          { w: "apple", def: "A round fruit with sweet, crisp flesh." },
+          { w: "book", def: "A written work published in printed pages." },
+          { w: "school", def: "An institution for educating students." },
+          { w: "bicycle", def: "A two-wheeled vehicle pedaled by foot." },
+          { w: "elephant", def: "A very large mammal with a trunk and tusks." },
+          { w: "doctor", def: "A person qualified to treat illness and injury." },
+          { w: "computer", def: "An electronic device for storing and processing data." },
+          { w: "dinosaur", def: "An extinct prehistoric reptile." },
+          { w: "astronaut", def: "A person trained to travel in a spacecraft." },
+          { w: "microscope", def: "An optical instrument used to view tiny objects." },
+          { w: "architecture", def: "The art or practice of designing buildings." }
         ]
       },
       verbs: {
-        name: "Verbs (Kata Kerja)",
-        tag: "Kata Kerja",
+        name: "Verbs",
+        tag: "Verb",
+        badge: "Verbs Master",
         icon: "fa-person-running",
         color: "from-rose-500 to-red-500",
         words: [
-          { w: "run", bm: "lari", def_bm: "Bergerak pantas menggunakan kaki.", def_en: "To move rapidly on foot." },
-          { w: "jump", bm: "lompat", def_bm: "Melonjakkan badan ke udara.", def_en: "To push oneself into the air using feet." },
-          { w: "eat", bm: "makan", def_bm: "Memasukkan makanan ke dalam mulut.", def_en: "To consume food into the body." },
-          { w: "sleep", bm: "tidur", def_bm: "Berehat dengan menutup mata.", def_en: "To rest with suspended consciousness." },
-          { w: "swim", bm: "berenang", def_bm: "Bergerak di dalam air.", def_en: "To propel oneself through water." },
-          { w: "dance", bm: "menari", def_bm: "Bergerak mengikut rentak muzik.", def_en: "To move rhythmically to music." },
-          { w: "explore", bm: "meneroka", def_bm: "Menyiasat kawasan yang baharu.", def_en: "To travel through an unfamiliar area to learn." },
-          { w: "invent", bm: "mencipta", def_bm: "Menghasilkan rekaan yang belum wujud.", def_en: "To create or design something new." },
-          { w: "accelerate", bm: "memecut", def_bm: "Menambah kelajuan pergerakan.", def_en: "To increase speed rapidly." },
-          { w: "investigate", bm: "menyiasat", def_bm: "Mengkaji sesuatu secara terperinci.", def_en: "To carry out a systematic inquiry." }
+          { w: "run", def: "To move rapidly on foot." },
+          { w: "jump", def: "To push oneself off the ground into the air." },
+          { w: "eat", def: "To consume food into the body." },
+          { w: "sleep", def: "To rest with suspended consciousness." },
+          { w: "swim", def: "To propel oneself through water." },
+          { w: "dance", def: "To move rhythmically to music." },
+          { w: "explore", def: "To travel through an unfamiliar area to learn." },
+          { w: "invent", def: "To create or design something new." },
+          { w: "accelerate", def: "To increase speed rapidly." },
+          { w: "investigate", def: "To carry out a systematic examination." }
         ]
       },
       adjectives: {
-        name: "Adjectives (Kata Adjektif)",
-        tag: "Kata Adjektif",
+        name: "Adjectives",
+        tag: "Adjective",
+        badge: "Adjectives Master",
         icon: "fa-wand-magic-sparkles",
         color: "from-pink-500 to-purple-500",
         words: [
-          { w: "happy", bm: "gembira", def_bm: "Perasaan riang dan sukacita.", def_en: "Feeling or showing pleasure and joy." },
-          { w: "big", bm: "besar", def_bm: "Mempunyai saiz yang luas atau tinggi.", def_en: "Of considerable size or extent." },
-          { w: "bright", bm: "terang", def_bm: "Memancarkan cahaya yang jelas.", def_en: "Giving out or reflecting much light." },
-          { w: "clever", bm: "pandai", def_bm: "Cepat memahami dan pintar.", def_en: "Quick to understand and intelligent." },
-          { w: "brave", bm: "berani", def_bm: "Tidak takut menghadapi cabaran.", def_en: "Ready to face danger or pain without fear." },
-          { w: "delicious", bm: "lazat", def_bm: "Makanan yang mempunyai rasa enak.", def_en: "Highly pleasant to the taste." },
-          { w: "enormous", bm: "sangat besar", def_bm: "Saiz yang teramat luar biasa besarnya.", def_en: "Extremely large; gigantic." },
-          { w: "mysterious", bm: "misteri", def_bm: "Sukar difahami atau dijelaskan.", def_en: "Difficult or impossible to understand." }
+          { w: "happy", def: "Feeling or showing pleasure and joy." },
+          { w: "big", def: "Of considerable size or extent." },
+          { w: "bright", def: "Giving out or reflecting much light." },
+          { w: "clever", def: "Quick to understand and intelligent." },
+          { w: "brave", def: "Ready to face danger or pain without fear." },
+          { w: "delicious", def: "Highly pleasant to the taste." },
+          { w: "enormous", def: "Extremely large; gigantic." },
+          { w: "mysterious", def: "Difficult or impossible to understand." }
         ]
       },
       adverbs: {
-        name: "Adverbs (Kata Keterangan)",
-        tag: "Kata Keterangan",
+        name: "Adverbs",
+        tag: "Adverb",
+        badge: "Adverbs Master",
         icon: "fa-bolt-lightning",
         color: "from-cyan-500 to-blue-500",
         words: [
-          { w: "quickly", bm: "dengan pantas", def_bm: "Melakukan sesuatu dalam masa singkat.", def_en: "At a fast speed; rapidly." },
-          { w: "loudly", bm: "dengan kuat", def_bm: "Bunyi yang dapat didengar jelas.", def_en: "With a great deal of volume." },
-          { w: "carefully", bm: "dengan teliti", def_bm: "Melakukan sesuatu dengan berwaspada.", def_en: "In a way that avoids harm or mistakes." },
-          { w: "happily", bm: "dengan gembira", def_bm: "Dalam keadaan senang hati.", def_en: "In a cheerful and joyous manner." },
-          { w: "suddenly", bm: "secara tiba-tiba", def_bm: "Berlaku tanpa diduga.", def_en: "Quickly and unexpectedly." },
-          { w: "eagerly", bm: "dengan bersungguh", def_bm: "Menunjukkan minat yang mendalam.", def_en: "With keen excitement or desire." },
-          { w: "frequently", bm: "kerap kali", def_bm: "Berulang dalam jarak masa pendek.", def_en: "Happening often or repeatedly." }
+          { w: "quickly", def: "At a fast speed; rapidly." },
+          { w: "loudly", def: "With a great deal of volume." },
+          { w: "carefully", def: "In a way that avoids harm or mistakes." },
+          { w: "happily", def: "In a cheerful and joyous manner." },
+          { w: "suddenly", def: "Quickly and unexpectedly." },
+          { w: "eagerly", def: "With keen excitement or desire." },
+          { w: "frequently", def: "Happening often or repeatedly." }
         ]
       },
       prepositions: {
-        name: "Prepositions (Kata Sendi)",
-        tag: "Kata Sendi",
+        name: "Prepositions",
+        tag: "Preposition",
+        badge: "Prepositions Master",
         icon: "fa-location-dot",
         color: "from-emerald-500 to-teal-500",
         words: [
-          { w: "under", bm: "di bawah", def_bm: "Berada pada kedudukan lebih rendah.", def_en: "Extending or directly below something." },
-          { w: "between", bm: "di antara", def_bm: "Di tengah-tengah dua objek atau titik.", def_en: "In the middle of two things." },
-          { w: "behind", bm: "di belakang", def_bm: "Pada bahagian belakang sesuatu benda.", def_en: "At or towards the back of something." },
-          { w: "across", bm: "merentasi", def_bm: "Dari satu bahagian ke bahagian lain.", def_en: "From one side to the other." },
-          { w: "through", bm: "menembusi", def_bm: "Bergerak masuk dan keluar dari sesuatu.", def_en: "Moving in one side and out of the other." },
-          { w: "against", bm: "menyandar pada", def_bm: "Menentang atau merapatkan ke dinding.", def_en: "In contact with or opposed to." }
+          { w: "under", def: "Extending or situated directly below something." },
+          { w: "between", def: "In the middle of two points or items." },
+          { w: "behind", def: "At or towards the back of something." },
+          { w: "across", def: "From one side to the other." },
+          { w: "through", def: "Moving in one side and out of the other." },
+          { w: "against", def: "In contact with or opposed to." }
         ]
       },
       pronouns: {
-        name: "Pronouns (Kata Ganti Nama)",
-        tag: "Kata Ganti Nama",
+        name: "Pronouns",
+        tag: "Pronoun",
+        badge: "Pronouns Master",
         icon: "fa-users",
         color: "from-violet-500 to-indigo-500",
         words: [
-          { w: "he", bm: "dia (lelaki)", def_bm: "Merujuk kepada orang lelaki.", def_en: "Used to refer to a male person." },
-          { w: "they", bm: "mereka", def_bm: "Merujuk kepada kumpulan orang.", def_en: "Used to refer to two or more people." },
-          { w: "we", bm: "kami / kita", def_bm: "Merujuk kepada penutur dan temannya.", def_en: "Used by a speaker to include others." },
-          { w: "mine", bm: "kepunyaan saya", def_bm: "Milik peribadi diri sendiri.", def_en: "Belonging to or associated with me." },
-          { w: "someone", bm: "seseorang", def_bm: "Satu individu yang tidak ditentukan.", def_en: "An unknown or unspecified person." },
-          { w: "ourselves", bm: "diri kami sendiri", def_bm: "Menegaskan diri penutur sendiri.", def_en: "We or us personally." }
+          { w: "he", def: "Used to refer to a male person." },
+          { w: "they", def: "Used to refer to two or more people." },
+          { w: "we", def: "Used by a speaker to include themselves and others." },
+          { w: "mine", def: "Belonging to or associated with oneself." },
+          { w: "someone", def: "An unspecified individual." },
+          { w: "ourselves", def: "We or us personally as reflexive subject." }
         ]
       },
       conjunctions: {
-        name: "Conjunctions (Kata Hubung)",
-        tag: "Kata Hubung",
+        name: "Conjunctions",
+        tag: "Conjunction",
+        badge: "Conjunctions Master",
         icon: "fa-link",
         color: "from-orange-500 to-amber-500",
         words: [
-          { w: "because", bm: "kerana", def_bm: "Menerangkan sebab atau alasan.", def_en: "For the reason that; since." },
-          { w: "although", bm: "walaupun", def_bm: "Menunjukkan keadaan pertentangan.", def_en: "In spite of the fact that; even though." },
-          { w: "unless", bm: "kecuali jika", def_bm: "Menunjukkan syarat tertentu.", def_en: "Except if; on the condition that." },
-          { w: "while", bm: "sementara", def_bm: "Semasa perkara lain sedang berlaku.", def_en: "During the time that." },
-          { w: "therefore", bm: "oleh itu", def_bm: "Menunjukkan akibat atau rumusan.", def_en: "For that reason; consequently." },
-          { w: "whereas", bm: "sedangkan", def_bm: "Membandingkan dua fakta yang berbeza.", def_en: "In contrast or comparison with the fact that." }
+          { w: "because", def: "For the reason that; since." },
+          { w: "although", def: "In spite of the fact that; even though." },
+          { w: "unless", def: "Except if; on the condition that." },
+          { w: "while", def: "During the time that." },
+          { w: "therefore", def: "For that reason; consequently." },
+          { w: "whereas", def: "In contrast with the fact that." }
         ]
       },
       determiners: {
-        name: "Determiners (Kata Penentu)",
-        tag: "Kata Penentu",
+        name: "Determiners",
+        tag: "Determiner",
+        badge: "Determiners Master",
         icon: "fa-tag",
         color: "from-lime-500 to-emerald-500",
         words: [
-          { w: "these", bm: "ini (jamak)", def_bm: "Menunjukkan benda dekat yang banyak.", def_en: "Indicating plural objects close at hand." },
-          { w: "those", bm: "itu (jamak)", def_bm: "Menunjukkan benda jauh yang banyak.", def_en: "Indicating plural objects further away." },
-          { w: "every", bm: "setiap", def_bm: "Merujuk kepada semua tanpa kecuali.", def_en: "Used to refer to all the individual members." },
-          { w: "several", bm: "beberapa", def_bm: "Bilangan lebih dari dua tetapi sedikit.", def_en: "More than two but not many." },
-          { w: "another", bm: "yang lain", def_bm: "Satu lagi pilihan berasingan.", def_en: "An additional person or thing." }
+          { w: "these", def: "Indicating plural objects close at hand." },
+          { w: "those", def: "Indicating plural objects further away." },
+          { w: "every", def: "Used to refer to all individual members of a set." },
+          { w: "several", def: "More than two but not many." },
+          { w: "another", def: "An additional person or item." }
         ]
       },
       interrogatives: {
-        name: "Interrogatives (Kata Tanya)",
-        tag: "Kata Tanya",
+        name: "Interrogatives",
+        tag: "Interrogative",
+        badge: "Interrogatives Master",
         icon: "fa-circle-question",
         color: "from-sky-500 to-cyan-500",
         words: [
-          { w: "where", bm: "di mana", def_bm: "Bertanya tentang tempat atau lokasi.", def_en: "In or to what place or position." },
-          { w: "whose", bm: "siapakah punya", def_bm: "Bertanya tentang hak milik siapa.", def_en: "Belonging to or associated with which person." },
-          { w: "which", bm: "yang mana satu", def_bm: "Meminta pilihan antara beberapa benda.", def_en: "Asking for information specifying one or more." },
-          { w: "why", bm: "mengapa", def_bm: "Bertanya tentang sebab atau punca.", def_en: "For what reason or purpose." },
-          { w: "how often", bm: "berapa kerap", def_bm: "Bertanya tentang kekerapan kejadian.", def_en: "Asking about the frequency of an event." }
+          { w: "where", def: "In or to what place or position." },
+          { w: "whose", def: "Belonging to or associated with which person." },
+          { w: "which", def: "Specifying one or more items out of a group." },
+          { w: "why", def: "For what reason or purpose." },
+          { w: "how often", def: "Asking about the frequency of an occurrence." }
         ]
       },
       numerals: {
-        name: "Numerals (Kata Bilangan)",
-        tag: "Kata Bilangan",
+        name: "Numerals",
+        tag: "Numeral",
+        badge: "Numerals Master",
         icon: "fa-arrow-down-1-9",
         color: "from-teal-500 to-blue-600",
         words: [
-          { w: "twelve", bm: "dua belas", def_bm: "Nombor cardinal selepas sebelas (12).", def_en: "Equivalent to the sum of six and six." },
-          { w: "fifteen", bm: "lima belas", def_bm: "Nombor cardinal iaitu 15.", def_en: "One more than fourteen; 15." },
-          { w: "thousand", bm: "seribu", def_bm: "Nombor bernilai 1,000.", def_en: "The number equivalent to ten hundreds." },
-          { w: "million", bm: "sejuta", def_bm: "Nombor bernilai 1,000,000.", def_en: "The number equivalent to one thousand thousands." },
-          { w: "quarter", bm: "suku", def_bm: "Satu daripada empat bahagian sama (1/4).", def_en: "Each of four equal or corresponding parts." }
+          { w: "twelve", def: "The number equal to the sum of 6 and 6 (12)." },
+          { w: "fifteen", def: "The cardinal number equal to 15." },
+          { w: "thousand", def: "The number equivalent to ten hundreds (1,000)." },
+          { w: "million", def: "The number equivalent to one thousand thousands." },
+          { w: "quarter", def: "Each of four equal or corresponding parts (1/4)." }
         ]
       },
       exclamations: {
-        name: "Exclamations (Kata Seru)",
-        tag: "Kata Seru",
+        name: "Exclamations",
+        tag: "Exclamation",
+        badge: "Exclamations Master",
         icon: "fa-comment-dots",
         color: "from-fuchsia-500 to-pink-600",
         words: [
-          { w: "wow!", bm: "wah!", def_bm: "Menunjukkan rasa kagum dan takjub.", def_en: "Expressing astonishment or admiration." },
-          { w: "hooray!", bm: "hore!", def_bm: "Sorakan kegembiraan dan kemenangan.", def_en: "Expressing joy or celebration." },
-          { w: "brilliant!", bm: "hebat sekali!", def_bm: "Pujian terhadap sesuatu yang cemerlang.", def_en: "Exceptionally clever or talented." },
-          { w: "ouch!", bm: "aduh!", def_bm: "Jeritan apabila merasa sakit tiba-tiba.", def_en: "Expressing sharp sudden pain." },
-          { w: "pardon!", bm: "maafkan saya!", def_bm: "Ungkapan meminta maaf atau mengulang perkataan.", def_en: "Used to ask someone to repeat what they said." }
+          { w: "wow!", def: "Expressing astonishment or admiration." },
+          { w: "hooray!", def: "Expressing joy, victory, or celebration." },
+          { w: "brilliant!", def: "Expressing praise for exceptional excellence." },
+          { w: "ouch!", def: "Expressing sudden physical pain." },
+          { w: "pardon!", def: "Used to politely ask someone to repeat." }
         ]
       },
       discourse: {
-        name: "Discourse Markers (Penanda Wacana)",
-        tag: "Penanda Wacana",
+        name: "Discourse Markers",
+        tag: "Discourse Marker",
+        badge: "Discourse Master",
         icon: "fa-signs-post",
         color: "from-amber-600 to-orange-600",
         words: [
-          { w: "however", bm: "walau bagaimanapun", def_bm: "Memperkenalkan fakta yang bertentangan.", def_en: "Used to introduce a statement that contrasts." },
-          { w: "furthermore", bm: "tambahan pula", def_bm: "Menambah hujah atau maklumat lanjutan.", def_en: "In addition; moreover." },
-          { w: "therefore", bm: "oleh yang demikian", def_bm: "Kesimpulan logik daripada pernyataan sebelumnya.", def_en: "As a consequence; for that reason." },
-          { w: "meanwhile", bm: "dalam masa yang sama", def_bm: "Berlaku serentak dengan peristiwa lain.", def_en: "In the intervening period of time." },
-          { w: "in addition", bm: "di samping itu", def_bm: "Menyertakan maklumat sampingan.", def_en: "As an extra person, thing, or circumstance." }
+          { w: "however", def: "Used to introduce a statement that contrasts." },
+          { w: "furthermore", def: "In addition; moreover." },
+          { w: "therefore", def: "A logical conclusion of what precedes." },
+          { w: "meanwhile", def: "In the intervening period of time." },
+          { w: "in addition", def: "As an extra detail or circumstance." }
         ]
       }
     };
@@ -667,10 +679,10 @@
       isGameOver: false,
       isBossLevel: false,
       bossHP: 100,
-      student: { name: "Saufi Aiman", class: "5 Jujur", school: "SK Seri Saujana" },
+      student: { name: "Saufi Aiman", class: "Grade 5", school: "Seri Saujana Primary School" },
       sheetWebhookUrl: localStorage.getItem('saufi_sheet_webhook') || '',
       completedCategories: JSON.parse(localStorage.getItem('saufi_completed_cats') || '[]'),
-      currentOptions: [], // { word, isCorrect, monsterIndex, def_bm, def_en, tag }
+      currentOptions: [], // { word, isCorrect, monsterIndex, def_en, tag }
       audioMuted: false,
       cameraActive: false,
       fistDetected: false,
@@ -1426,9 +1438,8 @@
         placard.className = 'absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-auto cursor-pointer transition-all duration-150';
 
         placard.innerHTML = `
-          <div class="px-4 py-2 sm:px-6 sm:py-2.5 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-2 border-yellow-400/90 shadow-2xl text-center active:scale-95 hover:border-white flex flex-col items-center">
-            <span class="font-arcade text-lg sm:text-2xl text-yellow-300 stroke-black-sm uppercase tracking-wide">${opt.w}</span>
-            <span class="text-[10px] text-cyan-300 font-extrabold uppercase mt-0.5">${opt.bm}</span>
+          <div class="px-5 py-2.5 sm:px-7 sm:py-3 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-2 border-yellow-400/90 shadow-2xl text-center active:scale-95 hover:border-white flex flex-col items-center">
+            <span class="font-arcade text-xl sm:text-2xl text-yellow-300 stroke-black-sm uppercase tracking-wider">${opt.w}</span>
           </div>
         `;
 
@@ -1497,9 +1508,8 @@
       const iconBox = document.getElementById('feedback-icon-box');
 
       document.getElementById('feedback-word-tag').textContent = option.tag;
-      document.getElementById('feedback-word-name').textContent = `"${option.w.toUpperCase()}" (${option.bm})`;
-      document.getElementById('feedback-def-bm').textContent = option.def_bm || "Maksud tersedia dalam kurikulum.";
-      document.getElementById('feedback-def-en').textContent = option.def_en || "Definition available in curriculum.";
+      document.getElementById('feedback-word-name').textContent = `"${option.w.toUpperCase()}"`;
+      document.getElementById('feedback-def').textContent = option.def || "Definition available in curriculum.";
 
       if (isSuccess) {
         card.className = 'w-full max-w-md bg-slate-900 border-2 border-emerald-400 rounded-3xl p-5 text-center shadow-2xl transition-all scale-100 opacity-100';
@@ -1594,14 +1604,14 @@
         subtitle.textContent = 'Congratulations! You mastered all 100 levels and defeated the Titan Boss!';
         icon.className = 'w-16 h-16 mx-auto bg-gradient-to-tr from-amber-500 to-yellow-400 text-slate-950 rounded-2xl flex items-center justify-center text-4xl mb-3 shadow-lg';
         icon.innerHTML = '<i class="fa-solid fa-crown"></i>';
-        document.getElementById('endgame-praise').textContent = '🌟 Syabas! Anda telah dianugerahkan lencana penguasaan penuh!';
+        document.getElementById('endgame-praise').textContent = '🌟 Congratulations! You have earned the official Category Master Badge!';
       } else {
         title.textContent = 'GAME OVER';
         title.className = 'font-arcade text-3xl sm:text-4xl text-rose-500 stroke-black-sm mb-1';
         subtitle.textContent = reason || 'Keep practicing! Review your grammar words and try again.';
         icon.className = 'w-16 h-16 mx-auto bg-slate-800 text-rose-400 rounded-2xl flex items-center justify-center text-4xl mb-3 border border-slate-700';
         icon.innerHTML = '<i class="fa-solid fa-heart-crack"></i>';
-        document.getElementById('endgame-praise').textContent = '💪 Usaha tangga kejayaan! Jangan berputus asa, cuba sekali lagi!';
+        document.getElementById('endgame-praise').textContent = '💪 Practice makes perfect! Do not give up, try again!';
       }
 
       modal.classList.remove('hidden');
@@ -1690,7 +1700,7 @@
         }`;
         badge.innerHTML = `
           <i class="fa-solid ${cat.icon} text-xs mb-0.5"></i>
-          <span class="text-[8px] font-black truncate max-w-full">${cat.tag}</span>
+          <span class="text-[8px] font-black truncate max-w-full uppercase">${cat.badge || cat.name}</span>
         `;
         container.appendChild(badge);
       });
@@ -1732,7 +1742,7 @@
       ctx.textAlign = 'center';
       ctx.fillStyle = '#fbbf24';
       ctx.font = 'bold 36px "Lilita One", sans-serif';
-      ctx.fillText('SIJIL PENGHARGAAN & KECEMERLANGAN', 600, 120);
+      ctx.fillText('CERTIFICATE OF EXCELLENCE & ACHIEVEMENT', 600, 120);
 
       ctx.fillStyle = '#ffffff';
       ctx.font = '22px "Nunito", sans-serif';
@@ -1740,7 +1750,7 @@
 
       ctx.fillStyle = '#cbd5e1';
       ctx.font = 'italic 18px "Nunito", sans-serif';
-      ctx.fillText('Dengan ini disahkan bahawa / This is proudly presented to:', 600, 240);
+      ctx.fillText('This certificate is proudly presented to:', 600, 240);
 
       // Student Name
       ctx.fillStyle = '#fde047';
@@ -1750,32 +1760,107 @@
       // Class and School
       ctx.fillStyle = '#38bdf8';
       ctx.font = 'bold 24px "Nunito", sans-serif';
-      ctx.fillText(`KELAS: ${gameState.student.class || '5 Jujur'}  |  SEKOLAH: ${gameState.student.school || 'SK Seri Saujana'}`, 600, 360);
+      ctx.fillText(`CLASS: ${gameState.student.class || 'Grade 5'}  |  SCHOOL: ${gameState.student.school || 'Saujana Academy'}`, 600, 360);
 
       // Accomplishment Paragraph
       ctx.fillStyle = '#f8fafc';
       ctx.font = '20px "Nunito", sans-serif';
       const earnedCount = gameState.completedCategories.length;
-      ctx.fillText(`Telah berjaya menguasai ${earnedCount} daripada 12 Misi Tatabahasa dan menumbuk Monster Titan!`, 600, 440);
-      ctx.fillText(`Demonstrated exceptional agility, vocabulary mastery, and quick reflex coordination.`, 600, 475);
+      ctx.fillText(`Successfully conquered ${earnedCount} of 12 English Grammar Missions and defeated the Titan Boss!`, 600, 440);
+      ctx.fillText(`Demonstrated exceptional agility, vocabulary mastery, and swift reflex coordination.`, 600, 475);
 
       // Date & Signature line
-      const today = new Date().toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' });
+      const today = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
       ctx.textAlign = 'left';
       ctx.fillStyle = '#94a3b8';
       ctx.font = '16px "Nunito", sans-serif';
-      ctx.fillText(`Tarikh: ${today}`, 120, 620);
+      ctx.fillText(`Date: ${today}`, 120, 620);
 
       ctx.textAlign = 'right';
-      ctx.fillText('Ketua Pengarah Akademik Super Saufi', 1080, 620);
-      ctx.fillText('Cop & Tandatangan Rasmi', 1080, 645);
+      ctx.fillText('Super Saufi Academic Director', 1080, 620);
+      ctx.fillText('Official Seal & Signature', 1080, 645);
+    }
+
+    function openCertificateModal() {
+      drawCertificate();
+      document.getElementById('cert-modal').classList.remove('hidden');
+    }
+
+    function closeCertificateModal() {
+      document.getElementById('cert-modal').classList.add('hidden');
+    }
+
+    function drawCertificate() {
+      const canvas = document.getElementById('cert-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = 1200;
+      canvas.height = 750;
+
+      // Background Gradient
+      const grad = ctx.createLinearGradient(0, 0, 1200, 750);
+      grad.addColorStop(0, '#0f172a');
+      grad.addColorStop(1, '#1e1b4b');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1200, 750);
+
+      // Gold Borders
+      ctx.lineWidth = 14;
+      ctx.strokeStyle = '#f59e0b';
+      ctx.strokeRect(25, 25, 1150, 700);
+
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#fef08a';
+      ctx.strokeRect(38, 38, 1124, 674);
+
+      // Certificate Title
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = 'bold 36px "Lilita One", sans-serif';
+      ctx.fillText('CERTIFICATE OF EXCELLENCE & ACHIEVEMENT', 600, 120);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '22px "Nunito", sans-serif';
+      ctx.fillText('SUPER SAUFI 3D GESTURE GRAMMAR ARCADE', 600, 160);
+
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = 'italic 18px "Nunito", sans-serif';
+      ctx.fillText('This certificate is proudly presented to:', 600, 240);
+
+      // Student Name
+      ctx.fillStyle = '#fde047';
+      ctx.font = 'bold 50px "Lilita One", sans-serif';
+      ctx.fillText((gameState.student.name || 'Saufi Aiman').toUpperCase(), 600, 310);
+
+      // Class and School
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 24px "Nunito", sans-serif';
+      ctx.fillText(`CLASS: ${gameState.student.class || 'Grade 5'}  |  SCHOOL: ${gameState.student.school || 'Seri Saujana Primary School'}`, 600, 360);
+
+      // Accomplishment Paragraph
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = '20px "Nunito", sans-serif';
+      const earnedCount = gameState.completedCategories.length;
+      ctx.fillText(`For successfully mastering ${earnedCount} out of 12 English Grammar Missions and defeating the Titan Boss!`, 600, 440);
+      ctx.fillText(`Demonstrating exceptional agility, vocabulary mastery, and swift reflex coordination.`, 600, 475);
+
+      // Date & Signature line
+      const today = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '16px "Nunito", sans-serif';
+      ctx.fillText(`Date: ${today}`, 120, 620);
+
+      ctx.textAlign = 'right';
+      ctx.fillText('Academic Director, Super Saufi Arcade', 1080, 620);
+      ctx.fillText('Official Stamp & Certification', 1080, 645);
     }
 
     function downloadCertificate() {
       const canvas = document.getElementById('cert-canvas');
       if (!canvas) return;
       const link = document.createElement('a');
-      link.download = `Sijil_Super_Saufi_${gameState.student.name.replace(/\s+/g, '_')}.png`;
+      link.download = `Certificate_Super_Saufi_${gameState.student.name.replace(/\s+/g, '_')}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     }
