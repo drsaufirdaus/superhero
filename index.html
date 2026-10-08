@@ -2,136 +2,137 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Super Saufi: Parts of Speech Punch-Out</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Super Saufi: 3D Gesture Punch-Out!</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Google Fonts for Comic Arcade Style -->
+  <!-- High Legibility Google Fonts for Distance Reading -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Fredoka:wght@400;600;700&family=Permanent+Marker&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Lilita+One&family=Bungee&display=swap" rel="stylesheet">
   
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+  <!-- Three.js CDN for Cute 3D Cartoon Monsters -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
   <!-- MediaPipe Hands & Camera Utils CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.4.1675466862/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin="anonymous"></script>
 
   <style>
+    /* Distance-Optimized High Legibility Typography */
     body {
       font-family: 'Fredoka', cursive, sans-serif;
       user-select: none;
       -webkit-user-select: none;
       touch-action: manipulation;
     }
-    .font-comic {
-      font-family: 'Bangers', cursive, sans-serif;
-      letter-spacing: 1.5px;
+    .font-arcade {
+      font-family: 'Lilita One', cursive, sans-serif;
+      letter-spacing: 1px;
     }
-    .font-marker {
-      font-family: 'Permanent Marker', cursive;
+    .font-hero {
+      font-family: 'Bungee', cursive, sans-serif;
+      letter-spacing: 1px;
     }
-    .text-stroke-2 {
+
+    /* Heavy Outlines for instant readability from 6-8 feet away */
+    .hero-text-stroke {
+      -webkit-text-stroke: 3px #050505;
+      text-shadow: 0 4px 0 #000, 0 8px 16px rgba(0,0,0,0.85);
+    }
+    .hero-text-stroke-lg {
+      -webkit-text-stroke: 4px #000000;
+      text-shadow: 0 6px 0 #000, 0 10px 24px rgba(0,0,0,0.9);
+    }
+    .badge-stroke {
       -webkit-text-stroke: 2px #0f172a;
     }
-    .text-stroke-3 {
-      -webkit-text-stroke: 3px #0f172a;
+
+    /* Monster Placards: High-contrast glossy pill mounted on monsters */
+    .monster-placard {
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.7));
+      transition: transform 0.12s ease-out, filter 0.12s ease-out;
     }
-    .text-stroke-white {
-      -webkit-text-stroke: 2px #ffffff;
+    .monster-placard:active {
+      transform: translate(-50%, -50%) scale(0.92) !important;
     }
 
-    @keyframes floatSwayA {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-14px) rotate(2deg); }
-    }
-    @keyframes floatSwayB {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-16px) rotate(-3deg); }
-    }
-    @keyframes floatSwayC {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-12px) rotate(2.5deg); }
-    }
-    .anim-float-a { animation: floatSwayA 2.8s ease-in-out infinite; }
-    .anim-float-b { animation: floatSwayB 3.2s ease-in-out infinite 0.5s; }
-    .anim-float-c { animation: floatSwayC 2.6s ease-in-out infinite 1s; }
-
-    @keyframes pulseGlow {
-      0%, 100% { box-shadow: 0 0 15px rgba(250, 204, 21, 0.6); }
-      50% { box-shadow: 0 0 35px rgba(239, 68, 68, 0.9); }
-    }
-    .anim-glow {
-      animation: pulseGlow 1.5s infinite alternate;
-    }
-
+    /* Screen shake on punch/slice hit */
     @keyframes screenShake {
       0% { transform: translate(0, 0); }
-      20% { transform: translate(-8px, 6px); }
-      40% { transform: translate(7px, -6px); }
-      60% { transform: translate(-6px, -4px); }
-      80% { transform: translate(5px, 5px); }
+      20% { transform: translate(-10px, 8px) rotate(-0.5deg); }
+      40% { transform: translate(10px, -8px) rotate(0.5deg); }
+      60% { transform: translate(-8px, -6px); }
+      80% { transform: translate(6px, 6px); }
       100% { transform: translate(0, 0); }
     }
     .shake-active {
       animation: screenShake 0.35s ease-out;
     }
+
+    /* Slash trail animation */
+    @keyframes slashFade {
+      0% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.1); }
+    }
   </style>
 </head>
-<body class="bg-slate-950 text-white min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-amber-400 selection:text-black">
+<body class="bg-slate-950 text-white min-h-[100dvh] flex flex-col justify-between overflow-x-hidden selection:bg-amber-400 selection:text-black">
 
-  <header class="w-full bg-gradient-to-r from-red-600 via-amber-500 to-indigo-700 p-2 sm:p-3 shadow-2xl border-b-4 border-amber-300 z-30 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-400 rounded-2xl flex items-center justify-center border-2 border-slate-900 shadow-lg transform -rotate-6">
-        <i class="fa-solid fa-hand-fist text-slate-900 text-xl sm:text-2xl"></i>
+  <!-- Top Arcade HUD -->
+  <header class="w-full bg-gradient-to-r from-red-600 via-amber-500 to-indigo-700 px-3 py-2 sm:py-2.5 shadow-2xl border-b-4 border-amber-300 z-30 flex items-center justify-between">
+    <div class="flex items-center gap-2 sm:gap-3">
+      <div class="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-300 rounded-2xl flex items-center justify-center border-3 border-slate-950 shadow-lg transform -rotate-3 flex-shrink-0">
+        <i class="fa-solid fa-hand-fist text-slate-950 text-xl sm:text-2xl"></i>
       </div>
       <div>
-        <h1 class="font-comic text-2xl sm:text-3xl text-yellow-300 text-stroke-2 drop-shadow-md leading-none tracking-wide">
+        <h1 class="font-hero text-xl sm:text-3xl text-yellow-300 hero-text-stroke leading-none tracking-wide">
           SUPER SAUFI
         </h1>
-        <p class="text-[11px] sm:text-xs text-amber-100 font-bold hidden sm:block">Parts of Speech Hero Punch-Out!</p>
+        <p class="text-[11px] sm:text-xs text-amber-100 font-bold hidden sm:block">3D Gesture Smash: Punch • Slice • Flick</p>
       </div>
     </div>
 
-    <!-- Active Game HUD (Toggles when game is playing) -->
-    <div id="game-hud" class="hidden flex items-center gap-2 sm:gap-5">
+    <!-- Active Game HUD (Lives, Score, Level, Audio) -->
+    <div id="game-hud" class="hidden flex items-center gap-2 sm:gap-4">
       <!-- Lives Hearts -->
-      <div class="flex items-center bg-slate-900/90 px-3 py-1 rounded-full border-2 border-red-500 shadow-md">
-        <span class="text-[11px] mr-1.5 font-bold text-red-400 uppercase tracking-wide hidden sm:inline">Lives:</span>
-        <div id="lives-container" class="flex gap-1 text-red-500 text-base sm:text-lg">
+      <div class="flex items-center bg-slate-950/90 px-3 py-1 rounded-full border-2 border-red-500 shadow-md">
+        <div id="lives-container" class="flex gap-1 text-red-500 text-base sm:text-xl">
           <i class="fa-solid fa-heart animate-pulse"></i>
           <i class="fa-solid fa-heart animate-pulse"></i>
           <i class="fa-solid fa-heart animate-pulse"></i>
         </div>
       </div>
 
-      <!-- Score & Streak Multiplier -->
-      <div class="flex items-center bg-slate-900/90 px-3 py-1 rounded-full border-2 border-yellow-400 shadow-md">
-        <i class="fa-solid fa-bolt text-yellow-400 mr-1.5 text-sm sm:text-base"></i>
-        <span id="hud-score" class="font-comic text-lg sm:text-xl text-yellow-300">0</span>
-        <span id="hud-streak" class="ml-2 text-[10px] bg-red-600 text-white font-black px-1.5 py-0.5 rounded-full uppercase hidden">COMBO x2</span>
+      <!-- Score & Streak -->
+      <div class="flex items-center bg-slate-950/90 px-3 py-1 rounded-full border-2 border-yellow-400 shadow-md">
+        <i class="fa-solid fa-bolt text-yellow-400 mr-1.5 text-base sm:text-lg"></i>
+        <span id="hud-score" class="font-arcade text-xl sm:text-2xl text-yellow-300 font-bold">0</span>
+        <span id="hud-streak" class="ml-2 text-[11px] bg-red-600 text-white font-extrabold px-2 py-0.5 rounded-full uppercase hidden">COMBO x2</span>
       </div>
 
-      <!-- Level Counter -->
-      <div class="bg-indigo-950 border-2 border-cyan-400 px-3 py-1 rounded-full text-xs font-bold text-cyan-200 shadow-md">
-        LVL <span id="hud-level-num" class="font-comic text-sm text-yellow-300">1</span>/10
+      <!-- Level Pill -->
+      <div class="bg-indigo-950 border-2 border-cyan-400 px-3 py-1 rounded-full text-xs font-black text-cyan-200 shadow-md">
+        LVL <span id="hud-level-num" class="font-arcade text-base sm:text-lg text-yellow-300">1</span>/10
       </div>
 
       <!-- Audio Mute Button -->
-      <button id="audio-toggle-btn" onclick="toggleAudio()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-900/80 border border-amber-400/80 hover:bg-slate-800 flex items-center justify-center text-amber-300 transition" title="Toggle Sound">
-        <i id="audio-icon" class="fa-solid fa-volume-high"></i>
+      <button id="audio-toggle-btn" onclick="toggleAudio()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-900 border-2 border-amber-400/80 hover:bg-slate-800 flex items-center justify-center text-amber-300 transition" title="Toggle Sound">
+        <i id="audio-icon" class="fa-solid fa-volume-high text-base"></i>
       </button>
     </div>
 
     <!-- Camera Diagnostics & Status Pill -->
     <div class="flex items-center gap-2">
-      <button onclick="toggleCameraModal()" class="flex items-center gap-1.5 text-xs bg-slate-900/80 hover:bg-slate-800 border border-slate-600 px-3 py-1.5 rounded-full text-gray-200 transition">
-        <span id="cam-status-dot" class="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-ping"></span>
-        <span id="cam-status-label" class="font-semibold">Camera Setup</span>
-        <i class="fa-solid fa-gear text-[10px] text-gray-400"></i>
+      <button onclick="toggleCameraModal()" class="flex items-center gap-1.5 text-xs bg-slate-900/90 hover:bg-slate-800 border-2 border-amber-400/80 px-3 py-1.5 rounded-full text-amber-200 transition shadow">
+        <span id="cam-status-dot" class="w-3 h-3 rounded-full bg-yellow-400 animate-ping"></span>
+        <span id="cam-status-label" class="font-bold text-[12px] sm:text-xs">Webcam Setup</span>
+        <i class="fa-solid fa-gear text-xs text-amber-300 ml-1"></i>
       </button>
     </div>
   </header>
@@ -139,150 +140,165 @@
   <main class="relative flex-1 flex flex-col items-center justify-center p-2 sm:p-4 max-w-7xl mx-auto w-full">
 
     <!-- 1. CATEGORY & MISSION SELECTION MENU -->
-    <div id="start-screen" class="w-full max-w-4xl bg-slate-900/95 border-4 border-amber-400 rounded-3xl p-5 sm:p-8 shadow-2xl z-20 backdrop-blur-md flex flex-col items-center text-center my-auto">
-      <div class="inline-block bg-gradient-to-r from-red-500 via-amber-500 to-yellow-400 p-1 rounded-2xl mb-3 shadow-lg transform -rotate-1">
-        <div class="bg-slate-950 px-5 py-1.5 rounded-xl">
-          <span class="font-comic text-xl sm:text-2xl text-yellow-300 tracking-wider">HERO COMIC ARENA</span>
+    <div id="start-screen" class="w-full max-w-4xl bg-slate-900/95 border-4 border-amber-400 rounded-3xl p-4 sm:p-7 shadow-2xl z-20 backdrop-blur-md flex flex-col items-center text-center my-auto">
+      
+      <!-- High Visibility Super Saufi Banner -->
+      <div class="inline-block bg-gradient-to-r from-red-500 via-amber-500 to-yellow-400 p-1.5 rounded-2xl mb-3 shadow-xl transform -rotate-1">
+        <div class="bg-slate-950 px-6 py-1.5 rounded-xl">
+          <span class="font-hero text-xl sm:text-2xl text-yellow-300 tracking-wider">HERO COMIC ARENA</span>
         </div>
       </div>
 
-      <h2 class="font-comic text-3xl sm:text-5xl text-white text-stroke-2 tracking-wide mb-2 leading-none">
-        GENGGAM FIST & PUNCH THE MONSTER!
+      <h2 class="font-arcade text-3xl sm:text-5xl text-yellow-300 hero-text-stroke-lg tracking-wide mb-2 leading-none uppercase">
+        SMASH THE CUTE GRAMMAR MONSTERS!
       </h2>
-      <p class="text-amber-200 text-xs sm:text-sm max-w-xl mb-4">
-        Hold your hand in front of your camera. Clench into a tight <b class="text-yellow-300">"Genggam" Fist ✊</b> to strike the monster with the correct Part of Speech!
-      </p>
+
+      <!-- Distance Play Hint Banner -->
+      <div class="w-full bg-indigo-950/80 border-2 border-cyan-400/80 rounded-2xl p-2.5 sm:p-3 mb-4 flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs sm:text-sm font-bold text-cyan-100">
+        <div class="flex items-center gap-2">
+          <span class="w-7 h-7 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center text-base"><i class="fa-solid fa-hand-fist"></i></span>
+          <span><b class="text-yellow-300">PUNCH:</b> Clench Fist ✊</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-7 h-7 rounded-full bg-cyan-400 text-slate-950 flex items-center justify-center text-base"><i class="fa-solid fa-hand"></i></span>
+          <span><b class="text-cyan-300">SLICE:</b> Karate Chop 🖐️</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-7 h-7 rounded-full bg-pink-400 text-slate-950 flex items-center justify-center text-base"><i class="fa-solid fa-hand-point-up"></i></span>
+          <span><b class="text-pink-300">FLICK:</b> Quick Snap 👆</span>
+        </div>
+        <div class="flex items-center gap-2 text-emerald-300">
+          <i class="fa-solid fa-mobile-screen"></i> Touch / Click Backup Ready!
+        </div>
+      </div>
 
       <!-- Category selection cards (6 parts of speech) -->
-      <div class="w-full mb-5">
-        <div class="text-xs font-bold text-cyan-300 uppercase tracking-wider mb-2 flex items-center justify-center gap-2">
-          <i class="fa-solid fa-graduation-cap"></i> Select Grammatical Mission (10 Levels Each)
+      <div class="w-full mb-4">
+        <div class="text-xs sm:text-sm font-black text-amber-300 uppercase tracking-wider mb-2.5 flex items-center justify-center gap-2">
+          <i class="fa-solid fa-graduation-cap text-base"></i> Select Mission (10 Levels • Boss at Level 10)
         </div>
-        <div id="category-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+        <div id="category-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
           <!-- Filled dynamically via JavaScript -->
         </div>
       </div>
 
-      <!-- Action Panel & Camera Preview confirmation banner -->
-      <div class="w-full bg-slate-950/80 p-3.5 sm:p-4 rounded-2xl border-2 border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div class="flex items-center gap-3 text-left">
-          <!-- Live Mini Camera Mirror Preview Box -->
-          <div class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-slate-900 border-2 border-amber-400 shadow-md flex-shrink-0 flex items-center justify-center">
-            <canvas id="start-cam-preview-canvas" class="w-full h-full object-cover transform -scale-x-100 hidden"></canvas>
-            <div id="start-cam-indicator" class="flex flex-col items-center justify-center text-amber-400 text-xl sm:text-2xl">
-              <i class="fa-solid fa-camera"></i>
+      <!-- Action Panel & Direct Camera Preview Box -->
+      <div class="w-full bg-slate-950/90 p-3 sm:p-4 rounded-2xl border-2 border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-3 text-left w-full sm:w-auto">
+          <!-- Live Camera Mirror Preview Thumbnail -->
+          <div class="relative w-18 h-18 sm:w-22 sm:h-22 rounded-2xl overflow-hidden bg-slate-900 border-3 border-amber-400 shadow-md flex-shrink-0 flex items-center justify-center">
+            <video id="menu-cam-preview" playsinline autoplay muted class="w-full h-full object-cover transform -scale-x-100 hidden"></video>
+            <div id="menu-cam-placeholder" class="flex flex-col items-center justify-center text-amber-400 text-2xl p-2 text-center">
+              <i class="fa-solid fa-video"></i>
+              <span class="text-[9px] text-gray-400 mt-1 font-bold">Cam Standby</span>
             </div>
-            <div id="start-cam-fist-pill" class="absolute bottom-1 px-1.5 py-0.5 rounded bg-black/80 text-[9px] font-bold text-yellow-300 hidden border border-yellow-400/60">
-              ✊ FIST!
+            <div id="menu-cam-fist-pill" class="absolute bottom-1 px-1.5 py-0.5 rounded bg-black/85 text-[10px] font-black text-yellow-300 hidden border border-yellow-400">
+              ✊ GESTURE!
             </div>
           </div>
           <div>
-            <div id="start-cam-title" class="text-sm font-bold text-white flex items-center gap-2">
-              Detecting Camera Status...
+            <div id="start-cam-title" class="text-sm sm:text-base font-black text-white flex items-center gap-2">
+              <i class="fa-solid fa-camera text-amber-400"></i> Camera Ready To Start
             </div>
-            <div id="start-cam-desc" class="text-xs text-gray-400">Click below to activate webcam tracking or play via touch/mouse!</div>
+            <div id="start-cam-desc" class="text-xs text-gray-300 font-medium">
+              Click Start to launch! If prompt appears, click <b>"Allow"</b>. Works with touch/click too!
+            </div>
           </div>
         </div>
 
-        <div class="flex gap-2 w-full sm:w-auto">
-          <button id="btn-enable-cam" onclick="requestCameraAccess(true)" class="px-4 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5">
-            <i class="fa-solid fa-video"></i> Connect Camera
+        <div class="flex gap-2 w-full sm:w-auto justify-end">
+          <button id="btn-force-cam" onclick="startCameraDirect(true)" class="px-3.5 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm rounded-xl shadow transition flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-arrows-rotate"></i> Connect Cam
           </button>
-          <button onclick="toggleCameraModal()" class="px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl border border-slate-600 transition flex items-center justify-center gap-1.5">
-            <i class="fa-solid fa-sliders"></i> Diagnostics
-          </button>
-          <button id="btn-start-hero" onclick="startMission()" class="flex-1 sm:flex-initial px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-slate-950 font-comic text-2xl tracking-wider rounded-xl shadow-xl transform active:scale-95 transition border-b-4 border-green-800 flex items-center justify-center gap-2">
-            <i class="fa-solid fa-play"></i> START MISSION!
+          <button id="btn-start-hero" onclick="startMission()" class="flex-1 sm:flex-initial px-8 py-3.5 bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-400 hover:to-green-400 text-slate-950 font-arcade text-2xl sm:text-3xl tracking-wider rounded-xl shadow-2xl transform active:scale-95 transition border-b-4 border-green-800 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-play"></i> START GAME!
           </button>
         </div>
-      </div>
-
-      <!-- Chrome Permission Help Banner (Shown if blocked or denied) -->
-      <div id="chrome-permission-guide" class="hidden mt-3 w-full bg-indigo-950/90 border border-cyan-400/50 rounded-2xl p-3 text-left text-xs text-cyan-100 flex items-start gap-3">
-        <i class="fa-solid fa-circle-question text-cyan-300 text-lg mt-0.5"></i>
-        <div class="flex-1">
-          <div class="font-bold text-cyan-200 mb-0.5">How to enable camera in Google Chrome:</div>
-          <ol class="list-decimal list-inside space-y-0.5 text-[11px] text-gray-300">
-            <li>Look at Chrome's address bar at the very top (next to the website URL).</li>
-            <li>Click the <b class="text-white">View Site Information (Tune / Lock icon ⚙️)</b> or the <b class="text-white">Camera icon with a red cross</b>.</li>
-            <li>Change the <b>Camera</b> switch from <i>Block</i> to <b class="text-emerald-300">Allow</b>.</li>
-            <li>Click the yellow <b>"Turn On Camera"</b> button above!</li>
-          </ol>
-        </div>
-      </div>
-      <div class="mt-3 text-[11px] text-slate-400 flex items-center justify-center gap-2">
-        <i class="fa-solid fa-circle-info text-amber-400"></i> Mouse click or Touch works as direct hero punch backup anytime!
       </div>
     </div>
 
-    <!-- 2. IN-GAME ARENA & CANVAS -->
-    <div id="arena-screen" class="hidden relative w-full h-[76vh] max-h-[760px] min-h-[460px] bg-slate-950 rounded-3xl overflow-hidden border-4 border-amber-400 shadow-2xl flex flex-col justify-between">
+    <!-- 2. IN-GAME ARENA & THREE.JS 3D CANVAS -->
+    <div id="arena-screen" class="hidden relative w-full h-[76dvh] max-h-[780px] min-h-[480px] bg-slate-950 rounded-3xl overflow-hidden border-4 border-amber-400 shadow-2xl flex flex-col justify-between">
       
-      <!-- Video Element (Rendered offscreen with positive dimensions to keep Chrome video decoding active) -->
-      <video id="raw-webcam" playsinline autoplay muted style="position: fixed; top: -9999px; left: -9999px; width: 640px; height: 480px; opacity: 0.01; pointer-events: none; z-index: -999;"></video>
+      <!-- Video Element: Live Mirrored User Webcam Feed (Always Decodes Reliably) -->
+      <video id="live-webcam-feed" playsinline autoplay muted class="absolute inset-0 w-full h-full object-cover transform -scale-x-100 opacity-35 z-0 pointer-events-none"></video>
 
-      <!-- Mirrored Comic Canvas (Camera Feed + Hand Gloves + VFX) -->
-      <canvas id="arena-canvas" class="absolute inset-0 w-full h-full object-cover z-0"></canvas>
+      <!-- Three.js 3D Monster WebGL Canvas -->
+      <canvas id="three-canvas" class="absolute inset-0 w-full h-full z-10 pointer-events-none"></canvas>
 
-      <!-- Comic Question Header -->
-      <div class="relative z-10 w-full p-2.5 sm:p-4 bg-gradient-to-b from-slate-950/95 via-slate-900/80 to-transparent flex flex-col items-center">
-        <div class="flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
-          <span id="arena-category-badge" class="px-3 py-0.5 bg-yellow-400 text-slate-950 font-comic text-base sm:text-xl rounded-xl shadow border-2 border-slate-900">
+      <!-- 2D Gesture HUD / Particle VFX Canvas -->
+      <canvas id="hud-vfx-canvas" class="absolute inset-0 w-full h-full z-20 pointer-events-none"></canvas>
+
+      <!-- High-Readability Question Banner (Clearly visible from across the room) -->
+      <div class="relative z-30 w-full p-2 sm:p-3 bg-gradient-to-b from-slate-950 via-slate-950/85 to-transparent flex flex-col items-center">
+        <div class="flex items-center gap-2 sm:gap-3 flex-wrap justify-center text-center">
+          <span id="arena-category-badge" class="px-4 py-1 bg-yellow-400 text-slate-950 font-arcade text-lg sm:text-2xl rounded-2xl shadow-lg border-3 border-slate-950 badge-stroke tracking-wider">
             NOUN
           </span>
-          <h3 id="arena-question-text" class="font-comic text-lg sm:text-2xl text-white tracking-wide text-stroke-2 text-center drop-shadow">
-            PUNCH THE CORRECT NOUN!
+          <h3 id="arena-question-text" class="font-arcade text-xl sm:text-3xl md:text-4xl text-white hero-text-stroke leading-tight tracking-wide drop-shadow-xl">
+            PUNCH / SLICE / FLICK THE CORRECT NOUN!
           </h3>
         </div>
 
-        <!-- Timer progress bar -->
-        <div class="w-full max-w-lg bg-slate-800/80 h-3 rounded-full mt-2.5 overflow-hidden border border-slate-600 relative">
+        <!-- Boss Health Bar (Visible in Level 10) -->
+        <div id="boss-hp-wrap" class="w-full max-w-xl bg-slate-900/90 border-3 border-red-500 rounded-2xl p-2 mt-2 hidden flex-col items-center shadow-2xl">
+          <div class="flex justify-between w-full text-xs sm:text-sm font-black text-red-300 px-1 mb-1">
+            <span id="boss-title-name"><i class="fa-solid fa-dragon"></i> TITAN BOSS LEVEL 10</span>
+            <span>HP: <span id="boss-hp-text" class="text-yellow-300">100%</span></span>
+          </div>
+          <div class="w-full bg-slate-950 h-5 rounded-full overflow-hidden border border-red-700/80 relative">
+            <div id="boss-hp-bar" class="h-full bg-gradient-to-r from-red-600 via-amber-500 to-yellow-400 w-full transition-all duration-200"></div>
+          </div>
+        </div>
+
+        <!-- Level Timer progress bar -->
+        <div id="timer-bar-wrap" class="w-full max-w-lg bg-slate-900/90 h-3.5 sm:h-4 rounded-full mt-2 overflow-hidden border-2 border-slate-700 shadow relative">
           <div id="arena-timer-bar" class="h-full bg-gradient-to-r from-emerald-500 via-yellow-400 to-red-500 w-full transition-all duration-100 ease-linear rounded-full"></div>
         </div>
       </div>
 
-      <!-- Floating Monsters Container (3 answer cards) -->
-      <div id="monsters-row" class="relative z-10 flex-1 w-full grid grid-cols-3 items-center justify-items-center px-1 sm:px-6">
-        <!-- Rendered dynamically -->
+      <!-- 3D Monster Word Placards Container (Pinned dynamically onto 3D monster chest coordinates) -->
+      <div id="monsters-3d-labels" class="absolute inset-0 z-30 pointer-events-auto overflow-hidden">
+        <!-- Pinned High-Legibility placards inserted here -->
       </div>
 
       <!-- Bottom Arena Controls / Gesture Detection Status -->
-      <div class="relative z-10 p-2 sm:p-3 bg-slate-950/90 border-t-2 border-slate-800 flex items-center justify-between text-xs sm:text-sm">
+      <div class="relative z-30 p-2 sm:p-2.5 bg-slate-950/90 border-t-2 border-slate-800 flex items-center justify-between text-xs sm:text-sm">
         <div class="flex items-center gap-2">
           <span id="gesture-pulse-dot" class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
-          <span id="gesture-hint-label" class="text-amber-300 font-bold">
-            Aim hand & GENGGAM FIST ✊ to smash!
+          <span id="gesture-hint-label" class="text-amber-300 font-black text-xs sm:text-sm">
+            Aim hand & GENGGAM FIST ✊ or SLICE 🖐️ to hit!
           </span>
         </div>
-        <div class="flex items-center gap-3">
-          <span id="hands-badge" class="bg-indigo-950 border border-indigo-700 px-2.5 py-0.5 rounded text-indigo-200 text-xs font-semibold">
-            <i class="fa-solid fa-hand"></i> Hands: <span id="hands-count">0</span>
+        <div class="flex items-center gap-2.5">
+          <span id="cam-active-badge" class="bg-indigo-950 border border-indigo-600 px-2.5 py-0.5 rounded-full text-indigo-200 text-xs font-bold">
+            <i class="fa-solid fa-camera"></i> <span id="cam-active-text">Cam Live</span>
           </span>
-          <button onclick="quitToMainMenu()" class="text-red-400 hover:text-red-300 font-bold underline">
-            Quit
+          <button onclick="quitToMainMenu()" class="text-red-400 hover:text-red-300 font-black px-2 py-0.5 bg-red-950/60 rounded border border-red-800">
+            Exit
           </button>
         </div>
       </div>
 
-      <!-- Comic Punch Comic Impact (POW! / BAM! / SMASH!) -->
-      <div id="vfx-burst-layer" class="absolute inset-0 pointer-events-none z-30 flex items-center justify-center opacity-0 transition-opacity duration-150">
-        <div id="vfx-burst-text" class="font-comic text-7xl sm:text-9xl text-yellow-300 text-stroke-3 drop-shadow-[0_12px_24px_rgba(0,0,0,0.9)] transform -rotate-12 scale-90">
+      <!-- Comic Punch / Slash Comic Impact (POW! / BAM! / SLICE!) -->
+      <div id="vfx-burst-layer" class="absolute inset-0 pointer-events-none z-40 flex items-center justify-center opacity-0 transition-opacity duration-150">
+        <div id="vfx-burst-text" class="font-arcade text-7xl sm:text-9xl text-yellow-300 hero-text-stroke-lg transform -rotate-12 scale-90">
           POW!
         </div>
       </div>
 
-      <!-- Educational Feedback Popup Dialog -->
-      <div id="dialog-feedback" class="absolute inset-0 z-40 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-        <div id="dialog-card" class="bg-gradient-to-b from-slate-900 to-indigo-950 border-4 border-yellow-400 p-5 sm:p-6 rounded-3xl max-w-md w-full text-center shadow-2xl transform scale-95 transition-all">
-          <div id="dialog-icon-wrap" class="w-16 h-16 mx-auto mb-2 rounded-full bg-emerald-500 flex items-center justify-center text-3xl text-slate-900 border-2 border-white shadow-lg">
+      <!-- Distance Educational Feedback Popup Dialog -->
+      <div id="dialog-feedback" class="absolute inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div id="dialog-card" class="bg-gradient-to-b from-slate-900 to-indigo-950 border-4 border-yellow-400 p-6 sm:p-8 rounded-3xl max-w-lg w-full text-center shadow-2xl transform scale-95 transition-all">
+          <div id="dialog-icon-wrap" class="w-18 h-18 sm:w-22 sm:h-22 mx-auto mb-3 rounded-full bg-emerald-500 flex items-center justify-center text-4xl sm:text-5xl text-slate-950 border-3 border-white shadow-xl">
             <i class="fa-solid fa-check"></i>
           </div>
-          <h4 id="dialog-title" class="font-comic text-3xl sm:text-4xl text-yellow-300 text-stroke-2 mb-1">SUPER HIT!</h4>
-          <p id="dialog-explanation" class="text-slate-200 text-xs sm:text-sm mb-4 font-semibold leading-relaxed">
+          <h4 id="dialog-title" class="font-arcade text-3xl sm:text-5xl text-yellow-300 hero-text-stroke mb-2 uppercase">SUPER HIT!</h4>
+          <p id="dialog-explanation" class="text-white text-base sm:text-xl font-bold leading-relaxed mb-4 bg-slate-950/70 p-3 rounded-2xl border border-slate-700">
             'Mountain' is a noun because it identifies a physical object!
           </p>
-          <div class="text-[11px] text-amber-300 font-bold uppercase tracking-wider animate-pulse">
-            Next Level Incoming...
+          <div class="text-xs sm:text-sm text-amber-300 font-black uppercase tracking-wider animate-pulse">
+            Next Level Loading...
           </div>
         </div>
       </div>
@@ -290,37 +306,37 @@
 
     <!-- 3. GAME OVER / MISSION VICTORY SCREEN -->
     <div id="endgame-screen" class="hidden w-full max-w-xl bg-slate-900/95 border-4 border-amber-400 rounded-3xl p-6 sm:p-8 shadow-2xl z-20 backdrop-blur-md flex flex-col items-center text-center my-auto">
-      <div id="endgame-icon-box" class="w-20 h-20 bg-yellow-400 rounded-full flex items-center justify-center text-4xl text-slate-900 mb-4 border-4 border-white shadow-xl animate-bounce">
+      <div id="endgame-icon-box" class="w-20 h-20 bg-yellow-400 rounded-full flex items-center justify-center text-4xl text-slate-950 mb-3 border-4 border-white shadow-xl animate-bounce">
         <i class="fa-solid fa-trophy"></i>
       </div>
-      <h2 id="endgame-title-text" class="font-comic text-4xl sm:text-5xl text-yellow-300 text-stroke-2 mb-1">
+      <h2 id="endgame-title-text" class="font-arcade text-4xl sm:text-5xl text-yellow-300 hero-text-stroke-lg mb-1 uppercase">
         MISSION ACCOMPLISHED!
       </h2>
-      <p id="endgame-sub-text" class="text-slate-300 text-xs sm:text-sm mb-5">
-        You knocked out every grammar monster with true hero prowess!
+      <p id="endgame-sub-text" class="text-slate-200 text-sm sm:text-base font-bold mb-5">
+        You defeated the Boss and knocked out every grammar monster!
       </p>
 
       <div class="w-full bg-slate-950/90 p-4 rounded-2xl border-2 border-slate-700 grid grid-cols-3 gap-2 mb-6">
         <div>
-          <div class="text-[10px] text-gray-400 font-bold uppercase">SCORE</div>
-          <div id="endgame-score" class="font-comic text-2xl sm:text-3xl text-yellow-300">0</div>
+          <div class="text-xs text-gray-400 font-black uppercase">SCORE</div>
+          <div id="endgame-score" class="font-arcade text-2xl sm:text-3xl text-yellow-300">0</div>
         </div>
         <div>
-          <div class="text-[10px] text-gray-400 font-bold uppercase">ACCURACY</div>
-          <div id="endgame-accuracy" class="font-comic text-2xl sm:text-3xl text-cyan-300">100%</div>
+          <div class="text-xs text-gray-400 font-black uppercase">ACCURACY</div>
+          <div id="endgame-accuracy" class="font-arcade text-2xl sm:text-3xl text-cyan-300">100%</div>
         </div>
         <div>
-          <div class="text-[10px] text-gray-400 font-bold uppercase">MAX COMBO</div>
-          <div id="endgame-streak" class="font-comic text-2xl sm:text-3xl text-red-400">x0</div>
+          <div class="text-xs text-gray-400 font-black uppercase">MAX COMBO</div>
+          <div id="endgame-streak" class="font-arcade text-2xl sm:text-3xl text-red-400">x0</div>
         </div>
       </div>
 
       <div class="flex gap-3 w-full">
-        <button onclick="quitToMainMenu()" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 rounded-xl font-comic text-xl tracking-wider text-slate-200 transition">
+        <button onclick="quitToMainMenu()" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 rounded-xl font-arcade text-xl tracking-wider text-slate-200 transition">
           MAIN MENU
         </button>
-        <button onclick="restartMission()" class="flex-1 py-3 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-comic text-xl sm:text-2xl tracking-wider rounded-xl shadow-lg border-b-4 border-amber-700 transition">
-          PUNCH AGAIN!
+        <button onclick="restartMission()" class="flex-1 py-3 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-arcade text-2xl tracking-wider rounded-xl shadow-lg border-b-4 border-amber-700 transition">
+          PLAY AGAIN!
         </button>
       </div>
     </div>
@@ -332,42 +348,24 @@
           <i class="fa-solid fa-xmark"></i>
         </button>
 
-        <h3 class="font-comic text-2xl sm:text-3xl text-yellow-300 text-stroke-2 mb-1 flex items-center gap-2">
-          <i class="fa-solid fa-video"></i> Camera Configuration & Diagnostics
+        <h3 class="font-arcade text-2xl sm:text-3xl text-yellow-300 mb-1 flex items-center gap-2">
+          <i class="fa-solid fa-video text-amber-400"></i> Camera Configuration
         </h3>
         <p class="text-xs text-gray-300 mb-4">
-          Verify your webcam preview and device permissions.
+          Test camera preview and verify device permissions.
         </p>
 
         <!-- Live Diagnostics Preview Box -->
-        <div class="relative w-full h-44 bg-black rounded-2xl overflow-hidden border-2 border-slate-700 mb-4 flex items-center justify-center">
+        <div class="relative w-full h-44 bg-black rounded-2xl overflow-hidden border-2 border-slate-700 mb-3 flex items-center justify-center">
           <video id="modal-preview-video" class="w-full h-full object-cover transform -scale-x-100" playsinline autoplay muted></video>
-          <div id="modal-preview-placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-center p-4 bg-slate-950/90 text-gray-400 text-xs">
+          <div id="modal-preview-placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-center p-4 bg-slate-950/90 text-gray-300 text-xs">
             <i class="fa-solid fa-camera text-3xl mb-2 text-amber-400"></i>
-            <span id="modal-placeholder-msg">Click 'Connect Camera' below to prompt Chrome for permission.</span>
-          </div>
-          <div id="modal-fist-badge" class="absolute bottom-2 left-2 px-2.5 py-1 rounded bg-black/75 border border-yellow-400 text-yellow-300 text-[11px] font-bold hidden">
-            ✊ FIST DETECTED!
+            <span id="modal-placeholder-msg">Click 'Connect Camera' below to prompt browser permission.</span>
           </div>
         </div>
 
-        <!-- Camera In-Use Notice Banner -->
-        <div id="camera-in-use-alert" class="hidden mb-3 bg-amber-950/80 border-2 border-amber-500 rounded-xl p-2.5 text-left text-xs text-amber-200">
-          <div class="font-bold flex items-center gap-1.5 text-amber-300 mb-1">
-            <i class="fa-solid fa-triangle-exclamation"></i> Camera is In Use by Another App
-          </div>
-          <p class="text-[11px] text-gray-300">
-            Another app (Zoom, Teams, or another tab) is accessing your webcam. You can close them and click Retry, or continue using the <b>Virtual Hero Glove (Mouse/Touch)</b>!
-          </p>
-        </div>
-
-        <!-- Iframe permission warning -->
-        <div id="iframe-perm-warning" class="hidden mb-3 bg-red-950/80 border border-red-500 rounded-xl p-2 text-left text-[11px] text-red-200">
-          <i class="fa-solid fa-ban mr-1"></i> Running inside an embedded iframe. The host site must include <code class="bg-black/50 px-1 py-0.5 rounded text-amber-300">allow="camera"</code> on the &lt;iframe&gt; tag.
-        </div>
-
-        <!-- Camera Select Dropdown & Controls -->
-        <div class="space-y-3 mb-5">
+        <!-- Camera Device Dropdown -->
+        <div class="space-y-3 mb-4">
           <div>
             <label class="block text-xs font-bold text-gray-300 mb-1">Select Video Device:</label>
             <select id="camera-device-select" onchange="changeCameraDevice(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400">
@@ -375,31 +373,26 @@
             </select>
           </div>
 
-          <!-- Diagnostic Log Box -->
+          <!-- Diagnostic Status -->
           <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-[11px] text-gray-300 font-mono space-y-1">
             <div class="flex justify-between">
-              <span class="text-gray-400">Context Security:</span>
-              <span id="diag-secure" class="font-bold">Checking...</span>
+              <span class="text-gray-400">Security Protocol:</span>
+              <span id="diag-secure" class="font-bold text-emerald-400">HTTPS / Secure</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-400">Chrome Permission Status:</span>
-              <span id="diag-permission" class="font-bold text-yellow-400">Checking...</span>
+              <span class="text-gray-400">Camera Stream:</span>
+              <span id="diag-stream" class="font-bold text-yellow-400">Not Started</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-gray-400">MediaDevices API:</span>
-              <span id="diag-api" class="font-bold">Checking...</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-gray-400">MediaPipe Engine:</span>
-              <span id="diag-mediapipe" class="font-bold text-yellow-400">Standby</span>
+              <span class="text-gray-400">MediaPipe Vision:</span>
+              <span id="diag-vision" class="font-bold text-yellow-400">Standby</span>
             </div>
           </div>
         </div>
 
-        <!-- Retry and Action buttons -->
         <div class="flex gap-2">
-          <button onclick="requestCameraAccess(true)" class="flex-1 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow">
-            <i class="fa-solid fa-arrows-rotate"></i> Connect / Request Permission
+          <button onclick="startCameraDirect(true)" class="flex-1 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm rounded-xl transition flex items-center justify-center gap-1.5 shadow">
+            <i class="fa-solid fa-arrows-rotate"></i> Connect / Restart Camera
           </button>
           <button onclick="toggleCameraModal()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-600 transition">
             Close
@@ -410,8 +403,8 @@
 
   </main>
 
-  <footer class="w-full bg-slate-950 border-t border-slate-800 text-center py-2 px-4 text-[11px] text-slate-500 z-10">
-    Super Saufi © Educational Arcade • Dual-Pipeline MediaPipe Computer Vision • Single File Standalone
+  <footer class="w-full bg-slate-950 border-t border-slate-800 text-center py-2 px-4 text-xs text-slate-400 font-bold z-10">
+    Super Saufi © Educational Arcade • Stand & Play with Fist / Slice / Flick • Single File Standalone
   </footer>
 
   <script>
@@ -424,83 +417,94 @@
       init() {
         if (!this.ctx) {
           const AudioCtx = window.AudioContext || window.webkitAudioContext;
-          if (AudioCtx) {
-            this.ctx = new AudioCtx();
-          }
+          if (AudioCtx) this.ctx = new AudioCtx();
         }
         if (this.ctx && this.ctx.state === 'suspended') {
           this.ctx.resume();
         }
       }
 
-      // Punch impact with noise + pitch-drop bass thump
+      // Punch impact with bass drop
       playPunch() {
         if (this.isMuted) return;
         this.init();
         if (!this.ctx) return;
         try {
           const t = this.ctx.currentTime;
-          
-          // Noise buffer for glove thud
-          const bufferSize = this.ctx.sampleRate * 0.14;
-          const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-          const data = buffer.getChannelData(0);
-          for (let i = 0; i < bufferSize; i++) {
-            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.22));
-          }
-          const noise = this.ctx.createBufferSource();
-          noise.buffer = buffer;
-
-          // Low bass punch frequency drop
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
           osc.type = 'triangle';
-          osc.frequency.setValueAtTime(160, t);
-          osc.frequency.exponentialRampToValueAtTime(36, t + 0.18);
+          osc.frequency.setValueAtTime(170, t);
+          osc.frequency.exponentialRampToValueAtTime(32, t + 0.18);
 
           gain.gain.setValueAtTime(1.0, t);
           gain.gain.exponentialRampToValueAtTime(0.01, t + 0.18);
 
           osc.connect(gain);
-          noise.connect(gain);
           gain.connect(this.ctx.destination);
-
           osc.start(t);
-          noise.start(t);
           osc.stop(t + 0.2);
-          noise.stop(t + 0.2);
-        } catch(e) {
-          console.warn("Sound error:", e);
-        }
+        } catch(e) {}
       }
 
-      // Triumphant arpeggio chime for correct hit
+      // Slice sword whoosh sound
+      playSlice() {
+        if (this.isMuted) return;
+        this.init();
+        if (!this.ctx) return;
+        try {
+          const t = this.ctx.currentTime;
+          const bufferSize = this.ctx.sampleRate * 0.18;
+          const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * (i / bufferSize));
+          }
+          const noise = this.ctx.createBufferSource();
+          noise.buffer = buffer;
+          const filter = this.ctx.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(1200, t);
+          filter.frequency.exponentialRampToValueAtTime(400, t + 0.18);
+
+          const gain = this.ctx.createGain();
+          gain.gain.setValueAtTime(0.8, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.18);
+
+          noise.connect(filter);
+          filter.connect(gain);
+          gain.connect(this.ctx.destination);
+          noise.start(t);
+          noise.stop(t + 0.19);
+        } catch(e) {}
+      }
+
+      // High crisp chime for correct strike
       playCorrect() {
         if (this.isMuted) return;
         this.init();
         if (!this.ctx) return;
         try {
           const t = this.ctx.currentTime;
-          const freqs = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+          const freqs = [523.25, 659.25, 783.99, 1046.50];
           freqs.forEach((freq, idx) => {
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, t + idx * 0.07);
+            osc.frequency.setValueAtTime(freq, t + idx * 0.06);
 
-            gain.gain.setValueAtTime(0, t + idx * 0.07);
-            gain.gain.linearRampToValueAtTime(0.28, t + idx * 0.07 + 0.02);
-            gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.07 + 0.32);
+            gain.gain.setValueAtTime(0, t + idx * 0.06);
+            gain.gain.linearRampToValueAtTime(0.3, t + idx * 0.06 + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.06 + 0.3);
 
             osc.connect(gain);
             gain.connect(this.ctx.destination);
-            osc.start(t + idx * 0.07);
-            osc.stop(t + idx * 0.07 + 0.35);
+            osc.start(t + idx * 0.06);
+            osc.stop(t + idx * 0.06 + 0.32);
           });
         } catch(e) {}
       }
 
-      // Low buzzing buzzer for wrong hits
       playWrong() {
         if (this.isMuted) return;
         this.init();
@@ -510,10 +514,10 @@
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
           osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(200, t);
-          osc.frequency.linearRampToValueAtTime(120, t + 0.3);
+          osc.frequency.setValueAtTime(190, t);
+          osc.frequency.linearRampToValueAtTime(110, t + 0.3);
 
-          gain.gain.setValueAtTime(0.3, t);
+          gain.gain.setValueAtTime(0.35, t);
           gain.gain.exponentialRampToValueAtTime(0.01, t + 0.32);
 
           osc.connect(gain);
@@ -523,7 +527,6 @@
         } catch(e) {}
       }
 
-      // Clock tick for countdown
       playTick() {
         if (this.isMuted) return;
         this.init();
@@ -533,8 +536,8 @@
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(900, t);
-          gain.gain.setValueAtTime(0.08, t);
+          osc.frequency.setValueAtTime(950, t);
+          gain.gain.setValueAtTime(0.09, t);
           gain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
           osc.connect(gain);
           gain.connect(this.ctx.destination);
@@ -543,7 +546,6 @@
         } catch(e) {}
       }
 
-      // Victory fanfare
       playVictory() {
         if (this.isMuted) return;
         this.init();
@@ -556,7 +558,7 @@
             const gain = this.ctx.createGain();
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(n, t + i * 0.09);
-            gain.gain.setValueAtTime(0.25, t + i * 0.09);
+            gain.gain.setValueAtTime(0.28, t + i * 0.09);
             gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.09 + 0.5);
             osc.connect(gain);
             gain.connect(this.ctx.destination);
@@ -587,17 +589,25 @@
         tag: "NOUN",
         icon: "fa-solid fa-mountain",
         theme: "from-blue-600 to-cyan-500",
+        bossName: "TITAN GOLEM OF SUBSTANCE",
         levels: [
-          { prompt: "PUNCH the NOUN (High Frequency / Animals):", correct: "Cheetah", distractors: ["Rapidly", "Sprint"], expl: "'Cheetah' is a noun because it names a physical living animal!" },
-          { prompt: "Spot the NOUN (Everyday Objects):", correct: "Umbrella", distractors: ["Rainy", "Shelter"], expl: "'Umbrella' is a tangible object noun used in rainy weather!" },
-          { prompt: "PUNCH the NOUN (Place):", correct: "Laboratory", distractors: ["Scientific", "Analyze"], expl: "'Laboratory' is a noun designating a dedicated physical location!" },
+          { prompt: "HIT the NOUN (Animal / Living):", correct: "Cheetah", distractors: ["Rapidly", "Sprint"], expl: "'Cheetah' is a noun naming a living creature!" },
+          { prompt: "Spot the NOUN (Object):", correct: "Umbrella", distractors: ["Rainy", "Shelter-verb"], expl: "'Umbrella' is a physical object noun!" },
+          { prompt: "HIT the NOUN (Physical Place):", correct: "Laboratory", distractors: ["Scientific", "Analyze"], expl: "'Laboratory' is a noun designating a physical venue!" },
           { prompt: "Find the Compound NOUN:", correct: "Earthquake", distractors: ["Tremble", "Shaky"], expl: "'Earthquake' is a compound noun representing a physical event!" },
-          { prompt: "PUNCH the Abstract NOUN (Emotion/State):", correct: "Gratitude", distractors: ["Thankful", "Appreciate"], expl: "'Gratitude' is an abstract noun for the state of feeling thankful!" },
-          { prompt: "Identify the NOUN (Nature/Science):", correct: "Atmosphere", distractors: ["Gaseous", "Breathe"], expl: "'Atmosphere' is a scientific noun naming the layer of gases around Earth!" },
-          { prompt: "PUNCH the Mid-Frequency NOUN:", correct: "Architecture", distractors: ["Construct", "Sturdy"], expl: "'Architecture' is a noun referring to the art/practice of building!" },
-          { prompt: "Find the Advanced NOUN (Sophisticated):", correct: "Labyrinth", distractors: ["Perplexed", "Twist"], expl: "'Labyrinth' is a noun meaning a complicated maze of passages!" },
-          { prompt: "PUNCH the Rare NOUN:", correct: "Benevolence", distractors: ["Generous", "Kindly"], expl: "'Benevolence' is an abstract noun meaning goodwill or kindly disposition!" },
-          { prompt: "Master NOUN Challenge:", correct: "Serendipity", distractors: ["Accidental", "Discover"], expl: "'Serendipity' is a noun denoting good fortune discovered by chance!" }
+          { prompt: "HIT the Abstract NOUN (Emotion/State):", correct: "Gratitude", distractors: ["Thankful", "Appreciate"], expl: "'Gratitude' is an abstract noun for thankful feelings!" },
+          { prompt: "Identify the Scientific NOUN:", correct: "Atmosphere", distractors: ["Gaseous", "Breathe"], expl: "'Atmosphere' is a scientific noun naming the air blanket around Earth!" },
+          { prompt: "HIT the Architecture NOUN:", correct: "Labyrinth", distractors: ["Perplexed", "Twist"], expl: "'Labyrinth' is a noun meaning an intricate maze!" },
+          { prompt: "Spot the Noble Character NOUN:", correct: "Benevolence", distractors: ["Generous", "Kindly"], expl: "'Benevolence' is a noun meaning active goodwill!" },
+          { prompt: "HIT the Rare Sophisticated NOUN:", correct: "Serendipity", distractors: ["Accidental", "Discover"], expl: "'Serendipity' is a noun meaning valuable chance discovery!" },
+          // Level 10 Boss Pool
+          { prompt: "BOSS RUSH! Hit as many NOUNS to drain Boss HP!", isBoss: true, bossHp: 5, pool: [
+            { correct: "Pyramid", distractors: ["Ancient", "Construct"] },
+            { correct: "Galaxy", distractors: ["Immense", "Orbiting"] },
+            { correct: "Microscope", distractors: ["Tiny", "Magnify"] },
+            { correct: "Fortitude", distractors: ["Brave", "Endure"] },
+            { correct: "Cascade", distractors: ["Flowing", "Rush"] }
+          ]}
         ]
       },
       verb: {
@@ -605,17 +615,25 @@
         tag: "VERB",
         icon: "fa-solid fa-bolt-lightning",
         theme: "from-amber-600 to-red-500",
+        bossName: "KINETIC CYBORG OVERLORD",
         levels: [
-          { prompt: "PUNCH the VERB (Everyday Action):", correct: "Gallop", distractors: ["Stallion", "Swift"], expl: "'Gallop' is a verb describing the fastest pace of a horse!" },
-          { prompt: "Spot the Action VERB:", correct: "Shatter", distractors: ["Glass", "Fragile"], expl: "'Shatter' is a verb meaning to break suddenly into pieces!" },
-          { prompt: "PUNCH the Mental VERB:", correct: "Investigate", distractors: ["Detective", "Curious"], expl: "'Investigate' is an action verb meaning to carry out systematic inquiry!" },
-          { prompt: "Identify the VERB (Communication):", correct: "Articulate", distractors: ["Eloquent", "Speech"], expl: "'Articulate' is a verb meaning to express an idea clearly in words!" },
-          { prompt: "PUNCH the Movement VERB:", correct: "Propel", distractors: ["Propeller", "Forceful"], expl: "'Propel' is a verb meaning to drive or push something forward!" },
-          { prompt: "Find the Transformation VERB:", correct: "Metamorphose", distractors: ["Chrysalis", "Organic"], expl: "'Metamorphose' is a verb meaning to transform completely in structure!" },
-          { prompt: "PUNCH the Explanatory VERB:", correct: "Elucidate", distractors: ["Clarity", "Lucid"], expl: "'Elucidate' is a verb meaning to make something clear or explain!" },
-          { prompt: "Spot the Science VERB:", correct: "Oscillate", distractors: ["Pendulum", "Rhythmic"], expl: "'Oscillate' is a verb meaning to move or swing back and forth repeatedly!" },
-          { prompt: "PUNCH the Literary VERB:", correct: "Corroborate", distractors: ["Evidence", "Certain"], expl: "'Corroborate' is a verb meaning to confirm with supporting evidence!" },
-          { prompt: "Master VERB Challenge:", correct: "Exemplify", distractors: ["Exemplary", "Example"], expl: "'Exemplify' is a verb meaning to illustrate or represent as a model!" }
+          { prompt: "HIT the VERB (Fast Action):", correct: "Gallop", distractors: ["Stallion", "Swift"], expl: "'Gallop' is a verb describing horse motion!" },
+          { prompt: "Spot the Impact VERB:", correct: "Shatter", distractors: ["Glass", "Fragile"], expl: "'Shatter' is a verb meaning to smash into pieces!" },
+          { prompt: "HIT the Mental Action VERB:", correct: "Investigate", distractors: ["Detective", "Curious"], expl: "'Investigate' is a verb meaning to examine facts systematically!" },
+          { prompt: "Identify the Speech VERB:", correct: "Articulate", distractors: ["Eloquent", "Speech"], expl: "'Articulate' is a verb meaning to express clearly!" },
+          { prompt: "HIT the Force VERB:", correct: "Propel", distractors: ["Propeller", "Forceful"], expl: "'Propel' is a verb meaning to push or drive forward!" },
+          { prompt: "Find the Science VERB:", correct: "Oscillate", distractors: ["Pendulum", "Rhythmic"], expl: "'Oscillate' is a verb meaning to swing back and forth!" },
+          { prompt: "HIT the Transformation VERB:", correct: "Metamorphose", distractors: ["Chrysalis", "Organic"], expl: "'Metamorphose' is a verb meaning to transform completely!" },
+          { prompt: "Spot the Explaining VERB:", correct: "Elucidate", distractors: ["Clarity", "Lucid"], expl: "'Elucidate' is a verb meaning to make clear!" },
+          { prompt: "HIT the Evidence VERB:", correct: "Corroborate", distractors: ["Evidence", "Certain"], expl: "'Corroborate' is a verb meaning to verify or confirm!" },
+          // Level 10 Boss Pool
+          { prompt: "BOSS RUSH! Hit all VERBS to slice the Kinetic Overlord!", isBoss: true, bossHp: 5, pool: [
+            { correct: "Pulverize", distractors: ["Dust", "Powerful"] },
+            { correct: "Vindicate", distractors: ["Innocence", "Just"] },
+            { correct: "Demolish", distractors: ["Ruins", "Fragile"] },
+            { correct: "Illuminate", distractors: ["Lantern", "Bright"] },
+            { correct: "Accelerate", distractors: ["Speedy", "Velocity"] }
+          ]}
         ]
       },
       adjective: {
@@ -623,17 +641,25 @@
         tag: "ADJECTIVE",
         icon: "fa-solid fa-palette",
         theme: "from-purple-600 to-pink-500",
+        bossName: "CHROMATIC SPECTRE TITAN",
         levels: [
-          { prompt: "PUNCH the ADJECTIVE (Describing Size):", correct: "Colossal", distractors: ["Giant", "Expand"], expl: "'Colossal' is an adjective describing something exceptionally huge!" },
-          { prompt: "Identify the ADJECTIVE (Touch):", correct: "Velvety", distractors: ["Silk", "Soften"], expl: "'Velvety' is an adjective describing a soft, smooth texture!" },
-          { prompt: "PUNCH the ADJECTIVE (Sight / Glow):", correct: "Luminous", distractors: ["Lantern", "Glow"], expl: "'Luminous' is an adjective describing something radiating light!" },
-          { prompt: "Spot the Personality ADJECTIVE:", correct: "Tenacious", distractors: ["Grit", "Persist"], expl: "'Tenacious' is an adjective describing someone holding on firmly!" },
-          { prompt: "PUNCH the Weather ADJECTIVE:", correct: "Tempestuous", distractors: ["Storm", "Howl"], expl: "'Tempestuous' is an adjective meaning turbulent or violently stormy!" },
-          { prompt: "Find the Sound ADJECTIVE:", correct: "Resonant", distractors: ["Echo", "Reverberate"], expl: "'Resonant' is an adjective describing deep, clear sound!" },
-          { prompt: "PUNCH the Precision ADJECTIVE:", correct: "Meticulous", distractors: ["Precision", "Carefully"], expl: "'Meticulous' is an adjective meaning showing extreme care for details!" },
-          { prompt: "Spot the Time ADJECTIVE:", correct: "Ephemeral", distractors: ["Moment", "Vanish"], expl: "'Ephemeral' is an adjective meaning lasting for a brief period!" },
-          { prompt: "PUNCH the Value ADJECTIVE:", correct: "Invaluable", distractors: ["Treasure", "Enrich"], expl: "'Invaluable' is an adjective describing priceless value!" },
-          { prompt: "Master ADJECTIVE Challenge:", correct: "Ubiquitous", distractors: ["Everywhere", "Presence"], expl: "'Ubiquitous' is an adjective describing something found everywhere!" }
+          { prompt: "HIT the ADJECTIVE (Describing Size):", correct: "Colossal", distractors: ["Giant", "Expand"], expl: "'Colossal' is an adjective describing gigantic scale!" },
+          { prompt: "Spot the Texture ADJECTIVE:", correct: "Velvety", distractors: ["Silk", "Soften"], expl: "'Velvety' is an adjective describing soft, smooth touch!" },
+          { prompt: "HIT the Light ADJECTIVE:", correct: "Luminous", distractors: ["Lantern", "Glow"], expl: "'Luminous' is an adjective meaning radiating bright light!" },
+          { prompt: "Identify the Character ADJECTIVE:", correct: "Tenacious", distractors: ["Grit", "Persist"], expl: "'Tenacious' is an adjective meaning firm and determined!" },
+          { prompt: "HIT the Storm ADJECTIVE:", correct: "Tempestuous", distractors: ["Storm", "Howl"], expl: "'Tempestuous' is an adjective meaning stormy and turbulent!" },
+          { prompt: "Find the Sound ADJECTIVE:", correct: "Resonant", distractors: ["Echo", "Reverberate"], expl: "'Resonant' is an adjective describing deep, rich sound!" },
+          { prompt: "HIT the Detail ADJECTIVE:", correct: "Meticulous", distractors: ["Precision", "Carefully"], expl: "'Meticulous' is an adjective meaning showing extreme care!" },
+          { prompt: "Spot the Brief Time ADJECTIVE:", correct: "Ephemeral", distractors: ["Moment", "Vanish"], expl: "'Ephemeral' is an adjective meaning lasting for a short time!" },
+          { prompt: "HIT the Everywhere ADJECTIVE:", correct: "Ubiquitous", distractors: ["Everywhere", "Presence"], expl: "'Ubiquitous' is an adjective meaning found everywhere!" },
+          // Level 10 Boss Pool
+          { prompt: "BOSS RUSH! Hit all ADJECTIVES to shatter the Chromatic Titan!", isBoss: true, bossHp: 5, pool: [
+            { correct: "Invaluable", distractors: ["Treasure", "Enrich"] },
+            { correct: "Voracious", distractors: ["Appetite", "Devour"] },
+            { correct: "Luminescent", distractors: ["Bulb", "Shine"] },
+            { correct: "Magnificent", distractors: ["Royalty", "Praise"] },
+            { correct: "Formidable", distractors: ["Monster", "Fight"] }
+          ]}
         ]
       },
       adverb: {
@@ -641,17 +667,25 @@
         tag: "ADVERB",
         icon: "fa-solid fa-gauge-high",
         theme: "from-emerald-600 to-teal-500",
+        bossName: "TEMPORAL PHANTOM OF SPEED",
         levels: [
-          { prompt: "PUNCH the ADVERB (Manner):", correct: "Gracefully", distractors: ["Dancer", "Grace"], expl: "'Gracefully' is an adverb detailing HOW a motion is made!" },
-          { prompt: "Spot the ADVERB of Time:", correct: "Frequently", distractors: ["Often-times", "Frequent"], expl: "'Frequently' is an adverb specifying how often an action occurs!" },
-          { prompt: "PUNCH the ADVERB of Place:", correct: "Everywhere", distractors: ["Location", "Explore"], expl: "'Everywhere' is an adverb answering WHERE an event occurs!" },
-          { prompt: "Identify the Intensity ADVERB:", correct: "Extremely", distractors: ["Extreme", "Limit"], expl: "'Extremely' is an adverb modifying adjectives to a high degree!" },
-          { prompt: "PUNCH the Manner ADVERB:", correct: "Reluctantly", distractors: ["Hesitant", "Refusal"], expl: "'Reluctantly' is an adverb describing doing something with hesitation!" },
-          { prompt: "Find the Certainty ADVERB:", correct: "Undoubtedly", distractors: ["Certain", "Doubt"], expl: "'Undoubtedly' is an adverb expressing indisputable certainty!" },
-          { prompt: "PUNCH the Synchronous ADVERB:", correct: "Simultaneously", distractors: ["Timing", "Coincide"], expl: "'Simultaneously' is an adverb meaning at the exact same moment!" },
-          { prompt: "Spot the Intensity ADVERB:", correct: "Vehemently", distractors: ["Passion", "Forceful"], expl: "'Vehemently' is an adverb indicating forceful and intense emotion!" },
-          { prompt: "PUNCH the Accidental ADVERB:", correct: "Inadvertently", distractors: ["Accident", "Careless"], expl: "'Inadvertently' is an adverb meaning unintentionally or by chance!" },
-          { prompt: "Master ADVERB Challenge:", correct: "Surreptitiously", distractors: ["Secret", "Stealthy"], expl: "'Surreptitiously' is an adverb meaning done secretly or stealthily!" }
+          { prompt: "HIT the ADVERB (Manner):", correct: "Gracefully", distractors: ["Dancer", "Grace"], expl: "'Gracefully' is an adverb describing HOW an action happens!" },
+          { prompt: "Spot the Time ADVERB:", correct: "Frequently", distractors: ["Often-times", "Frequent"], expl: "'Frequently' is an adverb showing how often something happens!" },
+          { prompt: "HIT the Place ADVERB:", correct: "Everywhere", distractors: ["Location", "Explore"], expl: "'Everywhere' is an adverb detailing WHERE!" },
+          { prompt: "Identify the Degree ADVERB:", correct: "Extremely", distractors: ["Extreme", "Limit"], expl: "'Extremely' is an adverb modifying adjectives or verbs!" },
+          { prompt: "HIT the Manner ADVERB:", correct: "Reluctantly", distractors: ["Hesitant", "Refusal"], expl: "'Reluctantly' is an adverb describing hesitant action!" },
+          { prompt: "Find the Certainty ADVERB:", correct: "Undoubtedly", distractors: ["Certain", "Doubt"], expl: "'Undoubtedly' is an adverb expressing no doubt!" },
+          { prompt: "HIT the Timing ADVERB:", correct: "Simultaneously", distractors: ["Timing", "Coincide"], expl: "'Simultaneously' is an adverb meaning at the exact same moment!" },
+          { prompt: "Spot the Accidental ADVERB:", correct: "Inadvertently", distractors: ["Accident", "Careless"], expl: "'Inadvertently' is an adverb meaning unintentionally!" },
+          { prompt: "HIT the Secret ADVERB:", correct: "Surreptitiously", distractors: ["Secret", "Stealthy"], expl: "'Surreptitiously' is an adverb meaning done stealthily!" },
+          // Level 10 Boss Pool
+          { prompt: "BOSS RUSH! Hit all ADVERBS to outpace the Temporal Phantom!", isBoss: true, bossHp: 5, pool: [
+            { correct: "Spontaneously", distractors: ["Sudden", "Impulse"] },
+            { correct: "Vigorously", distractors: ["Energy", "Strength"] },
+            { correct: "Relentlessly", distractors: ["Persistent", "Chaser"] },
+            { correct: "Diligently", distractors: ["Hardworking", "Labor"] },
+            { correct: "Invariably", distractors: ["Permanent", "Always-fact"] }
+          ]}
         ]
       },
       preposition: {
@@ -659,17 +693,25 @@
         tag: "PREPOSITION",
         icon: "fa-solid fa-arrows-split-up-and-left",
         theme: "from-rose-600 to-orange-500",
+        bossName: "DIMENSIONAL GATE KEEPER",
         levels: [
-          { prompt: "PUNCH the PREPOSITION (Position):", correct: "Beneath", distractors: ["Basement", "Underneath-part"], expl: "'Beneath' is a preposition expressing location directly under!" },
-          { prompt: "Spot the Direction PREPOSITION:", correct: "Through", distractors: ["Passage", "Tunnel"], expl: "'Through' is a preposition indicating movement in one side and out another!" },
-          { prompt: "PUNCH the Relation PREPOSITION:", correct: "Between", distractors: ["Middle", "Divide"], expl: "'Between' is a preposition linking two discrete objects or times!" },
-          { prompt: "Identify the Time PREPOSITION:", correct: "During", distractors: ["Duration", "Happen"], expl: "'During' is a preposition indicating throughout the course of a period!" },
-          { prompt: "PUNCH the Location PREPOSITION:", correct: "Beside", distractors: ["Next-door", "Neighbor"], expl: "'Beside' is a preposition meaning at the side of or next to!" },
-          { prompt: "Find the Opposition PREPOSITION:", correct: "Against", distractors: ["Opponent", "Rival"], expl: "'Against' is a preposition expressing opposition or physical contact with!" },
-          { prompt: "PUNCH the Distribution PREPOSITION:", correct: "Throughout", distractors: ["Entirety", "Spread"], expl: "'Throughout' is a preposition meaning in every part of a space or time!" },
-          { prompt: "Spot the Distance PREPOSITION:", correct: "Beyond", distractors: ["Distant", "Horizon"], expl: "'Beyond' is a preposition indicating further than or past a point!" },
-          { prompt: "PUNCH the Surrounding PREPOSITION:", correct: "Amidst", distractors: ["Center", "Surrounding"], expl: "'Amidst' is a preposition indicating in the middle of or surrounded by!" },
-          { prompt: "Master PREPOSITION Challenge:", correct: "Notwithstanding", distractors: ["Objection", "Decline"], expl: "'Notwithstanding' is a formal preposition meaning in spite of / despite!" }
+          { prompt: "HIT the PREPOSITION (Location Under):", correct: "Beneath", distractors: ["Basement", "Underneath-part"], expl: "'Beneath' is a preposition showing position directly under!" },
+          { prompt: "Spot the Direction PREPOSITION:", correct: "Through", distractors: ["Passage", "Tunnel"], expl: "'Through' is a preposition showing movement through a space!" },
+          { prompt: "HIT the Relationship PREPOSITION:", correct: "Between", distractors: ["Middle", "Divide"], expl: "'Between' is a preposition connecting two points!" },
+          { prompt: "Identify the Time PREPOSITION:", correct: "During", distractors: ["Duration", "Happen"], expl: "'During' is a preposition meaning throughout a period!" },
+          { prompt: "HIT the Side PREPOSITION:", correct: "Beside", distractors: ["Next-door", "Neighbor"], expl: "'Beside' is a preposition meaning at the side of!" },
+          { prompt: "Find the Conflict PREPOSITION:", correct: "Against", distractors: ["Opponent", "Rival"], expl: "'Against' is a preposition expressing opposition or contact!" },
+          { prompt: "HIT the Spread PREPOSITION:", correct: "Throughout", distractors: ["Entirety", "Spread"], expl: "'Throughout' is a preposition covering all parts!" },
+          { prompt: "Spot the Distance PREPOSITION:", correct: "Beyond", distractors: ["Distant", "Horizon"], expl: "'Beyond' is a preposition meaning further than!" },
+          { prompt: "HIT the Surroundings PREPOSITION:", correct: "Amidst", distractors: ["Center", "Surrounding"], expl: "'Amidst' is a preposition meaning surrounded by!" },
+          // Level 10 Boss Pool
+          { prompt: "BOSS RUSH! Hit all PREPOSITIONS to break the Dimensional Gate!", isBoss: true, bossHp: 5, pool: [
+            { correct: "Notwithstanding", distractors: ["Objection", "Decline"] },
+            { correct: "Underneath", distractors: ["Underground", "Bottom"] },
+            { correct: "Across", distractors: ["Travel", "Distance"] },
+            { correct: "Towards", distractors: ["Destination", "Aim"] },
+            { correct: "Concerning", distractors: ["Subject", "Worry"] }
+          ]}
         ]
       },
       pronoun: {
@@ -677,26 +719,28 @@
         tag: "PRONOUN",
         icon: "fa-solid fa-users",
         theme: "from-sky-600 to-indigo-500",
+        bossName: "THE IDENTITY COLOSSUS",
         levels: [
-          { prompt: "PUNCH the Subject PRONOUN:", correct: "They", distractors: ["People", "Crowd"], expl: "'They' is a personal subject pronoun replacing plural nouns!" },
-          { prompt: "Spot the Object PRONOUN:", correct: "Them", distractors: ["Friends", "Gather"], expl: "'Them' is an objective personal pronoun!" },
-          { prompt: "PUNCH the Possessive PRONOUN:", correct: "Ours", distractors: ["Belonging", "Own"], expl: "'Ours' is an independent possessive pronoun showing ownership!" },
-          { prompt: "Find the Reflexive PRONOUN:", correct: "Themselves", distractors: ["Together", "Partners"], expl: "'Themselves' is a reflexive pronoun referring back to a plural subject!" },
-          { prompt: "PUNCH the Indefinite PRONOUN:", correct: "Someone", distractors: ["Individual", "Human"], expl: "'Someone' is an indefinite pronoun for an unspecified person!" },
-          { prompt: "Spot the Demonstrative PRONOUN:", correct: "These", distractors: ["Items", "Things"], expl: "'These' functions as a demonstrative pronoun specifying objects close by!" },
-          { prompt: "PUNCH the Relative PRONOUN:", correct: "Whomever", distractors: ["Anybody", "Identify"], expl: "'Whomever' is an objective relative/interrogative pronoun!" },
-          { prompt: "Identify the Quantity PRONOUN:", correct: "Neither", distractors: ["None-item", "Reject"], expl: "'Neither' is a pronoun meaning not one nor the other of two!" },
-          { prompt: "PUNCH the Reciprocal PRONOUN component:", correct: "Each other", distractors: ["Teammates", "Unite"], expl: "'Each other' acts as a reciprocal pronoun conveying mutual action!" },
-          { prompt: "Master PRONOUN Challenge:", correct: "Whosoever", distractors: ["Identity", "Everyone-all"], expl: "'Whosoever' is an emphatic archaic/formal form of whoever!" }
+          { prompt: "HIT the Subject PRONOUN:", correct: "They", distractors: ["People", "Crowd"], expl: "'They' is a subject pronoun standing for plural nouns!" },
+          { prompt: "Spot the Object PRONOUN:", correct: "Them", distractors: ["Friends", "Gather"], expl: "'Them' is an objective pronoun!" },
+          { prompt: "HIT the Possessive PRONOUN:", correct: "Ours", distractors: ["Belonging", "Own"], expl: "'Ours' is an independent possessive pronoun showing ownership!" },
+          { prompt: "Find the Reflexive PRONOUN:", correct: "Themselves", distractors: ["Together", "Partners"], expl: "'Themselves' is a reflexive pronoun referring back to subjects!" },
+          { prompt: "HIT the Indefinite PRONOUN:", correct: "Someone", distractors: ["Individual", "Human"], expl: "'Someone' is an indefinite pronoun for an unspecified person!" },
+          { prompt: "Spot the Pointer PRONOUN:", correct: "These", distractors: ["Items", "Things"], expl: "'These' functions as a demonstrative pronoun!" },
+          { prompt: "HIT the Relative PRONOUN:", correct: "Whomever", distractors: ["Anybody", "Identify"], expl: "'Whomever' is a formal objective relative pronoun!" },
+          { prompt: "Identify the Alternative PRONOUN:", correct: "Neither", distractors: ["None-item", "Reject"], expl: "'Neither' is a pronoun meaning not one nor the other!" },
+          { prompt: "HIT the Mutual PRONOUN expression:", correct: "Each other", distractors: ["Teammates", "Unite"], expl: "'Each other' functions as a reciprocal pronoun!" },
+          // Level 10 Boss Pool
+          { prompt: "BOSS RUSH! Hit all PRONOUNS to reveal the Identity Colossus!", isBoss: true, bossHp: 5, pool: [
+            { correct: "Whosoever", distractors: ["Identity", "Person"] },
+            { correct: "Yourselves", distractors: ["Group", "Members"] },
+            { correct: "Everybody", distractors: ["Population", "Citizens"] },
+            { correct: "Mine", distractors: ["Possession", "Claim"] },
+            { correct: "Whatever", distractors: ["Choice", "Anything"] }
+          ]}
         ]
       }
     };
-
-    const MONSTER_STYLES = [
-      { bg: "from-pink-500 via-rose-500 to-red-600", border: "border-pink-300", eye: "#fff", mouth: "fa-tooth", anim: "anim-float-a" },
-      { bg: "from-emerald-500 via-teal-600 to-cyan-700", border: "border-emerald-300", eye: "#fef08a", mouth: "fa-teeth-open", anim: "anim-float-b" },
-      { bg: "from-amber-500 via-purple-600 to-indigo-700", border: "border-amber-300", eye: "#38bdf8", mouth: "fa-teeth", anim: "anim-float-c" }
-    ];
   </script>
 
   <script>
@@ -713,106 +757,117 @@
       timerMax: 12,
       timerCurrent: 12,
       timerId: null,
-      lastPunchTime: 0,
-      handsCount: 0,
+      lastGestureTime: 0,
+      mousePos: { x: -100, y: -100, prevX: -100, prevY: -100, isDown: false, vel: 0 },
       isFistActive: false,
-      fistPos: { x: -100, y: -100 },
-      mousePos: { x: -100, y: -100, isDown: false },
-      mediaPipeReady: false
+      isSliceActive: false,
+      isFlickActive: false,
+      // Level 10 Boss state
+      isBossBattle: false,
+      bossHpMax: 5,
+      bossHpCurrent: 5,
+      bossQuestionsLeft: []
     };
 
     const cameraState = {
       stream: null,
       deviceId: null,
-      isInitializing: false,
-      usingFallbackLoop: false,
       handsInstance: null,
-      cameraUtilsInstance: null,
-      videoCallbackId: null
+      isProcessing: false,
+      cameraStarted: false
     };
 
-    const rawVideo = document.getElementById('raw-webcam');
-    const modalVideo = document.getElementById('modal-preview-video');
-    const arenaCanvas = document.getElementById('arena-canvas');
-    const arenaCtx = arenaCanvas.getContext('2d');
-    const startPreviewCanvas = document.getElementById('start-cam-preview-canvas');
-    const startPreviewCtx = startPreviewCanvas ? startPreviewCanvas.getContext('2d') : null;
+    const liveVideo = document.getElementById('live-webcam-feed');
+    const menuPreviewVideo = document.getElementById('menu-cam-preview');
+    const modalPreviewVideo = document.getElementById('modal-preview-video');
+    const hudCanvas = document.getElementById('hud-vfx-canvas');
+    const hudCtx = hudCanvas.getContext('2d');
 
-    // Comic explosion particles
+    // Comic Explosion Particles & Slash Trails
     const vfxParticles = [];
+    const slashTrails = [];
 
-    /* Check Environment and Enumerate Cameras */
-    async function inspectCameraEnvironment() {
-      const diagSecure = document.getElementById('diag-secure');
-      const diagApi = document.getElementById('diag-api');
-      const diagPerm = document.getElementById('diag-permission');
-      const iframeWarn = document.getElementById('iframe-perm-warning');
+    // Prioritized camera acquisition with auto-recovery
+    async function startCameraDirect(userInitiated = false) {
+      const statusDot = document.getElementById('cam-status-dot');
+      const statusLabel = document.getElementById('cam-status-label');
+      const menuPlaceholder = document.getElementById('menu-cam-placeholder');
+      const diagStream = document.getElementById('diag-stream');
 
-      const isSecure = window.isSecureContext || window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      diagSecure.innerText = isSecure ? "Secure (HTTPS/Local)" : "Insecure (Requires HTTPS)";
-      diagSecure.className = isSecure ? "font-bold text-emerald-400" : "font-bold text-red-400";
+      statusDot.className = "w-3 h-3 rounded-full bg-yellow-400 animate-ping";
+      statusLabel.innerText = "Connecting...";
 
-      // Check if embedded in iframe
-      if (window.self !== window.top) {
-        if (iframeWarn) iframeWarn.classList.remove('hidden');
-      }
-
-      // Check Chrome Permissions API
-      if (navigator.permissions && navigator.permissions.query) {
+      // Stop previous tracks cleanly
+      if (cameraState.stream) {
         try {
-          const perm = await navigator.permissions.query({ name: 'camera' });
-          updatePermissionUI(perm.state);
-          // If already granted in Chrome, auto-connect immediately!
-          if (perm.state === 'granted' && !cameraState.stream && !cameraState.isInitializing) {
-            requestCameraAccess(false);
+          cameraState.stream.getTracks().forEach(t => t.stop());
+        } catch(e){}
+        cameraState.stream = null;
+        await new Promise(r => setTimeout(r, 150));
+      }
+
+      const constraintVariants = [
+        { video: { facingMode: "user", width: { ideal: 960 }, height: { ideal: 540 } }, audio: false },
+        { video: { facingMode: "user" }, audio: false },
+        { video: true, audio: false }
+      ];
+
+      if (cameraState.deviceId) {
+        constraintVariants.unshift({
+          video: { deviceId: { exact: cameraState.deviceId } },
+          audio: false
+        });
+      }
+
+      let activeStream = null;
+      for (const constraints of constraintVariants) {
+        try {
+          activeStream = await navigator.mediaDevices.getUserMedia(constraints);
+          if (activeStream) break;
+        } catch(err) {
+          console.warn("Retrying constraints:", err);
+        }
+      }
+
+      if (activeStream) {
+        cameraState.stream = activeStream;
+        cameraState.cameraStarted = true;
+
+        // Feed stream to live game video and preview thumbnails
+        [liveVideo, menuPreviewVideo, modalPreviewVideo].forEach(v => {
+          if (v) {
+            v.srcObject = activeStream;
+            v.muted = true;
+            v.playsInline = true;
+            v.play().catch(() => {});
           }
-          perm.onchange = () => {
-            updatePermissionUI(perm.state);
-            if (perm.state === 'granted' && !cameraState.stream) {
-              requestCameraAccess(false);
-            }
-          };
-        } catch (e) {
-          if (diagPerm) diagPerm.innerText = "Query not supported";
-        }
-      }
+        });
 
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        diagApi.innerText = "Available";
-        diagApi.className = "font-bold text-emerald-400";
+        if (menuPreviewVideo) menuPreviewVideo.classList.remove('hidden');
+        if (menuPlaceholder) menuPlaceholder.classList.add('hidden');
+        document.getElementById('modal-preview-placeholder').classList.add('hidden');
+
+        statusDot.className = "w-3 h-3 rounded-full bg-emerald-400";
+        statusLabel.innerText = "Cam Live ✊";
+        if (diagStream) {
+          diagStream.innerText = "Active (Connected)";
+          diagStream.className = "font-bold text-emerald-400";
+        }
+
+        document.getElementById('start-cam-title').innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400"></i> Camera Connected!';
+        document.getElementById('start-cam-desc').innerText = "Stand or sit back! Make a Genggam Fist ✊, Karate Slice 🖐️, or Flick 👆!";
+
         await populateCameraDevices();
+        initMediaPipeHands();
       } else {
-        diagApi.innerText = "Unavailable (Check Browser/Policy)";
-        diagApi.className = "font-bold text-red-400";
-      }
-    }
-
-    function updatePermissionUI(state) {
-      const diagPerm = document.getElementById('diag-permission');
-      const guide = document.getElementById('chrome-permission-guide');
-      const camBtn = document.getElementById('btn-enable-cam');
-
-      if (!diagPerm) return;
-
-      if (state === 'granted') {
-        diagPerm.innerText = "Granted (Allowed)";
-        diagPerm.className = "font-bold text-emerald-400";
-        if (guide) guide.classList.add('hidden');
-        if (camBtn && !cameraState.stream) {
-          camBtn.innerHTML = '<i class="fa-solid fa-video"></i> Start Camera (Ready)';
-          camBtn.className = "px-4 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5";
+        statusDot.className = "w-3 h-3 rounded-full bg-red-400";
+        statusLabel.innerText = "Cam Standby";
+        if (diagStream) {
+          diagStream.innerText = "Denied / Blocked (Using Touch/Mouse)";
+          diagStream.className = "font-bold text-amber-400";
         }
-      } else if (state === 'denied') {
-        diagPerm.innerText = "Denied / Blocked in Chrome";
-        diagPerm.className = "font-bold text-red-400";
-        if (guide) guide.classList.remove('hidden');
-        if (camBtn) {
-          camBtn.innerText = "Permission Blocked (See Help)";
-          camBtn.className = "px-4 py-3 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5";
-        }
-      } else {
-        diagPerm.innerText = "Prompt Needed (Click Button)";
-        diagPerm.className = "font-bold text-yellow-400";
+        document.getElementById('start-cam-title').innerText = "Hero Virtual Glove Active";
+        document.getElementById('start-cam-desc').innerText = "Webcam not available. You can punch/slice monsters directly via Touch or Click!";
       }
     }
 
@@ -831,203 +886,23 @@
         videoInputs.forEach((dev, idx) => {
           const opt = document.createElement('option');
           opt.value = dev.deviceId;
-          opt.text = dev.label || `Camera ${idx + 1} (${dev.deviceId.substring(0, 5)}...)`;
+          opt.text = dev.label || `Camera ${idx + 1}`;
           if (dev.deviceId === cameraState.deviceId) opt.selected = true;
           select.appendChild(opt);
         });
-      } catch (err) {
-        console.warn("Could not enumerate camera devices:", err);
-      }
-    }
-
-    /* Helper: Stop existing stream and yield to OS driver lock */
-    async function releaseCameraStream() {
-      if (cameraState.stream) {
-        try {
-          cameraState.stream.getTracks().forEach(track => {
-            track.stop();
-            track.enabled = false;
-          });
-        } catch (e) {
-          console.warn("Track stop error:", e);
-        }
-        cameraState.stream = null;
-        if (rawVideo) rawVideo.srcObject = null;
-        if (modalVideo) modalVideo.srcObject = null;
-        // Pause briefly so operating system releases hardware camera lock
-        await new Promise(r => setTimeout(r, 200));
-      }
-    }
-
-    /* Reliable getUserMedia with Chrome playback guarantee */
-    async function requestCameraAccess(triggerByUser = false) {
-      if (cameraState.isInitializing) return;
-      cameraState.isInitializing = true;
-
-      const statusDot = document.getElementById('cam-status-dot');
-      const statusLabel = document.getElementById('cam-status-label');
-      const previewPlaceholder = document.getElementById('modal-preview-placeholder');
-      const inUseAlert = document.getElementById('camera-in-use-alert');
-      const chromeGuide = document.getElementById('chrome-permission-guide');
-      const enableBtn = document.getElementById('btn-enable-cam');
-
-      if (inUseAlert) inUseAlert.classList.add('hidden');
-      statusLabel.innerText = "Requesting...";
-      statusDot.className = "w-2.5 h-2.5 rounded-full bg-yellow-400 animate-ping";
-
-      // 1. Fully release previous stream with hardware cooldown
-      await releaseCameraStream();
-
-      // Progressive constraint lists to avoid rejection
-      const constraintCandidates = [];
-
-      if (cameraState.deviceId) {
-        constraintCandidates.push({
-          audio: false,
-          video: { deviceId: { exact: cameraState.deviceId } }
-        });
-      }
-
-      // Default ideal constraints
-      constraintCandidates.push({
-        audio: false,
-        video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-          facingMode: "user"
-        }
-      });
-
-      // Loose fallback constraint
-      constraintCandidates.push({
-        audio: false,
-        video: true
-      });
-
-      let stream = null;
-      let lastError = null;
-
-      for (const constraints of constraintCandidates) {
-        try {
-          stream = await navigator.mediaDevices.getUserMedia(constraints);
-          if (stream) break;
-        } catch (err) {
-          lastError = err;
-          await new Promise(r => setTimeout(r, 120));
-        }
-      }
-
-      if (stream) {
-        cameraState.stream = stream;
-
-        // Chrome Autoplay Guarantee: set muted and playsinline explicitly
-        rawVideo.muted = true;
-        rawVideo.defaultMuted = true;
-        rawVideo.playsInline = true;
-        rawVideo.srcObject = stream;
-
-        if (modalVideo) {
-          modalVideo.muted = true;
-          modalVideo.defaultMuted = true;
-          modalVideo.playsInline = true;
-          modalVideo.srcObject = stream;
-        }
-
-        // Wait for video metadata to be fully loaded
-        await new Promise((resolve) => {
-          if (rawVideo.readyState >= 1) {
-            resolve();
-          } else {
-            rawVideo.onloadedmetadata = () => resolve();
-            setTimeout(resolve, 800); // Safety fallback
-          }
-        });
-
-        try {
-          await rawVideo.play();
-          if (modalVideo) await modalVideo.play().catch(() => {});
-        } catch (e) {
-          console.warn("Video play notice:", e);
-        }
-
-        // Show start screen preview canvas
-        if (startPreviewCanvas) {
-          startPreviewCanvas.classList.remove('hidden');
-          const indicator = document.getElementById('start-cam-indicator');
-          if (indicator) indicator.classList.add('hidden');
-        }
-
-        if (previewPlaceholder) previewPlaceholder.classList.add('hidden');
-        if (chromeGuide) chromeGuide.classList.add('hidden');
-        statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400";
-        statusLabel.innerText = "Camera Active ✊";
-
-        document.getElementById('start-cam-title').innerText = "Webcam Connected & Live!";
-        document.getElementById('start-cam-desc').innerText = "Clench into a 'Genggam' Fist to test punch & smash monsters!";
-        if (enableBtn) {
-          enableBtn.innerHTML = '<i class="fa-solid fa-check"></i> Camera Live';
-          enableBtn.className = "px-4 py-3 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold text-xs rounded-xl shadow flex items-center justify-center gap-1.5 cursor-default";
-        }
-
-        await populateCameraDevices();
-        await inspectCameraEnvironment();
-        initMediaPipeHands();
-      } else {
-        console.warn("Camera could not be opened:", lastError);
-        const isNotAllowed = lastError && (lastError.name === 'NotAllowedError' || lastError.name === 'PermissionDeniedError');
-        const isDeviceInUse = lastError && (
-          lastError.name === 'NotReadableError' ||
-          (lastError.message && lastError.message.toLowerCase().includes('in use'))
-        );
-
-        statusDot.className = "w-2.5 h-2.5 rounded-full bg-red-500";
-        statusLabel.innerText = isNotAllowed ? "Permission Denied" : (isDeviceInUse ? "Cam In Use" : "Camera Blocked");
-
-        if (isNotAllowed && chromeGuide) {
-          chromeGuide.classList.remove('hidden');
-        }
-
-        if (inUseAlert && isDeviceInUse) {
-          inUseAlert.classList.remove('hidden');
-        }
-
-        if (previewPlaceholder) {
-          previewPlaceholder.classList.remove('hidden');
-          previewPlaceholder.innerHTML = `
-            <i class="fa-solid fa-triangle-exclamation text-3xl mb-2 text-amber-400"></i>
-            <span class="font-bold text-white mb-1">${isNotAllowed ? "Chrome Permission Blocked" : (isDeviceInUse ? "Camera In Use Elsewhere" : "Webcam Unavailable")}</span>
-            <span class="text-[11px] text-gray-300">
-              ${isNotAllowed 
-                ? "Chrome has blocked camera permissions for this page. Click the icon beside the URL in the address bar to Allow." 
-                : "Virtual Hero Glove active — punch via Mouse or Touch!"}
-            </span>
-          `;
-        }
-
-        document.getElementById('start-cam-title').innerText = isNotAllowed ? "Camera Permission Needed" : "Hero Glove Backup Active";
-        document.getElementById('start-cam-desc').innerText = isNotAllowed 
-          ? "Chrome blocked camera access. Allow camera in your browser address bar or use tap/mouse!"
-          : "Webcam unavailable. Punch monsters directly via Tap or Click!";
-
-        // Keep canvas VFX and cursor active
-        startFallbackCanvasRenderLoop();
-      }
-
-      cameraState.isInitializing = false;
+      } catch (err) {}
     }
 
     async function changeCameraDevice(devId) {
       cameraState.deviceId = devId;
-      await requestCameraAccess(true);
+      await startCameraDirect(true);
     }
 
-    /* Initialize MediaPipe Hands */
+    /* MediaPipe Hands Initialization */
     function initMediaPipeHands() {
-      const diagMp = document.getElementById('diag-mediapipe');
+      const diagVision = document.getElementById('diag-vision');
       if (typeof Hands === 'undefined') {
-        diagMp.innerText = "CDN Loading/Blocked (Using Tap Mode)";
-        diagMp.className = "font-bold text-amber-400";
-        startFallbackCanvasRenderLoop();
+        if (diagVision) diagVision.innerText = "Using Touch/Mouse Backup";
         return;
       }
 
@@ -1040,329 +915,470 @@
           hands.setOptions({
             maxNumHands: 2,
             modelComplexity: 1,
-            minDetectionConfidence: 0.6,
+            minDetectionConfidence: 0.55,
             minTrackingConfidence: 0.5
           });
 
-          hands.onResults(handleHandResults);
+          hands.onResults(processHandLandmarks);
           cameraState.handsInstance = hands;
         }
 
-        diagMp.innerText = "Active & Processing";
-        diagMp.className = "font-bold text-emerald-400";
-        gameState.mediaPipeReady = true;
-
-        // Start synchronized frame processing loop
-        startProcessingLoop();
-
-      } catch (err) {
-        console.error("MediaPipe initialization error:", err);
-        diagMp.innerText = "Error (Using Tap Backup)";
-        diagMp.className = "font-bold text-amber-400";
-        startFallbackCanvasRenderLoop();
+        if (diagVision) {
+          diagVision.innerText = "Tracking Gestures Active";
+          diagVision.className = "font-bold text-emerald-400";
+        }
+      } catch (e) {
+        console.warn("MediaPipe init fallback:", e);
       }
     }
 
-    let isProcessingFrame = false;
+    // Previous hand landmark positions for velocity calculations (Slice / Flick)
+    let prevLandmarks = null;
+    let prevTimestamp = 0;
 
-    /* Frame loop using Chrome's native requestVideoFrameCallback when available */
-    function startProcessingLoop() {
-      async function onFrame() {
-        if (rawVideo && rawVideo.videoWidth > 0 && !rawVideo.paused) {
-          // Mirror frame to start-screen preview box if visible
-          updateStartScreenMirror();
+    function processHandLandmarks(results) {
+      const hands = results.multiHandLandmarks || [];
+      const now = performance.now();
+      const dt = Math.max(16, now - prevTimestamp);
 
-          if (cameraState.handsInstance && !isProcessingFrame) {
-            isProcessingFrame = true;
-            try {
-              await cameraState.handsInstance.send({ image: rawVideo });
-            } catch (err) {
-              // Frame dropped, continue smoothly
+      let detectedFist = false;
+      let detectedSlice = false;
+      let detectedFlick = false;
+
+      if (hands.length > 0) {
+        hands.forEach((landmarks) => {
+          const wrist = landmarks[0];
+          const indexTip = landmarks[8];
+          const middleTip = landmarks[12];
+          const ringTip = landmarks[16];
+          const pinkyTip = landmarks[20];
+
+          // Screen-space Hand Center (mirrored horizontally)
+          const palmX = (1 - (landmarks[0].x + landmarks[9].x) / 2) * hudCanvas.width;
+          const palmY = ((landmarks[0].y + landmarks[9].y) / 2) * hudCanvas.height;
+
+          // 1. GENGGAM FIST PUNCH DETECTION
+          const fingers = [
+            { tip: 8, pip: 6 },
+            { tip: 12, pip: 10 },
+            { tip: 16, pip: 14 },
+            { tip: 20, pip: 18 }
+          ];
+          let foldedCount = 0;
+          for (let f of fingers) {
+            const dTip = Math.hypot(landmarks[f.tip].x - wrist.x, landmarks[f.tip].y - wrist.y);
+            const dPip = Math.hypot(landmarks[f.pip].x - wrist.x, landmarks[f.pip].y - wrist.y);
+            if (dTip < dPip * 1.08) foldedCount++;
+          }
+          if (foldedCount >= 3) {
+            detectedFist = true;
+            checkHitCollision(palmX, palmY, 'PUNCH');
+          }
+
+          // 2. KATANA SLICE DETECTION (Open hand sweeping across screen with high velocity)
+          if (prevLandmarks) {
+            const prevPalmX = (1 - (prevLandmarks[0].x + prevLandmarks[9].x) / 2) * hudCanvas.width;
+            const prevPalmY = ((prevLandmarks[0].y + prevLandmarks[9].y) / 2) * hudCanvas.height;
+            const handSpeed = Math.hypot(palmX - prevPalmX, palmY - prevPalmY) / dt;
+
+            // Open hand (foldedCount <= 1) and fast motion
+            if (foldedCount <= 1 && handSpeed > 0.85) {
+              detectedSlice = true;
+              addSlashTrail(prevPalmX, prevPalmY, palmX, palmY);
+              checkHitCollision(palmX, palmY, 'SLICE');
             }
-            isProcessingFrame = false;
+
+            // 3. FINGER FLICK DETECTION (Index finger tip velocity shooting outwards from curled position)
+            const prevIndexX = (1 - prevLandmarks[8].x) * hudCanvas.width;
+            const prevIndexY = prevLandmarks[8].y * hudCanvas.height;
+            const currIndexX = (1 - landmarks[8].x) * hudCanvas.width;
+            const currIndexY = landmarks[8].y * hudCanvas.height;
+            const indexSpeed = Math.hypot(currIndexX - prevIndexX, currIndexY - prevIndexY) / dt;
+
+            if (indexSpeed > 1.25) {
+              detectedFlick = true;
+              checkHitCollision(currIndexX, currIndexY, 'FLICK');
+            }
           }
-        } else {
-          // If webcam isn't sending video frames, still render canvas VFX and fallback feedback
-          renderCanvasScene(null);
-        }
 
-        // Use requestVideoFrameCallback in Chrome for direct hardware sync
-        if ('requestVideoFrameCallback' in rawVideo && cameraState.stream) {
-          rawVideo.requestVideoFrameCallback(onFrame);
-        } else {
-          requestAnimationFrame(onFrame);
-        }
-      }
+          prevLandmarks = landmarks;
+          prevTimestamp = now;
 
-      if ('requestVideoFrameCallback' in rawVideo && cameraState.stream) {
-        rawVideo.requestVideoFrameCallback(onFrame);
-      } else {
-        requestAnimationFrame(onFrame);
-      }
-    }
-
-    function updateStartScreenMirror() {
-      if (!startPreviewCtx || !startPreviewCanvas || rawVideo.videoWidth === 0) return;
-      if (startPreviewCanvas.width !== rawVideo.videoWidth) {
-        startPreviewCanvas.width = rawVideo.videoWidth;
-        startPreviewCanvas.height = rawVideo.videoHeight;
-      }
-      startPreviewCtx.drawImage(rawVideo, 0, 0, startPreviewCanvas.width, startPreviewCanvas.height);
-    }
-
-    function startFallbackCanvasRenderLoop() {
-      if (cameraState.usingFallbackLoop) return;
-      cameraState.usingFallbackLoop = true;
-      function loop() {
-        renderCanvasScene(null);
-        requestAnimationFrame(loop);
-      }
-      requestAnimationFrame(loop);
-    }
-
-    /* Hand Landmark Analysis & Fist Detection ('Genggam') */
-    let cachedLandmarks = [];
-    function handleHandResults(results) {
-      cachedLandmarks = results.multiHandLandmarks || [];
-      gameState.handsCount = cachedLandmarks.length;
-      const countEl = document.getElementById('hands-count');
-      if (countEl) countEl.innerText = gameState.handsCount;
-
-      renderCanvasScene(cachedLandmarks);
-    }
-
-    function isFistClenched(landmarks) {
-      if (!landmarks || landmarks.length < 21) return false;
-      const wrist = landmarks[0];
-
-      // 4 primary finger tip vs PIP joint distances
-      const fingers = [
-        { tip: 8, pip: 6 },   // Index
-        { tip: 12, pip: 10 }, // Middle
-        { tip: 16, pip: 14 }, // Ring
-        { tip: 20, pip: 18 }  // Pinky
-      ];
-
-      let foldedCount = 0;
-      for (let f of fingers) {
-        const dTip = Math.hypot(landmarks[f.tip].x - wrist.x, landmarks[f.tip].y - wrist.y);
-        const dPip = Math.hypot(landmarks[f.pip].x - wrist.x, landmarks[f.pip].y - wrist.y);
-        if (dTip < dPip * 1.08) {
-          foldedCount++;
-        }
-      }
-
-      // Thumb curl check (Tip #4 vs MCP #2)
-      const dThumb = Math.hypot(landmarks[4].x - wrist.x, landmarks[4].y - wrist.y);
-      const dThumbMcp = Math.hypot(landmarks[2].x - wrist.x, landmarks[2].y - wrist.y);
-      if (dThumb < dThumbMcp * 1.25) {
-        foldedCount++;
-      }
-
-      return foldedCount >= 4;
-    }
-  </script>
-
-  <script>
-    function resizeCanvas() {
-      const arena = document.getElementById('arena-screen');
-      if (!arena || !arenaCanvas) return;
-      const rect = arena.getBoundingClientRect();
-      arenaCanvas.width = rect.width;
-      arenaCanvas.height = rect.height;
-    }
-    window.addEventListener('resize', resizeCanvas);
-
-    function spawnVfxExplosion(x, y, color) {
-      for (let i = 0; i < 18; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 9 + 4;
-        vfxParticles.push({
-          x: x,
-          y: y,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          size: Math.random() * 14 + 6,
-          color: color || '#facc15',
-          life: 1.0
-        });
-      }
-    }
-
-    function renderCanvasScene(handsList) {
-      if (!arenaCtx || arenaCanvas.width === 0) return;
-
-      arenaCtx.clearRect(0, 0, arenaCanvas.width, arenaCanvas.height);
-
-      // 1. Draw Mirrored Webcam Video as live superhero background if active
-      if (rawVideo && rawVideo.srcObject && rawVideo.readyState >= 2) {
-        arenaCtx.save();
-        arenaCtx.translate(arenaCanvas.width, 0);
-        arenaCtx.scale(-1, 1);
-        arenaCtx.globalAlpha = 0.38; // Translucent so monster cards pop brightly
-        arenaCtx.drawImage(rawVideo, 0, 0, arenaCanvas.width, arenaCanvas.height);
-        arenaCtx.restore();
-      }
-
-      let fistDetectedThisPass = false;
-
-      // 2. Process Hand Gestures & Gloves from webcam
-      if (handsList && handsList.length > 0) {
-        handsList.forEach((landmarks) => {
-          // Center of palm
-          const palmX = (landmarks[0].x + landmarks[9].x) / 2;
-          const palmY = (landmarks[0].y + landmarks[9].y) / 2;
-
-          // Mirror horizontally for natural superhero direct feedback
-          const screenX = (1 - palmX) * arenaCanvas.width;
-          const screenY = palmY * arenaCanvas.height;
-
-          const isFist = isFistClenched(landmarks);
-
-          if (isFist) {
-            fistDetectedThisPass = true;
-            gameState.fistPos = { x: screenX, y: screenY };
-
-            // Render Superhero Comic Glove
-            drawComicHeroGlove(screenX, screenY);
-
-            // Check collision with monster cards
-            detectMonsterHit(screenX, screenY);
-          } else {
-            // Render targeting crosshair
-            drawTargetReticle(screenX, screenY);
-          }
+          // Render Hand Target Ring on HUD
+          drawHandReticle(palmX, palmY, detectedFist ? 'FIST' : (detectedSlice ? 'SLICE' : 'OPEN'));
         });
       }
 
-      // 3. Fallback Virtual Hero Glove for Mouse / Touch interaction
-      if (!cameraState.stream && gameState.mousePos.x > 0 && gameState.mousePos.y > 0) {
-        if (gameState.mousePos.isDown) {
-          fistDetectedThisPass = true;
-          drawComicHeroGlove(gameState.mousePos.x, gameState.mousePos.y);
-        } else {
-          drawTargetReticle(gameState.mousePos.x, gameState.mousePos.y);
-        }
-      }
+      gameState.isFistActive = detectedFist;
+      gameState.isSliceActive = detectedSlice;
+      gameState.isFlickActive = detectedFlick;
 
-      gameState.isFistActive = fistDetectedThisPass;
-
-      // Update gesture indicator pill & Start-screen test pill
+      // Update gesture indicator pill
       const hint = document.getElementById('gesture-hint-label');
       const pulseDot = document.getElementById('gesture-pulse-dot');
-      const modalFistBadge = document.getElementById('modal-fist-badge');
-      const startFistPill = document.getElementById('start-cam-fist-pill');
+      const menuFistPill = document.getElementById('menu-cam-fist-pill');
 
-      if (fistDetectedThisPass) {
+      if (detectedFist) {
         if (hint) hint.innerHTML = "<span class='text-red-400 font-black animate-pulse'>⚡ FIST CLENCHED! PUNCHING! ⚡</span>";
         if (pulseDot) pulseDot.className = "w-3 h-3 rounded-full bg-red-500 animate-ping";
-        if (modalFistBadge) modalFistBadge.classList.remove('hidden');
-        if (startFistPill) startFistPill.classList.remove('hidden');
+        if (menuFistPill) menuFistPill.classList.remove('hidden');
+      } else if (detectedSlice) {
+        if (hint) hint.innerHTML = "<span class='text-cyan-300 font-black animate-pulse'>⚔️ KATANA SLICE ACTIVE! ⚔️</span>";
+        if (pulseDot) pulseDot.className = "w-3 h-3 rounded-full bg-cyan-400 animate-ping";
+      } else if (detectedFlick) {
+        if (hint) hint.innerHTML = "<span class='text-pink-300 font-black animate-pulse'>💥 FINGER FLICK SMASH! 💥</span>";
       } else {
-        if (hint) {
-          if (!cameraState.stream) {
-            hint.innerHTML = "Aim pointer & <b class='text-yellow-400'>CLICK / TOUCH</b> to smash!";
-          } else {
-            hint.innerHTML = "Aim hand & <b class='text-yellow-400'>GENGGAM FIST ✊</b> to smash!";
-          }
-        }
+        if (hint) hint.innerHTML = "Aim hand & <b class='text-yellow-300'>GENGGAM FIST ✊</b> or <b class='text-cyan-300'>SLICE 🖐️</b> to hit!";
         if (pulseDot) pulseDot.className = "w-3 h-3 rounded-full bg-emerald-400 animate-ping";
-        if (modalFistBadge) modalFistBadge.classList.add('hidden');
-        if (startFistPill) startFistPill.classList.add('hidden');
+        if (menuFistPill) menuFistPill.classList.add('hidden');
       }
-
-      // 4. Render and update comic VFX sparks
-      drawVfxParticles();
     }
 
-    function drawComicHeroGlove(x, y) {
-      arenaCtx.save();
+    function addSlashTrail(x1, y1, x2, y2) {
+      slashTrails.push({ x1, y1, x2, y2, life: 1.0 });
+    }
+  </script>
 
-      // Energy aura burst
-      arenaCtx.beginPath();
-      arenaCtx.arc(x, y, 52, 0, Math.PI * 2);
-      arenaCtx.fillStyle = 'rgba(239, 68, 68, 0.35)';
-      arenaCtx.fill();
+  <script>
+    let scene, camera, renderer;
+    let monsters3D = [];
+    let bossMonster3D = null;
+    let clock = new THREE.Clock();
 
-      // Glove body
-      arenaCtx.beginPath();
-      arenaCtx.arc(x, y, 38, 0, Math.PI * 2);
-      arenaCtx.fillStyle = '#dc2626';
-      arenaCtx.strokeStyle = '#fef08a';
-      arenaCtx.lineWidth = 5;
-      arenaCtx.stroke();
-      arenaCtx.fill();
+    function initThreeJS() {
+      const arena = document.getElementById('arena-screen');
+      const threeCanvas = document.getElementById('three-canvas');
+      const width = arena.clientWidth || 800;
+      const height = arena.clientHeight || 500;
 
-      // Comic punch icon
-      arenaCtx.fillStyle = '#ffffff';
-      arenaCtx.font = '900 34px "Font Awesome 6 Free"';
-      arenaCtx.textAlign = 'center';
-      arenaCtx.textBaseline = 'middle';
-      arenaCtx.fillText('\uf6de', x, y); // fa-hand-fist
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+      camera.position.set(0, 0, 8.5);
 
-      // POW spark beams
-      arenaCtx.strokeStyle = '#facc15';
-      arenaCtx.lineWidth = 3;
-      for (let i = 0; i < 8; i++) {
-        const rad = (i * Math.PI) / 4;
-        arenaCtx.beginPath();
-        arenaCtx.moveTo(x + Math.cos(rad) * 44, y + Math.sin(rad) * 44);
-        arenaCtx.lineTo(x + Math.cos(rad) * 58, y + Math.sin(rad) * 58);
-        arenaCtx.stroke();
-      }
+      renderer = new THREE.WebGLRenderer({ canvas: threeCanvas, alpha: true, antialias: true });
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-      arenaCtx.restore();
+      // Comic Arcade Studio Lights
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
+      scene.add(ambientLight);
+
+      const dirLight = new THREE.DirectionalLight(0xfff7ed, 1.2);
+      dirLight.position.set(4, 8, 6);
+      scene.add(dirLight);
+
+      const rimLight = new THREE.DirectionalLight(0x38bdf8, 0.8);
+      rimLight.position.set(-5, -4, 3);
+      scene.add(rimLight);
+
+      // Build 3 distinct cute cartoon monsters
+      buildCuteMonsters();
+
+      // Build Titan Boss Monster (for Level 10)
+      buildTitanBoss();
+
+      window.addEventListener('resize', onResizeThree);
+      onResizeThree();
     }
 
-    function drawTargetReticle(x, y) {
-      arenaCtx.save();
-      arenaCtx.strokeStyle = '#38bdf8';
-      arenaCtx.lineWidth = 3;
-      arenaCtx.setLineDash([5, 5]);
+    function onResizeThree() {
+      const arena = document.getElementById('arena-screen');
+      if (!arena || !renderer) return;
+      const w = arena.clientWidth;
+      const h = arena.clientHeight;
 
-      arenaCtx.beginPath();
-      arenaCtx.arc(x, y, 35, 0, Math.PI * 2);
-      arenaCtx.stroke();
+      camera.aspect = w / h;
+      // On mobile screens, back camera up slightly so all 3 monsters stay comfortably visible
+      camera.position.z = w < 640 ? 10.5 : 8.5;
+      camera.updateProjectionMatrix();
 
-      arenaCtx.fillStyle = '#38bdf8';
-      arenaCtx.beginPath();
-      arenaCtx.arc(x, y, 6, 0, Math.PI * 2);
-      arenaCtx.fill();
-
-      arenaCtx.setLineDash([]);
-      arenaCtx.fillStyle = '#bae6fd';
-      arenaCtx.font = '700 12px "Fredoka", sans-serif';
-      arenaCtx.textAlign = 'center';
-      arenaCtx.fillText('CLENCH FIST', x, y + 50);
-
-      arenaCtx.restore();
+      renderer.setSize(w, h);
+      hudCanvas.width = w;
+      hudCanvas.height = h;
     }
 
-    function drawVfxParticles() {
-      for (let i = vfxParticles.length - 1; i >= 0; i--) {
-        const p = vfxParticles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        p.life -= 0.05;
+    // 1. Pink Bunny Mochi, 2. Minty Dino, 3. Golden Star Critter
+    function buildCuteMonsters() {
+      // Clean existing
+      monsters3D.forEach(m => scene.remove(m.mesh));
+      monsters3D = [];
 
-        if (p.life <= 0) {
-          vfxParticles.splice(i, 1);
-          continue;
+      const monsterConfigs = [
+        { color: 0xff4d88, hornColor: 0xffffff, eyeColor: 0x0f172a, type: 'bunny', xBase: -3.2 },
+        { color: 0x10b981, hornColor: 0xfacc15, eyeColor: 0x0f172a, type: 'dino', xBase: 0.0 },
+        { color: 0xf59e0b, hornColor: 0xec4899, eyeColor: 0x0f172a, type: 'star', xBase: 3.2 }
+      ];
+
+      monsterConfigs.forEach((cfg, idx) => {
+        const group = new THREE.Group();
+
+        // Shiny Toon Body
+        const bodyGeo = new THREE.SphereGeometry(1.05, 32, 32);
+        bodyGeo.scale(1.0, 1.15, 0.95);
+        const bodyMat = new THREE.MeshToonMaterial({
+          color: cfg.color,
+          emissive: cfg.color,
+          emissiveIntensity: 0.12
+        });
+        const body = new THREE.Mesh(bodyGeo, bodyMat);
+        group.add(body);
+
+        // Cute Big Anime Eyes (White Sclera + Dark Pupils + Catchlights)
+        const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const pupilMat = new THREE.MeshBasicMaterial({ color: cfg.eyeColor });
+        const glintMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+        [-0.34, 0.34].forEach(eyeX => {
+          const eye = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 16), eyeMat);
+          eye.position.set(eyeX, 0.32, 0.88);
+          eye.scale.set(1, 1.25, 0.4);
+
+          const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.14, 16, 16), pupilMat);
+          pupil.position.set(eyeX > 0 ? 0.04 : -0.04, 0, 0.14);
+
+          const glint = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), glintMat);
+          glint.position.set(0.04, 0.05, 0.1);
+
+          pupil.add(glint);
+          eye.add(pupil);
+          group.add(eye);
+        });
+
+        // Rosy Blushing Cheeks
+        const blushMat = new THREE.MeshBasicMaterial({ color: 0xff2d55, transparent: true, opacity: 0.65 });
+        [-0.52, 0.52].forEach(bX => {
+          const blush = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 12), blushMat);
+          blush.position.set(bX, 0.05, 0.84);
+          blush.scale.set(1.4, 0.7, 0.2);
+          group.add(blush);
+        });
+
+        // Ears / Horns according to cute type
+        if (cfg.type === 'bunny') {
+          const earGeo = new THREE.CylinderGeometry(0.12, 0.22, 1.1, 16);
+          const earMat = new THREE.MeshToonMaterial({ color: 0xff7597 });
+          [-0.38, 0.38].forEach(eX => {
+            const ear = new THREE.Mesh(earGeo, earMat);
+            ear.position.set(eX, 1.45, 0);
+            ear.rotation.z = eX > 0 ? -0.2 : 0.2;
+            group.add(ear);
+          });
+        } else if (cfg.type === 'dino') {
+          const hornGeo = new THREE.ConeGeometry(0.26, 0.65, 16);
+          const hornMat = new THREE.MeshToonMaterial({ color: cfg.hornColor });
+          const horn = new THREE.Mesh(hornGeo, hornMat);
+          horn.position.set(0, 1.35, 0.2);
+          group.add(horn);
+        } else {
+          // Cute Star antenna
+          const antGeo = new THREE.SphereGeometry(0.3, 16, 16);
+          const antMat = new THREE.MeshToonMaterial({ color: cfg.hornColor });
+          const starTop = new THREE.Mesh(antGeo, antMat);
+          starTop.position.set(0, 1.45, 0);
+          group.add(starTop);
         }
 
-        arenaCtx.save();
-        arenaCtx.globalAlpha = p.life;
-        arenaCtx.fillStyle = p.color;
-        arenaCtx.beginPath();
-        arenaCtx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
-        arenaCtx.fill();
-        arenaCtx.restore();
+        group.position.set(cfg.xBase, 0, 0);
+        scene.add(group);
+
+        monsters3D.push({
+          mesh: group,
+          xBase: cfg.xBase,
+          knockedOut: false,
+          knockVelocity: new THREE.Vector3(0, 0, 0),
+          rotVelocity: new THREE.Vector3(0, 0, 0),
+          bounceOffset: idx * 1.5
+        });
+      });
+    }
+
+    // Level 10 Titan Boss Model
+    function buildTitanBoss() {
+      const bossGroup = new THREE.Group();
+
+      const mainGeo = new THREE.DodecahedronGeometry(2.3, 1);
+      const mainMat = new THREE.MeshToonMaterial({
+        color: 0x9333ea,
+        emissive: 0x6b21a8,
+        emissiveIntensity: 0.3
+      });
+      const core = new THREE.Mesh(mainGeo, mainMat);
+      bossGroup.add(core);
+
+      // Glowing menacing yellow eyes
+      const eyeMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+      [-0.7, 0.7].forEach(eX => {
+        const eye = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), eyeMat);
+        eye.position.set(eX, 0.5, 2.0);
+        eye.scale.set(1.5, 0.7, 0.4);
+        bossGroup.add(eye);
+      });
+
+      // Spikes / Horns
+      const spikeGeo = new THREE.ConeGeometry(0.4, 1.2, 8);
+      const spikeMat = new THREE.MeshToonMaterial({ color: 0xef4444 });
+      for (let i = 0; i < 6; i++) {
+        const ang = (i * Math.PI) / 3;
+        const spike = new THREE.Mesh(spikeGeo, spikeMat);
+        spike.position.set(Math.cos(ang) * 2.2, Math.sin(ang) * 2.2, 0);
+        spike.rotation.z = ang - Math.PI / 2;
+        bossGroup.add(spike);
+      }
+
+      bossGroup.position.set(0, 0.4, 0);
+      bossGroup.visible = false;
+      scene.add(bossGroup);
+
+      bossMonster3D = {
+        mesh: bossGroup,
+        knockedOut: false,
+        pulseSpeed: 3.5
+      };
+    }
+
+    function resetMonstersPositions() {
+      const isMobile = window.innerWidth < 640;
+      const xSpan = isMobile ? 1.85 : 3.0;
+
+      monsters3D.forEach((m, idx) => {
+        m.knockedOut = false;
+        m.knockVelocity.set(0, 0, 0);
+        m.rotVelocity.set(0, 0, 0);
+        m.mesh.rotation.set(0, 0, 0);
+        m.mesh.scale.set(1, 1, 1);
+        m.xBase = (idx - 1) * xSpan;
+        m.mesh.position.set(m.xBase, 0, 0);
+        m.mesh.visible = !gameState.isBossBattle;
+      });
+
+      if (bossMonster3D) {
+        bossMonster3D.mesh.visible = gameState.isBossBattle;
+        bossMonster3D.mesh.position.set(0, 0.4, 0);
+        bossMonster3D.mesh.rotation.set(0, 0, 0);
       }
     }
   </script>
 
   <script>
-    let currentQuestionData = null;
+    let currentOptionsData = [];
+
+    function updateMonstersPlacards() {
+      const container = document.getElementById('monsters-3d-labels');
+      container.innerHTML = '';
+
+      if (gameState.isBossBattle) {
+        // Boss Battle: Render 3 Minion Word Orbs floating in front of Boss
+        currentOptionsData.forEach((opt, idx) => {
+          const pill = document.createElement('div');
+          pill.id = `monster-placard-${idx}`;
+          pill.className = `monster-placard absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer pointer-events-auto flex flex-col items-center justify-center p-3 sm:p-5 rounded-3xl bg-gradient-to-b from-amber-400 via-yellow-400 to-amber-500 border-4 border-slate-950 shadow-2xl`;
+          pill.setAttribute('data-index', idx);
+
+          pill.onpointerdown = (e) => {
+            e.preventDefault();
+            const rect = pill.getBoundingClientRect();
+            triggerHitOnIndex(idx, rect.left + rect.width / 2, rect.top + rect.height / 2, 'PUNCH');
+          };
+
+          pill.innerHTML = `
+            <span class="text-xs sm:text-sm font-black text-slate-950 uppercase tracking-wider mb-0.5">
+              <i class="fa-solid fa-crosshairs"></i> TARGET
+            </span>
+            <span class="font-arcade text-2xl sm:text-4xl text-slate-950 tracking-wider block uppercase px-2 py-0.5">
+              ${opt.text}
+            </span>
+            <div class="mt-1 text-[11px] sm:text-xs bg-red-600 text-white font-extrabold px-3 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow">
+              <i class="fa-solid fa-hand-fist"></i> PUNCH / SLICE
+            </div>
+          `;
+          container.appendChild(pill);
+        });
+        return;
+      }
+
+      // Normal Levels 1-9: Mount high-contrast placard onto each 3D monster chest
+      currentOptionsData.forEach((opt, idx) => {
+        const pill = document.createElement('div');
+        pill.id = `monster-placard-${idx}`;
+        pill.className = `monster-placard absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer pointer-events-auto flex flex-col items-center justify-center p-2.5 sm:p-4 rounded-3xl bg-slate-950/95 border-4 ${
+          idx === 0 ? 'border-pink-400' : (idx === 1 ? 'border-emerald-400' : 'border-amber-400')
+        } shadow-2xl min-w-[120px] sm:min-w-[190px]`;
+        pill.setAttribute('data-index', idx);
+
+        pill.onpointerdown = (e) => {
+          e.preventDefault();
+          const rect = pill.getBoundingClientRect();
+          triggerHitOnIndex(idx, rect.left + rect.width / 2, rect.top + rect.height / 2, 'PUNCH');
+        };
+
+        // Words are extra-large, ultra-bold, and high-contrast for standing play
+        pill.innerHTML = `
+          <div class="w-full bg-gradient-to-r ${
+            idx === 0 ? 'from-pink-500 to-rose-600' : (idx === 1 ? 'from-emerald-500 to-teal-600' : 'from-amber-500 to-yellow-500')
+          } text-slate-950 font-arcade text-2xl sm:text-4xl text-center py-2 px-3 rounded-2xl tracking-wider shadow-inner uppercase">
+            ${opt.text}
+          </div>
+          <div class="mt-1 text-[11px] sm:text-xs text-white font-black uppercase tracking-wider flex items-center gap-1">
+            <i class="fa-solid fa-bolt text-yellow-300"></i> SMASH
+          </div>
+        `;
+
+        container.appendChild(pill);
+      });
+    }
+
+    // Projects 3D monster chest coordinates into screen CSS pixels
+    function syncPlacardsTo3D() {
+      const arena = document.getElementById('arena-screen');
+      if (!arena || !camera) return;
+      const arenaW = arena.clientWidth;
+      const arenaH = arena.clientHeight;
+
+      if (gameState.isBossBattle) {
+        // Place 3 minion targets evenly across lower half of arena
+        const count = currentOptionsData.length;
+        for (let i = 0; i < count; i++) {
+          const pill = document.getElementById(`monster-placard-${i}`);
+          if (pill) {
+            const posX = (arenaW / (count + 1)) * (i + 1);
+            const posY = arenaH * 0.65;
+            pill.style.left = `${posX}px`;
+            pill.style.top = `${posY}px`;
+          }
+        }
+        return;
+      }
+
+      monsters3D.forEach((m, idx) => {
+        const pill = document.getElementById(`monster-placard-${idx}`);
+        if (!pill) return;
+
+        if (m.knockedOut) {
+          pill.style.opacity = '0';
+          pill.style.pointerEvents = 'none';
+          return;
+        }
+
+        // Chest position in 3D
+        const chestPos = m.mesh.position.clone();
+        chestPos.y -= 0.15;
+        chestPos.z += 0.6;
+
+        chestPos.project(camera);
+
+        const screenX = ((chestPos.x + 1) / 2) * arenaW;
+        const screenY = ((-chestPos.y + 1) / 2) * arenaH;
+
+        pill.style.left = `${screenX}px`;
+        pill.style.top = `${screenY}px`;
+        pill.style.opacity = '1';
+        pill.style.pointerEvents = 'auto';
+      });
+    }
+  </script>
+
+  <script>
+    let currentLevelData = null;
 
     function renderCategoryMenu() {
       const grid = document.getElementById('category-grid');
@@ -1373,9 +1389,9 @@
         const isSelected = gameState.categoryKey === key;
         const card = document.createElement('div');
 
-        card.className = `cursor-pointer p-3 sm:p-4 rounded-2xl border-2 transition-all duration-200 transform hover:scale-105 flex flex-col items-center justify-center gap-1.5 ${
+        card.className = `cursor-pointer p-3 sm:p-4 rounded-2xl border-3 transition-all duration-200 transform hover:scale-105 flex flex-col items-center justify-center gap-1 ${
           isSelected 
-            ? 'bg-gradient-to-br ' + cat.theme + ' border-yellow-300 shadow-xl ring-2 ring-yellow-400' 
+            ? 'bg-gradient-to-br ' + cat.theme + ' border-yellow-300 shadow-2xl ring-4 ring-yellow-400' 
             : 'bg-slate-800/90 border-slate-700 hover:border-slate-500'
         }`;
 
@@ -1390,11 +1406,11 @@
           <div class="text-2xl sm:text-3xl ${isSelected ? 'text-white' : 'text-amber-400'}">
             <i class="${cat.icon}"></i>
           </div>
-          <div class="font-comic text-base sm:text-lg tracking-wider text-center leading-tight">
+          <div class="font-arcade text-base sm:text-xl tracking-wider text-center leading-tight">
             ${cat.name.split(' ')[0]}
           </div>
-          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${isSelected ? 'bg-slate-950/60 text-white' : 'bg-slate-700 text-gray-300'}">
-            10 Levels
+          <span class="text-[11px] font-black px-2.5 py-0.5 rounded-full ${isSelected ? 'bg-slate-950/70 text-white' : 'bg-slate-700 text-gray-300'}">
+            10 Levels + Boss
           </span>
         `;
         grid.appendChild(card);
@@ -1413,19 +1429,20 @@
       gameState.correctCount = 0;
       gameState.totalCount = 0;
       gameState.isLocked = false;
+      gameState.isBossBattle = false;
 
       document.getElementById('start-screen').classList.add('hidden');
       document.getElementById('endgame-screen').classList.add('hidden');
       document.getElementById('arena-screen').classList.remove('hidden');
       document.getElementById('game-hud').classList.remove('hidden');
 
-      resizeCanvas();
+      onResizeThree();
       updateHUD();
       loadLevelQuestion();
 
-      // Trigger camera request on user click if not connected yet
+      // Ensure camera is active
       if (!cameraState.stream) {
-        requestCameraAccess(true);
+        startCameraDirect(true);
       }
     }
 
@@ -1446,7 +1463,6 @@
       document.getElementById('hud-score').innerText = gameState.score;
       document.getElementById('hud-level-num').innerText = (gameState.levelIdx + 1);
 
-      // Streak Combo
       const streakBadge = document.getElementById('hud-streak');
       if (gameState.streak >= 2) {
         streakBadge.innerText = `COMBO x${gameState.streak}`;
@@ -1455,7 +1471,6 @@
         streakBadge.classList.add('hidden');
       }
 
-      // Lives Hearts
       const heartsWrap = document.getElementById('lives-container');
       heartsWrap.innerHTML = '';
       for (let i = 0; i < 3; i++) {
@@ -1479,77 +1494,64 @@
         return;
       }
 
-      currentQuestionData = level;
+      currentLevelData = level;
       gameState.isLocked = false;
+      gameState.isBossBattle = !!level.isBoss;
 
-      // Update Header Text
+      const bossHpWrap = document.getElementById('boss-hp-wrap');
+      const timerWrap = document.getElementById('timer-bar-wrap');
       document.getElementById('arena-category-badge').innerText = cat.tag;
-      document.getElementById('arena-question-text').innerText = level.prompt;
 
-      // Prepare 3 Options (1 Correct + 2 Distractors)
-      const options = [
-        { text: level.correct, isCorrect: true },
-        { text: level.distractors[0], isCorrect: false },
-        { text: level.distractors[1], isCorrect: false }
-      ];
-      shuffleList(options);
+      if (gameState.isBossBattle) {
+        bossHpWrap.classList.remove('hidden');
+        document.getElementById('boss-title-name').innerHTML = `<i class="fa-solid fa-dragon"></i> ${cat.bossName}`;
+        gameState.bossHpMax = level.bossHp || 5;
+        gameState.bossHpCurrent = gameState.bossHpMax;
+        gameState.bossQuestionsLeft = [...level.pool];
+        document.getElementById('boss-hp-text').innerText = '100%';
+        document.getElementById('boss-hp-bar').style.width = '100%';
+        document.getElementById('arena-question-text').innerText = level.prompt;
+        loadBossWave();
+      } else {
+        bossHpWrap.classList.add('hidden');
+        document.getElementById('arena-question-text').innerText = level.prompt;
 
-      // Render Floating Monster Cards
-      const container = document.getElementById('monsters-row');
-      container.innerHTML = '';
+        currentOptionsData = [
+          { text: level.correct, isCorrect: true },
+          { text: level.distractors[0], isCorrect: false },
+          { text: level.distractors[1], isCorrect: false }
+        ];
+        shuffleList(currentOptionsData);
 
-      options.forEach((opt, idx) => {
-        const style = MONSTER_STYLES[idx % MONSTER_STYLES.length];
-        const card = document.createElement('div');
-        card.className = `monster-entity relative flex flex-col items-center justify-center p-3 sm:p-5 rounded-3xl bg-gradient-to-b ${style.bg} border-4 ${style.border} shadow-2xl cursor-pointer select-none transition-all duration-300 w-11/12 max-w-[230px] ${style.anim} transform hover:brightness-110 active:scale-95`;
-        card.setAttribute('data-correct', opt.isCorrect ? "true" : "false");
-        card.setAttribute('data-word', opt.text);
-
-        // Direct Touch / Click fallback
-        card.onpointerdown = (e) => {
-          e.preventDefault();
-          const rect = card.getBoundingClientRect();
-          punchMonster(card, rect.left + rect.width / 2, rect.top + rect.height / 2);
-        };
-
-        card.innerHTML = `
-          <!-- Horns / Antenna -->
-          <div class="flex justify-between w-full px-4 -mt-7 mb-1 text-yellow-300 text-lg sm:text-2xl drop-shadow">
-            <i class="fa-solid fa-bolt transform -rotate-12"></i>
-            <i class="fa-solid fa-bolt transform rotate-12"></i>
-          </div>
-
-          <!-- Monster Face -->
-          <div class="w-16 h-16 sm:w-20 sm:h-20 bg-slate-900/90 rounded-full flex flex-col items-center justify-center border-2 border-white shadow-inner mb-2">
-            <div class="flex gap-2 text-base sm:text-lg mb-1" style="color: ${style.eye};">
-              <i class="fa-solid fa-eye"></i>
-              <i class="fa-solid fa-eye"></i>
-            </div>
-            <i class="fa-solid ${style.mouth} text-white text-xs sm:text-sm"></i>
-          </div>
-
-          <!-- Monster Word Plaque -->
-          <div class="w-full bg-slate-950/90 border-2 border-yellow-300 rounded-2xl py-2 px-1 text-center shadow-lg">
-            <span class="font-comic text-xl sm:text-2xl text-yellow-300 tracking-wider break-words block uppercase">
-              ${opt.text}
-            </span>
-          </div>
-
-          <!-- Punch Button Stamp -->
-          <div class="mt-2 text-[10px] sm:text-xs bg-red-600 text-white font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow">
-            <i class="fa-solid fa-hand-fist"></i> PUNCH!
-          </div>
-        `;
-
-        container.appendChild(card);
-      });
-
-      startCountdownTimer();
+        resetMonstersPositions();
+        updateMonstersPlacards();
+        startCountdownTimer(12);
+      }
     }
 
-    function startCountdownTimer() {
+    function loadBossWave() {
+      if (gameState.bossQuestionsLeft.length === 0) {
+        triggerVictory();
+        return;
+      }
+
+      const wave = gameState.bossQuestionsLeft.pop();
+      currentOptionsData = [
+        { text: wave.correct, isCorrect: true },
+        { text: wave.distractors[0], isCorrect: false },
+        { text: wave.distractors[1], isCorrect: false }
+      ];
+      shuffleList(currentOptionsData);
+
+      resetMonstersPositions();
+      updateMonstersPlacards();
+      startCountdownTimer(15);
+    }
+
+    function startCountdownTimer(seconds) {
       clearInterval(gameState.timerId);
-      gameState.timerCurrent = gameState.timerMax;
+      gameState.timerMax = seconds;
+      gameState.timerCurrent = seconds;
       const bar = document.getElementById('arena-timer-bar');
       bar.style.width = '100%';
 
@@ -1569,71 +1571,90 @@
       }, 100);
     }
 
-    // Distance-based Fist Punch Collision Detection
-    function detectMonsterHit(fistX, fistY) {
+    // Check hit collision against 3D placards
+    function checkHitCollision(x, y, gestureType) {
       if (gameState.isLocked) return;
+      const now = performance.now();
+      if (now - gameState.lastGestureTime < 450) return; // Debounce gesture
 
-      const now = Date.now();
-      if (now - gameState.lastPunchTime < 800) return; // Debounce punches
+      const count = currentOptionsData.length;
+      for (let i = 0; i < count; i++) {
+        const pill = document.getElementById(`monster-placard-${i}`);
+        if (!pill || pill.style.opacity === '0') continue;
 
-      const monsters = document.querySelectorAll('.monster-entity');
-      const arenaRect = document.getElementById('arena-screen').getBoundingClientRect();
+        const rect = pill.getBoundingClientRect();
+        const arenaRect = document.getElementById('arena-screen').getBoundingClientRect();
+        const pillCenterX = (rect.left - arenaRect.left) + rect.width / 2;
+        const pillCenterY = (rect.top - arenaRect.top) + rect.height / 2;
 
-      monsters.forEach((monster) => {
-        const mRect = monster.getBoundingClientRect();
-        // Convert to canvas relative coordinates
-        const mX = (mRect.left - arenaRect.left) + mRect.width / 2;
-        const mY = (mRect.top - arenaRect.top) + mRect.height / 2;
+        const dist = Math.hypot(x - pillCenterX, y - pillCenterY);
 
-        const dist = Math.hypot(fistX - mX, fistY - mY);
-
-        if (dist < (mRect.width / 2 + 35)) {
-          gameState.lastPunchTime = now;
-          punchMonster(monster, fistX, fistY);
+        if (dist < (rect.width * 0.65 + 30)) {
+          gameState.lastGestureTime = now;
+          triggerHitOnIndex(i, pillCenterX, pillCenterY, gestureType);
+          break;
         }
-      });
+      }
     }
 
-    function punchMonster(monsterEl, hitX, hitY) {
+    function triggerHitOnIndex(index, hitX, hitY, gestureType) {
       if (gameState.isLocked) return;
       gameState.isLocked = true;
       clearInterval(gameState.timerId);
 
-      sound.playPunch();
-      const isCorrect = monsterEl.getAttribute('data-correct') === "true";
-      const word = monsterEl.getAttribute('data-word');
+      const hitData = currentOptionsData[index];
+      const isCorrect = hitData.isCorrect;
 
-      // Spawn comic particles & trigger impact burst
+      // Sound according to gesture
+      if (gestureType === 'SLICE') {
+        sound.playSlice();
+      } else {
+        sound.playPunch();
+      }
+
+      // Visual comic banner & screen shake
+      const vfxText = gestureType === 'SLICE' ? 'SLASH!' : (gestureType === 'FLICK' ? 'SNAP!' : 'POW!');
+      triggerImpactBurst(vfxText, isCorrect);
       spawnVfxExplosion(hitX, hitY, isCorrect ? '#facc15' : '#ef4444');
-      triggerImpactBurst(isCorrect ? "POW!" : "WHAM!");
 
-      // Screen shake effect
       const arena = document.getElementById('arena-screen');
       arena.classList.add('shake-active');
       setTimeout(() => arena.classList.remove('shake-active'), 350);
 
-      // Monster knocked out animation
-      monsterEl.style.transform = 'scale(0.1) rotate(50deg)';
-      monsterEl.style.opacity = '0';
+      // Trigger 3D Monster Knockout Physics
+      if (!gameState.isBossBattle && monsters3D[index]) {
+        const m = monsters3D[index];
+        m.knockedOut = true;
+        m.knockVelocity.set(
+          (Math.random() - 0.5) * 4,
+          Math.random() * 4 + 4,
+          -14 // Launch into screen depth!
+        );
+        m.rotVelocity.set(Math.random() * 10, Math.random() * 10, Math.random() * 8);
+      } else if (gameState.isBossBattle && bossMonster3D) {
+        // Boss flinches backwards
+        bossMonster3D.mesh.position.z = -2.5;
+        bossMonster3D.mesh.rotation.y = (Math.random() - 0.5) * 1.5;
+      }
 
       gameState.totalCount++;
 
       setTimeout(() => {
         if (isCorrect) {
-          handleSuccessPunch(word);
+          handleSuccessPunch(hitData.text);
         } else {
-          handleFailurePunch(word);
+          handleFailurePunch(hitData.text);
         }
-      }, 400);
+      }, 350);
     }
 
-    function triggerImpactBurst(text) {
+    function triggerImpactBurst(text, isCorrect) {
       const banner = document.getElementById('vfx-burst-layer');
       const txt = document.getElementById('vfx-burst-text');
       txt.innerText = text;
-      txt.className = `font-comic text-7xl sm:text-9xl ${
-        text === 'POW!' ? 'text-yellow-300' : 'text-red-400'
-      } text-stroke-3 drop-shadow-[0_12px_24px_rgba(0,0,0,0.9)] transform -rotate-12 scale-110 transition-all`;
+      txt.className = `font-arcade text-7xl sm:text-9xl ${
+        isCorrect ? 'text-yellow-300' : 'text-red-400'
+      } hero-text-stroke-lg transform -rotate-12 scale-110 transition-all`;
       banner.style.opacity = '1';
 
       setTimeout(() => {
@@ -1647,11 +1668,30 @@
       if (gameState.streak > gameState.maxStreak) gameState.maxStreak = gameState.streak;
       gameState.correctCount++;
 
-      const timeBonus = Math.floor(gameState.timerCurrent * 20);
-      const streakBonus = gameState.streak * 50;
+      const timeBonus = Math.floor(gameState.timerCurrent * 25);
+      const streakBonus = gameState.streak * 60;
       gameState.score += (100 + timeBonus + streakBonus);
 
-      displayExplanation(true, `POW! '${word}' is correct!`, currentQuestionData.expl);
+      if (gameState.isBossBattle) {
+        gameState.bossHpCurrent--;
+        const pct = Math.max(0, Math.round((gameState.bossHpCurrent / gameState.bossHpMax) * 100));
+        document.getElementById('boss-hp-bar').style.width = `${pct}%`;
+        document.getElementById('boss-hp-text').innerText = `${pct}%`;
+
+        if (gameState.bossHpCurrent <= 0) {
+          triggerVictory();
+          return;
+        } else {
+          // Next boss wave
+          setTimeout(() => {
+            gameState.isLocked = false;
+            loadBossWave();
+          }, 600);
+          return;
+        }
+      }
+
+      displayExplanation(true, `SUPER HIT! '${word}' IS CORRECT!`, currentLevelData.expl);
     }
 
     function handleFailurePunch(word) {
@@ -1659,7 +1699,8 @@
       gameState.streak = 0;
       gameState.lives--;
 
-      displayExplanation(false, `OOPS! '${word}' is not a ${CURRICULUM[gameState.categoryKey].tag}!`, currentQuestionData.expl);
+      const tag = CURRICULUM[gameState.categoryKey].tag;
+      displayExplanation(false, `OOPS! '${word}' is not a ${tag}!`, currentLevelData.expl || "Watch out for distractors!");
     }
 
     function handleTimeExpired() {
@@ -1669,7 +1710,7 @@
       gameState.lives--;
       gameState.totalCount++;
 
-      displayExplanation(false, "TIME'S UP! The monster got away!", currentQuestionData.expl);
+      displayExplanation(false, "TIME'S UP! The monster slipped away!", currentLevelData.expl || "Be fast with your gestures!");
     }
 
     function displayExplanation(isSuccess, title, text) {
@@ -1685,13 +1726,13 @@
       textEl.innerText = text;
 
       if (isSuccess) {
-        iconWrap.className = "w-16 h-16 mx-auto mb-2 rounded-full bg-emerald-500 flex items-center justify-center text-3xl text-slate-900 border-2 border-white shadow-lg";
+        iconWrap.className = "w-18 h-18 sm:w-22 sm:h-22 mx-auto mb-3 rounded-full bg-emerald-500 flex items-center justify-center text-4xl sm:text-5xl text-slate-950 border-3 border-white shadow-xl";
         iconWrap.innerHTML = '<i class="fa-solid fa-trophy"></i>';
-        card.className = "bg-gradient-to-b from-slate-900 to-indigo-950 border-4 border-yellow-400 p-5 sm:p-6 rounded-3xl max-w-md w-full text-center shadow-2xl transform scale-100 transition-all";
+        card.className = "bg-gradient-to-b from-slate-900 to-indigo-950 border-4 border-yellow-400 p-6 sm:p-8 rounded-3xl max-w-lg w-full text-center shadow-2xl transform scale-100 transition-all";
       } else {
-        iconWrap.className = "w-16 h-16 mx-auto mb-2 rounded-full bg-red-600 flex items-center justify-center text-3xl text-white border-2 border-white shadow-lg";
+        iconWrap.className = "w-18 h-18 sm:w-22 sm:h-22 mx-auto mb-3 rounded-full bg-red-600 flex items-center justify-center text-4xl sm:text-5xl text-white border-3 border-white shadow-xl";
         iconWrap.innerHTML = '<i class="fa-solid fa-heart-crack"></i>';
-        card.className = "bg-gradient-to-b from-slate-900 to-red-950 border-4 border-red-500 p-5 sm:p-6 rounded-3xl max-w-md w-full text-center shadow-2xl transform scale-100 transition-all";
+        card.className = "bg-gradient-to-b from-slate-900 to-red-950 border-4 border-red-500 p-6 sm:p-8 rounded-3xl max-w-lg w-full text-center shadow-2xl transform scale-100 transition-all";
       }
 
       dialog.classList.remove('hidden');
@@ -1710,7 +1751,7 @@
             loadLevelQuestion();
           }
         }
-      }, 2300);
+      }, 2100);
     }
 
     function triggerGameOver() {
@@ -1719,10 +1760,10 @@
       document.getElementById('game-hud').classList.add('hidden');
       document.getElementById('endgame-screen').classList.remove('hidden');
 
-      document.getElementById('endgame-icon-box').className = "w-20 h-20 bg-red-600 rounded-full flex items-center justify-center text-4xl text-white mb-4 border-4 border-white shadow-xl animate-bounce";
+      document.getElementById('endgame-icon-box').className = "w-20 h-20 bg-red-600 rounded-full flex items-center justify-center text-4xl text-white mb-3 border-4 border-white shadow-xl animate-bounce";
       document.getElementById('endgame-icon-box').innerHTML = '<i class="fa-solid fa-skull"></i>';
       document.getElementById('endgame-title-text').innerText = "HERO KNOCKED OUT!";
-      document.getElementById('endgame-sub-text').innerText = "Don't give up! Rest and punch your way back to grammar glory!";
+      document.getElementById('endgame-sub-text').innerText = "Take a breath and punch your way back to grammatical mastery!";
 
       renderFinalSummary();
     }
@@ -1734,10 +1775,10 @@
       document.getElementById('game-hud').classList.add('hidden');
       document.getElementById('endgame-screen').classList.remove('hidden');
 
-      document.getElementById('endgame-icon-box').className = "w-20 h-20 bg-amber-400 rounded-full flex items-center justify-center text-4xl text-slate-900 mb-4 border-4 border-white shadow-xl animate-bounce";
+      document.getElementById('endgame-icon-box').className = "w-20 h-20 bg-amber-400 rounded-full flex items-center justify-center text-4xl text-slate-950 mb-3 border-4 border-white shadow-xl animate-bounce";
       document.getElementById('endgame-icon-box').innerHTML = '<i class="fa-solid fa-crown"></i>';
       document.getElementById('endgame-title-text').innerText = "GRAMMAR CHAMPION!";
-      document.getElementById('endgame-sub-text').innerText = `You conquered all 10 Levels of ${CURRICULUM[gameState.categoryKey].name}!`;
+      document.getElementById('endgame-sub-text').innerText = `You conquered all 10 Levels & defeated the ${CURRICULUM[gameState.categoryKey].bossName}!`;
 
       renderFinalSummary();
     }
@@ -1759,73 +1800,240 @@
       return arr;
     }
 
+    function spawnVfxExplosion(x, y, color) {
+      for (let i = 0; i < 20; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 8 + 3;
+        vfxParticles.push({
+          x: x,
+          y: y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          size: Math.random() * 12 + 5,
+          color: color || '#facc15',
+          life: 1.0
+        });
+      }
+    }
+
+    function drawHandReticle(x, y, gesture) {
+      hudCtx.save();
+      if (gesture === 'FIST') {
+        hudCtx.beginPath();
+        hudCtx.arc(x, y, 46, 0, Math.PI * 2);
+        hudCtx.fillStyle = 'rgba(239, 68, 68, 0.4)';
+        hudCtx.fill();
+
+        hudCtx.beginPath();
+        hudCtx.arc(x, y, 32, 0, Math.PI * 2);
+        hudCtx.fillStyle = '#dc2626';
+        hudCtx.strokeStyle = '#fef08a';
+        hudCtx.lineWidth = 4;
+        hudCtx.stroke();
+        hudCtx.fill();
+
+        hudCtx.fillStyle = '#ffffff';
+        hudCtx.font = '900 28px "Font Awesome 6 Free"';
+        hudCtx.textAlign = 'center';
+        hudCtx.textBaseline = 'middle';
+        hudCtx.fillText('\uf6de', x, y); // Fist
+      } else if (gesture === 'SLICE') {
+        hudCtx.strokeStyle = '#38bdf8';
+        hudCtx.lineWidth = 5;
+        hudCtx.beginPath();
+        hudCtx.moveTo(x - 30, y + 30);
+        hudCtx.lineTo(x + 30, y - 30);
+        hudCtx.stroke();
+      } else {
+        hudCtx.strokeStyle = '#facc15';
+        hudCtx.lineWidth = 3;
+        hudCtx.setLineDash([4, 4]);
+        hudCtx.beginPath();
+        hudCtx.arc(x, y, 32, 0, Math.PI * 2);
+        hudCtx.stroke();
+        hudCtx.setLineDash([]);
+      }
+      hudCtx.restore();
+    }
+
     function toggleCameraModal() {
       const modal = document.getElementById('camera-modal');
       modal.classList.toggle('hidden');
       if (!modal.classList.contains('hidden')) {
-        inspectCameraEnvironment();
-        if (!cameraState.stream) {
-          requestCameraAccess(true);
-        }
+        startCameraDirect(true);
       }
     }
   </script>
 
   <script>
-    window.addEventListener('DOMContentLoaded', () => {
-      renderCategoryMenu();
-      resizeCanvas();
-      inspectCameraEnvironment();
+    let lastMediaPipeCheck = 0;
 
-      // Track pointer position on the arena canvas for virtual glove mode
-      const arena = document.getElementById('arena-screen');
-      if (arena) {
-        const updatePointer = (e) => {
-          const rect = arena.getBoundingClientRect();
-          const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-          const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-          gameState.mousePos.x = clientX - rect.left;
-          gameState.mousePos.y = clientY - rect.top;
-        };
+    function mainAnimationLoop() {
+      const delta = clock.getDelta();
+      const elapsedTime = clock.getElapsedTime();
 
-        arena.addEventListener('mousemove', (e) => {
-          updatePointer(e);
-        });
-
-        arena.addEventListener('mousedown', (e) => {
-          updatePointer(e);
-          gameState.mousePos.isDown = true;
-          sound.init();
-        });
-
-        window.addEventListener('mouseup', () => {
-          gameState.mousePos.isDown = false;
-        });
-
-        arena.addEventListener('touchmove', (e) => {
-          updatePointer(e);
-        }, { passive: true });
-
-        arena.addEventListener('touchstart', (e) => {
-          updatePointer(e);
-          gameState.mousePos.isDown = true;
-          sound.init();
-        }, { passive: true });
-
-        window.addEventListener('touchend', () => {
-          gameState.mousePos.isDown = false;
-        });
+      // 1. Process WebCam Frames through MediaPipe smoothly
+      const now = performance.now();
+      if (cameraState.handsInstance && liveVideo && liveVideo.readyState >= 2 && !cameraState.isProcessing) {
+        if (now - lastMediaPipeCheck > 45) { // ~22 FPS vision inference keeps WebGL silky 60 FPS
+          lastMediaPipeCheck = now;
+          cameraState.isProcessing = true;
+          cameraState.handsInstance.send({ image: liveVideo }).catch(() => {}).finally(() => {
+            cameraState.isProcessing = false;
+          });
+        }
       }
 
-      // Cleanly stop any tracks when tab/window is closed or hidden
-      window.addEventListener('pagehide', () => {
-        releaseCameraStream();
+      // 2. Animate 3D Cute Monsters (Breathing Bounce & Knockout Trajectory)
+      monsters3D.forEach((m) => {
+        if (!m.knockedOut) {
+          // Cute squash and floating bounce
+          m.mesh.position.y = Math.sin(elapsedTime * 3 + m.bounceOffset) * 0.22;
+          m.mesh.scale.x = 1.0 + Math.sin(elapsedTime * 4 + m.bounceOffset) * 0.04;
+          m.mesh.scale.y = 1.0 - Math.sin(elapsedTime * 4 + m.bounceOffset) * 0.04;
+          m.mesh.rotation.y = Math.sin(elapsedTime * 2 + m.bounceOffset) * 0.12;
+        } else {
+          // Physics trajectory into the distance
+          m.mesh.position.addScaledVector(m.knockVelocity, delta);
+          m.mesh.rotation.x += m.rotVelocity.x * delta;
+          m.mesh.rotation.y += m.rotVelocity.y * delta;
+          m.mesh.rotation.z += m.rotVelocity.z * delta;
+          m.knockVelocity.y -= 9.8 * delta; // Gravity
+        }
       });
 
-      // Unlock Web Audio context on user first gesture
-      document.body.addEventListener('pointerdown', () => {
-        sound.init();
-      }, { once: true });
+      // Animate Level 10 Titan Boss
+      if (bossMonster3D && bossMonster3D.mesh.visible) {
+        bossMonster3D.mesh.rotation.y += 0.8 * delta;
+        bossMonster3D.mesh.position.y = 0.4 + Math.sin(elapsedTime * bossMonster3D.pulseSpeed) * 0.25;
+        // Recover from hit flinch
+        bossMonster3D.mesh.position.z += (0 - bossMonster3D.mesh.position.z) * 0.08;
+      }
+
+      // 3. Render 3D Scene
+      if (renderer && scene && camera) {
+        renderer.render(scene, camera);
+      }
+
+      // 4. Synchronize 2D High-Readability Placards with 3D monster chest
+      syncPlacardsTo3D();
+
+      // 5. Render 2D HUD Canvas (Sparks and Slash Trails)
+      if (hudCtx) {
+        hudCtx.clearRect(0, 0, hudCanvas.width, hudCanvas.height);
+
+        // Slash trails
+        for (let i = slashTrails.length - 1; i >= 0; i--) {
+          const st = slashTrails[i];
+          st.life -= 0.06;
+          if (st.life <= 0) {
+            slashTrails.splice(i, 1);
+            continue;
+          }
+          hudCtx.save();
+          hudCtx.strokeStyle = `rgba(56, 189, 248, ${st.life})`;
+          hudCtx.lineWidth = 14 * st.life;
+          hudCtx.lineCap = 'round';
+          hudCtx.beginPath();
+          hudCtx.moveTo(st.x1, st.y1);
+          hudCtx.lineTo(st.x2, st.y2);
+          hudCtx.stroke();
+          hudCtx.restore();
+        }
+
+        // VFX particles
+        for (let i = vfxParticles.length - 1; i >= 0; i--) {
+          const p = vfxParticles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life -= 0.045;
+
+          if (p.life <= 0) {
+            vfxParticles.splice(i, 1);
+            continue;
+          }
+
+          hudCtx.save();
+          hudCtx.globalAlpha = p.life;
+          hudCtx.fillStyle = p.color;
+          hudCtx.beginPath();
+          hudCtx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+          hudCtx.fill();
+          hudCtx.restore();
+        }
+
+        // Virtual glove backup cursor for mouse/touch
+        if (!cameraState.stream && gameState.mousePos.x > 0 && gameState.mousePos.y > 0) {
+          drawHandReticle(
+            gameState.mousePos.x, 
+            gameState.mousePos.y, 
+            gameState.mousePos.isDown ? 'FIST' : (gameState.mousePos.vel > 1.2 ? 'SLICE' : 'OPEN')
+          );
+        }
+      }
+
+      requestAnimationFrame(mainAnimationLoop);
+    }
+
+    // Initialize application on load
+    window.addEventListener('DOMContentLoaded', () => {
+      renderCategoryMenu();
+      initThreeJS();
+
+      // Start rendering loop immediately
+      requestAnimationFrame(mainAnimationLoop);
+
+      // Attempt immediate seamless camera start
+      startCameraDirect(false);
+
+      // Mouse / Touch Event Listeners for backup
+      const arena = document.getElementById('arena-screen');
+      if (arena) {
+        const updatePointer = (clientX, clientY, isDown) => {
+          const rect = arena.getBoundingClientRect();
+          const currX = clientX - rect.left;
+          const currY = clientY - rect.top;
+
+          if (gameState.mousePos.x > 0) {
+            const dist = Math.hypot(currX - gameState.mousePos.x, currY - gameState.mousePos.y);
+            gameState.mousePos.vel = dist / 16;
+          }
+
+          gameState.mousePos.prevX = gameState.mousePos.x;
+          gameState.mousePos.prevY = gameState.mousePos.y;
+          gameState.mousePos.x = currX;
+          gameState.mousePos.y = currY;
+          gameState.mousePos.isDown = isDown;
+
+          if (gameState.mousePos.vel > 1.4) {
+            addSlashTrail(gameState.mousePos.prevX, gameState.mousePos.prevY, currX, currY);
+            checkHitCollision(currX, currY, 'SLICE');
+          }
+        };
+
+        arena.addEventListener('mousemove', (e) => updatePointer(e.clientX, e.clientY, gameState.mousePos.isDown));
+        arena.addEventListener('mousedown', (e) => {
+          sound.init();
+          updatePointer(e.clientX, e.clientY, true);
+          checkHitCollision(gameState.mousePos.x, gameState.mousePos.y, 'PUNCH');
+        });
+        window.addEventListener('mouseup', () => { gameState.mousePos.isDown = false; });
+
+        arena.addEventListener('touchmove', (e) => {
+          if (e.touches && e.touches[0]) updatePointer(e.touches[0].clientX, e.touches[0].clientY, true);
+        }, { passive: true });
+        arena.addEventListener('touchstart', (e) => {
+          sound.init();
+          if (e.touches && e.touches[0]) {
+            updatePointer(e.touches[0].clientX, e.touches[0].clientY, true);
+            checkHitCollision(gameState.mousePos.x, gameState.mousePos.y, 'PUNCH');
+          }
+        }, { passive: true });
+        window.addEventListener('touchend', () => { gameState.mousePos.isDown = false; });
+      }
+
+      // Unlock AudioContext on first interaction
+      document.body.addEventListener('pointerdown', () => { sound.init(); }, { once: true });
     });
   </script>
 </body>
