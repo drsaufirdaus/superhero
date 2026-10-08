@@ -84,7 +84,7 @@
         <i class="fa-solid fa-hand-back-fist text-lg sm:text-xl"></i>
       </div>
       <div>
-        <h1 class="font-arcade text-lg sm:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-400 to-orange-400 stroke-black-sm">
+        <h1 class="font-arcade text-lg sm:text-2xl stroke-black-sm tracking-wide" style="color: #fde047 !important;">
           SUPER SAUFI
         </h1>
         <p class="text-[10px] text-cyan-300 font-extrabold uppercase tracking-wider hidden sm:block">3D Gesture Punch Arcade</p>
@@ -110,13 +110,13 @@
       <!-- Hero Title -->
       <div class="text-center w-full max-w-3xl">
         <div class="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500/25 via-pink-500/20 to-cyan-500/25 border border-amber-300/60 px-4 py-0.5 rounded-full text-yellow-300 text-xs sm:text-sm font-extrabold mb-1 shadow-lg shadow-amber-500/10">
-          <i class="fa-solid fa-hand-back-fist text-amber-300 animate-bounce"></i> Stand / Sit & Punch with Clench Fist ✊ (Genggam Penumbuk)
+          <i class="fa-solid fa-hand-back-fist text-amber-300 animate-bounce"></i> Stand / Sit & Punch with Clench Fist ✊
         </div>
-        <h2 class="font-arcade text-3xl sm:text-5xl text-white stroke-black-lg leading-tight tracking-wide">
-          PUNCH THE <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-400 to-orange-400">CORRECT MONSTER</span>!
+        <h2 class="font-arcade text-3xl sm:text-5xl stroke-black-lg leading-tight tracking-wide" style="color: #fde047 !important;">
+          PUNCH THE CORRECT MONSTER!
         </h2>
         <p class="text-xs sm:text-sm text-slate-200 font-semibold max-w-xl mx-auto">
-          Master 12 English & Malay grammar categories! Conquer 99 levels, then crush the 60s Titan Boss at Level 100!
+          Master 12 English grammar categories! Conquer 99 levels, then crush the 60s Titan Boss at Level 100!
         </p>
       </div>
 
@@ -1027,6 +1027,8 @@
     let handsInstance = null;
     let cameraUtilInstance = null;
     let isProcessingFrame = false;
+    let feedbackAutoTimer = null;
+    let feedbackAutoInterval = null;
 
     function initCameraAndHands() {
       try {
@@ -1507,19 +1509,24 @@
       const subtitle = document.getElementById('feedback-subtitle');
       const iconBox = document.getElementById('feedback-icon-box');
 
-      document.getElementById('feedback-word-tag').textContent = option.tag;
-      document.getElementById('feedback-word-name').textContent = `"${option.w.toUpperCase()}"`;
-      document.getElementById('feedback-def').textContent = option.def || "Definition available in curriculum.";
+      const tagEl = document.getElementById('feedback-word-tag');
+      if (tagEl) tagEl.textContent = option.tag || '';
+
+      const nameEl = document.getElementById('feedback-word-name');
+      if (nameEl) nameEl.textContent = `"${(option.w || '').toUpperCase()}"`;
+
+      const defEl = document.getElementById('feedback-def');
+      if (defEl) defEl.textContent = option.def || "Definition available in curriculum.";
 
       if (isSuccess) {
-        card.className = 'w-full max-w-md bg-slate-900 border-2 border-emerald-400 rounded-3xl p-5 text-center shadow-2xl transition-all scale-100 opacity-100';
+        card.className = 'w-full max-w-md bg-slate-900 border-2 border-emerald-400 rounded-3xl p-5 text-center shadow-2xl transition-all scale-100 opacity-100 relative overflow-hidden';
         iconBox.className = 'w-14 h-14 mx-auto rounded-2xl flex items-center justify-center text-3xl mb-2 bg-emerald-500/20 text-emerald-400 border border-emerald-400/40';
         iconBox.innerHTML = '<i class="fa-solid fa-check"></i>';
         title.textContent = `SUPER HIT, ${gameState.student.name.toUpperCase()}!`;
         title.className = 'font-arcade text-2xl stroke-black-sm mb-1 text-emerald-400';
         subtitle.textContent = 'Great punch! You accurately identified the target word.';
       } else {
-        card.className = 'w-full max-w-md bg-slate-900 border-2 border-rose-500 rounded-3xl p-5 text-center shadow-2xl transition-all scale-100 opacity-100';
+        card.className = 'w-full max-w-md bg-slate-900 border-2 border-rose-500 rounded-3xl p-5 text-center shadow-2xl transition-all scale-100 opacity-100 relative overflow-hidden';
         iconBox.className = 'w-14 h-14 mx-auto rounded-2xl flex items-center justify-center text-3xl mb-2 bg-rose-500/20 text-rose-400 border border-rose-400/40';
         iconBox.innerHTML = '<i class="fa-solid fa-xmark"></i>';
         title.textContent = 'MISSED TARGET!';
@@ -1528,9 +1535,53 @@
       }
 
       modal.classList.remove('hidden');
+
+      // Clear any prior auto-dismiss timers
+      if (feedbackAutoTimer) clearTimeout(feedbackAutoTimer);
+      if (feedbackAutoInterval) clearInterval(feedbackAutoInterval);
+
+      // Duration: 1.8s for correct hits, 2.8s for incorrect hits to read the explanation
+      const durationMs = isSuccess ? 1800 : 2800;
+      let remainingMs = durationMs;
+
+      const countdownPill = document.getElementById('feedback-countdown-pill');
+      const progressBar = document.getElementById('feedback-auto-bar');
+
+      if (progressBar) progressBar.style.width = '100%';
+      if (countdownPill) countdownPill.textContent = `(Auto in ${(remainingMs / 1000).toFixed(1)}s)`;
+
+      const tickInterval = 100;
+      feedbackAutoInterval = setInterval(() => {
+        remainingMs -= tickInterval;
+        if (remainingMs <= 0) {
+          clearInterval(feedbackAutoInterval);
+        } else {
+          if (countdownPill) {
+            countdownPill.textContent = `(Auto in ${Math.ceil(remainingMs / 1000)}s)`;
+          }
+          if (progressBar) {
+            const pct = Math.max(0, (remainingMs / durationMs) * 100);
+            progressBar.style.width = `${pct}%`;
+          }
+        }
+      }, tickInterval);
+
+      feedbackAutoTimer = setTimeout(() => {
+        dismissFeedbackModal();
+      }, durationMs);
     }
 
     function dismissFeedbackModal() {
+      // Clear auto-dismiss timer and interval
+      if (feedbackAutoTimer) {
+        clearTimeout(feedbackAutoTimer);
+        feedbackAutoTimer = null;
+      }
+      if (feedbackAutoInterval) {
+        clearInterval(feedbackAutoInterval);
+        feedbackAutoInterval = null;
+      }
+
       document.getElementById('feedback-modal').classList.add('hidden');
       if (gameState.lives <= 0) {
         handleGameOver("Ran out of lives!");
@@ -1554,8 +1605,11 @@
     }
 
     function quitToHome() {
+      if (feedbackAutoTimer) clearTimeout(feedbackAutoTimer);
+      if (feedbackAutoInterval) clearInterval(feedbackAutoInterval);
       clearInterval(gameState.timerInterval);
       document.getElementById('pause-modal').classList.add('hidden');
+      document.getElementById('feedback-modal').classList.add('hidden');
       document.getElementById('arena-screen').classList.add('hidden');
       document.getElementById('endgame-modal').classList.add('hidden');
       document.getElementById('home-screen').classList.remove('hidden');
@@ -1779,81 +1833,6 @@
       ctx.textAlign = 'right';
       ctx.fillText('Super Saufi Academic Director', 1080, 620);
       ctx.fillText('Official Seal & Signature', 1080, 645);
-    }
-
-    function openCertificateModal() {
-      drawCertificate();
-      document.getElementById('cert-modal').classList.remove('hidden');
-    }
-
-    function closeCertificateModal() {
-      document.getElementById('cert-modal').classList.add('hidden');
-    }
-
-    function drawCertificate() {
-      const canvas = document.getElementById('cert-canvas');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      canvas.width = 1200;
-      canvas.height = 750;
-
-      // Background Gradient
-      const grad = ctx.createLinearGradient(0, 0, 1200, 750);
-      grad.addColorStop(0, '#0f172a');
-      grad.addColorStop(1, '#1e1b4b');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 1200, 750);
-
-      // Gold Borders
-      ctx.lineWidth = 14;
-      ctx.strokeStyle = '#f59e0b';
-      ctx.strokeRect(25, 25, 1150, 700);
-
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = '#fef08a';
-      ctx.strokeRect(38, 38, 1124, 674);
-
-      // Certificate Title
-      ctx.textAlign = 'center';
-      ctx.fillStyle = '#fbbf24';
-      ctx.font = 'bold 36px "Lilita One", sans-serif';
-      ctx.fillText('CERTIFICATE OF EXCELLENCE & ACHIEVEMENT', 600, 120);
-
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '22px "Nunito", sans-serif';
-      ctx.fillText('SUPER SAUFI 3D GESTURE GRAMMAR ARCADE', 600, 160);
-
-      ctx.fillStyle = '#cbd5e1';
-      ctx.font = 'italic 18px "Nunito", sans-serif';
-      ctx.fillText('This certificate is proudly presented to:', 600, 240);
-
-      // Student Name
-      ctx.fillStyle = '#fde047';
-      ctx.font = 'bold 50px "Lilita One", sans-serif';
-      ctx.fillText((gameState.student.name || 'Saufi Aiman').toUpperCase(), 600, 310);
-
-      // Class and School
-      ctx.fillStyle = '#38bdf8';
-      ctx.font = 'bold 24px "Nunito", sans-serif';
-      ctx.fillText(`CLASS: ${gameState.student.class || 'Grade 5'}  |  SCHOOL: ${gameState.student.school || 'Seri Saujana Primary School'}`, 600, 360);
-
-      // Accomplishment Paragraph
-      ctx.fillStyle = '#f8fafc';
-      ctx.font = '20px "Nunito", sans-serif';
-      const earnedCount = gameState.completedCategories.length;
-      ctx.fillText(`For successfully mastering ${earnedCount} out of 12 English Grammar Missions and defeating the Titan Boss!`, 600, 440);
-      ctx.fillText(`Demonstrating exceptional agility, vocabulary mastery, and swift reflex coordination.`, 600, 475);
-
-      // Date & Signature line
-      const today = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
-      ctx.textAlign = 'left';
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '16px "Nunito", sans-serif';
-      ctx.fillText(`Date: ${today}`, 120, 620);
-
-      ctx.textAlign = 'right';
-      ctx.fillText('Academic Director, Super Saufi Arcade', 1080, 620);
-      ctx.fillText('Official Stamp & Certification', 1080, 645);
     }
 
     function downloadCertificate() {
