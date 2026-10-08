@@ -92,7 +92,7 @@
         <h1 class="font-hero text-xl sm:text-3xl text-yellow-300 hero-text-stroke leading-none tracking-wide">
           SUPER SAUFI
         </h1>
-        <p class="text-[11px] sm:text-xs text-amber-100 font-bold hidden sm:block">3D Gesture Smash: Punch ✊ • Slice 🖐️</p>
+        <p class="text-[11px] sm:text-xs text-amber-100 font-bold hidden sm:block">3D Gesture Smash: Punch ✊ with Clenched Fist</p>
       </div>
     </div>
 
@@ -151,18 +151,14 @@
         SMASH THE CUTE GRAMMAR MONSTERS!
       </h2>
 
-      <!-- Distance Play Hint Banner (Fist & Karate Chop only; Flick removed) -->
-      <div class="w-full bg-indigo-950/80 border-2 border-cyan-400/80 rounded-2xl p-2.5 sm:p-3 mb-4 flex flex-wrap items-center justify-center gap-3 sm:gap-8 text-xs sm:text-sm font-bold text-cyan-100">
+      <!-- Distance Play Hint Banner (Fist Punch only) -->
+      <div class="w-full bg-indigo-950/80 border-2 border-cyan-400/80 rounded-2xl p-2.5 sm:p-3 mb-4 flex flex-wrap items-center justify-center gap-4 sm:gap-10 text-xs sm:text-sm font-bold text-cyan-100">
         <div class="flex items-center gap-2">
-          <span class="w-7 h-7 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center text-base"><i class="fa-solid fa-hand-fist"></i></span>
-          <span><b class="text-yellow-300">PUNCH:</b> Clench Fist ✊ (Genggam)</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="w-7 h-7 rounded-full bg-cyan-400 text-slate-950 flex items-center justify-center text-base"><i class="fa-solid fa-hand"></i></span>
-          <span><b class="text-cyan-300">SLICE:</b> Karate Chop 🖐️ (Libas Pantas)</span>
+          <span class="w-8 h-8 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center text-lg shadow"><i class="fa-solid fa-hand-fist"></i></span>
+          <span><b class="text-yellow-300 text-sm sm:text-base">PUNCH:</b> Clench Fist ✊ (Genggam Penumbuk)</span>
         </div>
         <div class="flex items-center gap-2 text-emerald-300">
-          <i class="fa-solid fa-mobile-screen"></i> Touch / Click Backup Ready!
+          <i class="fa-solid fa-mobile-screen"></i> Touch / Mouse Punch Also Supported!
         </div>
       </div>
 
@@ -242,7 +238,7 @@
             NOUN
           </span>
           <h3 id="arena-question-text" class="font-arcade text-xl sm:text-3xl md:text-4xl text-white hero-text-stroke leading-tight tracking-wide drop-shadow-xl">
-            PUNCH ✊ OR SLICE 🖐️ THE CORRECT ANSWER!
+            PUNCH ✊ THE MONSTER WITH THE CORRECT ANSWER!
           </h3>
         </div>
 
@@ -273,7 +269,7 @@
         <div class="flex items-center gap-2">
           <span id="gesture-pulse-dot" class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
           <span id="gesture-hint-label" class="text-amber-300 font-black text-xs sm:text-sm">
-            Aim hand & GENGGAM FIST ✊ or SLICE 🖐️ to hit!
+            Aim hand & GENGGAM FIST ✊ to punch!
           </span>
         </div>
         <div class="flex items-center gap-2.5">
@@ -293,29 +289,36 @@
         </div>
       </div>
 
-      <!-- Distance Educational Feedback Popup Dialog (Includes Malay Grammar Definition) -->
+      <!-- Distance Educational Feedback Popup Dialog (Word Definition in BM & English) -->
       <div id="dialog-feedback" class="absolute inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 hidden">
         <div id="dialog-card" class="bg-gradient-to-b from-slate-900 to-indigo-950 border-4 border-yellow-400 p-5 sm:p-7 rounded-3xl max-w-lg w-full text-center shadow-2xl transform scale-95 transition-all">
           <div id="dialog-icon-wrap" class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-2 rounded-full bg-emerald-500 flex items-center justify-center text-3xl sm:text-4xl text-slate-950 border-3 border-white shadow-xl">
             <i class="fa-solid fa-check"></i>
           </div>
-          <h4 id="dialog-title" class="font-arcade text-2xl sm:text-4xl text-yellow-300 hero-text-stroke mb-1 uppercase">SUPER HIT!</h4>
+          <h4 id="dialog-title" class="font-arcade text-2xl sm:text-4xl text-yellow-300 hero-text-stroke mb-2 uppercase">SUPER HIT!</h4>
           
-          <!-- Malay Grammar Definition Box -->
-          <div class="mb-3 bg-amber-400/10 border border-amber-400/40 rounded-xl p-2.5 text-left">
-            <span class="text-[11px] font-black uppercase text-amber-300 tracking-wider block mb-0.5">
-              <i class="fa-solid fa-book-bookmark mr-1"></i> Definisi Tatabahasa:
-            </span>
-            <p id="dialog-malay-def" class="text-xs sm:text-sm text-amber-100 font-semibold leading-snug">
-              Kata nama ialah perkataan yang menamakan orang, haiwan, tempat, benda, atau konsep.
+          <!-- Word Definition Box (Meaning of the punched word) -->
+          <div class="mb-3 bg-amber-400/10 border-2 border-amber-400/40 rounded-2xl p-3 text-left shadow-inner">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-black uppercase text-amber-300 tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-book-open text-yellow-400"></i> Maksud Perkataan (Word Definition)
+              </span>
+              <span id="dialog-word-tag" class="text-[10px] font-black px-2 py-0.5 rounded-full bg-yellow-400 text-slate-950 uppercase">NOUN</span>
+            </div>
+            <div id="dialog-word-head" class="text-base sm:text-lg font-black text-yellow-200 mb-1">Cheetah</div>
+            <p id="dialog-word-def-bm" class="text-xs sm:text-sm text-amber-100 font-semibold leading-snug mb-1">
+              <b>BM:</b> Haiwan pemangsa yang sangat pantas dan tergolong dalam keluarga kucing liar.
+            </p>
+            <p id="dialog-word-def-en" class="text-xs sm:text-sm text-slate-300 font-medium leading-snug">
+              <b>EN:</b> A fast-running, large spotted wild cat from Africa and parts of Iran.
             </p>
           </div>
 
-          <p id="dialog-explanation" class="text-white text-sm sm:text-base font-bold leading-relaxed mb-3 bg-slate-950/70 p-3 rounded-2xl border border-slate-700">
-            'Mountain' is a noun because it identifies a physical object!
+          <p id="dialog-explanation" class="text-white text-xs sm:text-sm font-bold leading-relaxed mb-3 bg-slate-950/70 p-2.5 rounded-xl border border-slate-700">
+            'Cheetah' is a noun because it names a specific animal!
           </p>
           <div class="text-xs sm:text-sm text-amber-300 font-black uppercase tracking-wider animate-pulse">
-            Next Level Loading...
+            Next Target Loading...
           </div>
         </div>
       </div>
@@ -463,37 +466,6 @@
         } catch(e) {}
       }
 
-      playSlice() {
-        if (this.isMuted) return;
-        this.init();
-        if (!this.ctx) return;
-        try {
-          const t = this.ctx.currentTime;
-          const bufferSize = this.ctx.sampleRate * 0.18;
-          const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-          const data = buffer.getChannelData(0);
-          for (let i = 0; i < bufferSize; i++) {
-            data[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * (i / bufferSize));
-          }
-          const noise = this.ctx.createBufferSource();
-          noise.buffer = buffer;
-          const filter = this.ctx.createBiquadFilter();
-          filter.type = 'bandpass';
-          filter.frequency.setValueAtTime(1200, t);
-          filter.frequency.exponentialRampToValueAtTime(400, t + 0.18);
-
-          const gain = this.ctx.createGain();
-          gain.gain.setValueAtTime(0.8, t);
-          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.18);
-
-          noise.connect(filter);
-          filter.connect(gain);
-          gain.connect(this.ctx.destination);
-          noise.start(t);
-          noise.stop(t + 0.19);
-        } catch(e) {}
-      }
-
       playCorrect() {
         if (this.isMuted) return;
         this.init();
@@ -601,163 +573,937 @@
       noun: {
         name: "Nouns (Kata Nama)",
         tag: "NOUN",
-        definitionBM: "Kata nama ialah perkataan yang menamakan orang, haiwan, tempat, benda, atau konsep/keadaan.",
         icon: "fa-solid fa-mountain",
         theme: "from-blue-600 to-cyan-500",
         bossName: "TITAN GOLEM OF SUBSTANCE",
         levels: [
-          { prompt: "HIT the NOUN (Living Creature):", correct: "Cheetah", distractors: ["Rapidly", "Sprint"], expl: "'Cheetah' is a noun naming a living creature!" },
-          { prompt: "Spot the NOUN (Physical Object):", correct: "Umbrella", distractors: ["Rainy", "Shelter-verb"], expl: "'Umbrella' is a physical object noun!" },
-          { prompt: "HIT the NOUN (Physical Place):", correct: "Laboratory", distractors: ["Scientific", "Analyze"], expl: "'Laboratory' is a noun designating a physical venue!" },
-          { prompt: "Find the Compound NOUN:", correct: "Earthquake", distractors: ["Tremble", "Shaky"], expl: "'Earthquake' is a compound noun representing an event!" },
-          { prompt: "HIT the Abstract NOUN (Emotion/State):", correct: "Gratitude", distractors: ["Thankful", "Appreciate"], expl: "'Gratitude' is an abstract noun for thankful feelings!" },
-          { prompt: "Identify the Scientific NOUN:", correct: "Atmosphere", distractors: ["Gaseous", "Breathe"], expl: "'Atmosphere' is a scientific noun naming the air blanket around Earth!" },
-          { prompt: "HIT the Architecture NOUN:", correct: "Labyrinth", distractors: ["Perplexed", "Twist"], expl: "'Labyrinth' is a noun meaning an intricate maze!" },
-          { prompt: "Spot the Noble Character NOUN:", correct: "Benevolence", distractors: ["Generous", "Kindly"], expl: "'Benevolence' is a noun meaning active goodwill!" },
-          { prompt: "HIT the Rare Sophisticated NOUN:", correct: "Serendipity", distractors: ["Accidental", "Discover"], expl: "'Serendipity' is a noun meaning valuable chance discovery!" },
+          { 
+            prompt: "HIT the NOUN (Living Creature):", 
+            correct: "Cheetah", 
+            distractors: ["Rapidly", "Sprint"], 
+            expl: "'Cheetah' is a noun naming a living creature!",
+            defs: {
+              "Cheetah": { bm: "Haiwan pemangsa terpantas di darat dalam keluarga kucing liar.", en: "The fastest land mammal, a large spotted cat." },
+              "Rapidly": { bm: "Secara amat laju atau pantas (Kata Keterangan / Adverb).", en: "In a very fast manner (Adverb)." },
+              "Sprint": { bm: "Berlari dengan kelajuan maksimum (Kata Kerja / Verb).", en: "Run at full speed over a short distance (Verb)." }
+            }
+          },
+          { 
+            prompt: "Spot the NOUN (Physical Object):", 
+            correct: "Umbrella", 
+            distractors: ["Rainy", "Shelter"], 
+            expl: "'Umbrella' is a physical object noun used for rain or sun!",
+            defs: {
+              "Umbrella": { bm: "Alat perlindungan daripada hujan atau panas matahari (Payung).", en: "A portable device used for protection against rain or sunlight." },
+              "Rainy": { bm: "Keadaan cuaca yang kerap menurunkan hujan (Kata Adjektif).", en: "Having or bringing a lot of rain (Adjective)." },
+              "Shelter": { bm: "Melindungi atau berlindung daripada bahaya/hujan (Kata Kerja).", en: "Protect or shield from bad weather or danger (Verb)." }
+            }
+          },
+          { 
+            prompt: "HIT the NOUN (Physical Place):", 
+            correct: "Laboratory", 
+            distractors: ["Scientific", "Analyze"], 
+            expl: "'Laboratory' is a noun designating a physical venue!",
+            defs: {
+              "Laboratory": { bm: "Bilik atau bangunan yang dilengkapi untuk eksperimen sains (Makmal).", en: "A room or building equipped for scientific experiments." },
+              "Scientific": { bm: "Berasaskan atau berkaitan dengan ilmu sains (Kata Adjektif).", en: "Based on or characterized by the methods of science (Adjective)." },
+              "Analyze": { bm: "Mengkaji atau menghuraikan secara terperinci (Kata Kerja).", en: "Examine methodically and in detail (Verb)." }
+            }
+          },
+          { 
+            prompt: "Find the Compound NOUN:", 
+            correct: "Earthquake", 
+            distractors: ["Tremble", "Shaky"], 
+            expl: "'Earthquake' is a compound noun representing a geological event!",
+            defs: {
+              "Earthquake": { bm: "Gegaran atau pergerakan mengejut pada permukaan bumi (Gempa bumi).", en: "A sudden violent shaking of the ground caused by seismic activity." },
+              "Tremble": { bm: "Menggeletar atau bergetar akibat ketakutan atau tekanan (Kata Kerja).", en: "Shake involuntarily, typically as a result of anxiety or excitement (Verb)." },
+              "Shaky": { bm: "Goyang, tidak stabil atau bergetar (Kata Adjektif).", en: "Shaking or unsteady (Adjective)." }
+            }
+          },
+          { 
+            prompt: "HIT the Abstract NOUN (Emotion/State):", 
+            correct: "Gratitude", 
+            distractors: ["Thankful", "Appreciate"], 
+            expl: "'Gratitude' is an abstract noun for thankful feelings!",
+            defs: {
+              "Gratitude": { bm: "Perasaan menghargai dan bersyukur atas pertolongan atau kebaikan.", en: "The quality of being thankful; readiness to show appreciation." },
+              "Thankful": { bm: "Merasa bersyukur atau berterima kasih (Kata Adjektif).", en: "Pleased and relieved; expressing gratitude (Adjective)." },
+              "Appreciate": { bm: "Menghargai nilai atau kebaikan sesuatu perkara (Kata Kerja).", en: "Recognize the full worth of (Verb)." }
+            }
+          },
+          { 
+            prompt: "Identify the Scientific NOUN:", 
+            correct: "Atmosphere", 
+            distractors: ["Gaseous", "Breathe"], 
+            expl: "'Atmosphere' is a scientific noun naming the gas blanket around Earth!",
+            defs: {
+              "Atmosphere": { bm: "Lapisan gas yang menyelubungi bumi atau planet lain (Atmosfera).", en: "The envelope of gases surrounding the Earth or another planet." },
+              "Gaseous": { bm: "Mempunyai sifat atau berupa gas (Kata Adjektif).", en: "Having the characteristics of and relating to gas (Adjective)." },
+              "Breathe": { bm: "Menyedut dan menghembuskan udara ke dalam paru-paru (Kata Kerja).", en: "Take air into the lungs and expel it (Verb)." }
+            }
+          },
+          { 
+            prompt: "HIT the Architecture NOUN:", 
+            correct: "Labyrinth", 
+            distractors: ["Perplexed", "Twist"], 
+            expl: "'Labyrinth' is a noun meaning an intricate maze!",
+            defs: {
+              "Labyrinth": { bm: "Rangkaian laluan berselirat yang rumit dan mengelirukan (Labirin).", en: "A complicated irregular network of passages or paths; a maze." },
+              "Perplexed": { bm: "Bingung atau berasa keliru (Kata Adjektif).", en: "Completely baffled or puzzled (Adjective)." },
+              "Twist": { bm: "Memulas, memintal, atau membengkokkan sesuatu (Kata Kerja).", en: "Form into a bent, curling, or distorted shape (Verb)." }
+            }
+          },
+          { 
+            prompt: "Spot the Noble Character NOUN:", 
+            correct: "Benevolence", 
+            distractors: ["Generous", "Kindly"], 
+            expl: "'Benevolence' is a noun meaning active goodwill and kindness!",
+            defs: {
+              "Benevolence": { bm: "Sifat bermurah hati, penyayang, dan suka membuat kebajikan.", en: "The quality of being well meaning; kindness." },
+              "Generous": { bm: "Suka memberi atau bersedekah (Kata Adjektif).", en: "Showing a readiness to give more of something (Adjective)." },
+              "Kindly": { bm: "Dengan cara yang mesra dan baik hati (Kata Keterangan / Adverb).", en: "In a kind, friendly manner (Adverb)." }
+            }
+          },
+          { 
+            prompt: "HIT the Rare Sophisticated NOUN:", 
+            correct: "Serendipity", 
+            distractors: ["Accidental", "Discover"], 
+            expl: "'Serendipity' is a noun meaning valuable chance discovery!",
+            defs: {
+              "Serendipity": { bm: "Kebolehan menemukan perkara bernilai atau menyenangkan secara kebetulan.", en: "The occurrence and development of events by chance in a happy or beneficial way." },
+              "Accidental": { bm: "Berlaku tanpa diduga atau secara tidak sengaja (Kata Adjektif).", en: "Happening by chance, unintentionally (Adjective)." },
+              "Discover": { bm: "Menemui sesuatu yang belum diketahui sebelumnya (Kata Kerja).", en: "Find unexpectedly or in the course of a search (Verb)." }
+            }
+          },
           // Level 10 Boss Pool
-          { prompt: "BOSS RUSH! Punch/Slice as many NOUNS to defeat the Titan!", isBoss: true, bossHp: 5, pool: [
-            { correct: "Pyramid", distractors: ["Ancient", "Construct"] },
-            { correct: "Galaxy", distractors: ["Immense", "Orbiting"] },
-            { correct: "Microscope", distractors: ["Tiny", "Magnify"] },
-            { correct: "Fortitude", distractors: ["Brave", "Endure"] },
-            { correct: "Cascade", distractors: ["Flowing", "Rush"] }
-          ]}
+          { 
+            prompt: "BOSS RUSH! Punch the NOUNS with your FIST ✊ to defeat the Titan!", 
+            isBoss: true, 
+            bossHp: 5, 
+            pool: [
+              { 
+                correct: "Pyramid", distractors: ["Ancient", "Construct"],
+                defs: {
+                  "Pyramid": { bm: "Struktur monumen batu berbentuk segi tiga piramid.", en: "A monumental structure with a square or triangular base and sloping sides." },
+                  "Ancient": { bm: "Purba atau zaman dahulu kala (Kata Adjektif).", en: "Belonging to the very distant past (Adjective)." },
+                  "Construct": { bm: "Membina atau mendirikan struktur (Kata Kerja).", en: "Build or erect something (Verb)." }
+                }
+              },
+              { 
+                correct: "Galaxy", distractors: ["Immense", "Orbiting"],
+                defs: {
+                  "Galaxy": { bm: "Sistem jutaan bintang, gas, dan habuk dalam alam semesta (Galaksi).", en: "A system of millions or billions of stars, together with gas and dust." },
+                  "Immense": { bm: "Sangat besar atau luas sekali (Kata Adjektif).", en: "Extremely large or great, especially in scale or degree (Adjective)." },
+                  "Orbiting": { bm: "Mengelilingi jasad angkasa mengikut orbit (Kata Kerja).", en: "Moving around a celestial body in an orbit (Verb)." }
+                }
+              },
+              { 
+                correct: "Microscope", distractors: ["Tiny", "Magnify"],
+                defs: {
+                  "Microscope": { bm: "Alat optik untuk melihat objek seni yang tidak dapat dilihat mata kasar (Mikroskop).", en: "An optical instrument used for viewing very small objects." },
+                  "Tiny": { bm: "Sangat kecil saiznya (Kata Adjektif).", en: "Very small (Adjective)." },
+                  "Magnify": { bm: "Membesarkan saiz imej sesuatu objek (Kata Kerja).", en: "Make something appear larger than it is (Verb)." }
+                }
+              },
+              { 
+                correct: "Fortitude", distractors: ["Brave", "Endure"],
+                defs: {
+                  "Fortitude": { bm: "Ketabahan hati dan kekuatan mental menghadapi kesukaran.", en: "Courage in pain or adversity." },
+                  "Brave": { bm: "Berani dan tidak gentar (Kata Adjektif).", en: "Ready to face and endure danger or pain (Adjective)." },
+                  "Endure": { bm: "Menahan atau menempuh kepayahan (Kata Kerja).", en: "Suffer patiently or remain in existence (Verb)." }
+                }
+              },
+              { 
+                correct: "Cascade", distractors: ["Flowing", "Rush"],
+                defs: {
+                  "Cascade": { bm: "Air terjun kecil yang bertingkat-tingkat curam.", en: "A small waterfall, typically one of several that fall in stages." },
+                  "Flowing": { bm: "Mengalir secara berterusan (Kata Adjektif/Kerja).", en: "Moving continuously in a stream (Adjective/Verb)." },
+                  "Rush": { bm: "Meluru atau bergerak tergesa-gesa (Kata Kerja).", en: "Move with urgent haste (Verb)." }
+                }
+              }
+            ]
+          }
         ]
       },
       verb: {
         name: "Verbs (Kata Kerja)",
         tag: "VERB",
-        definitionBM: "Kata kerja ialah perkataan yang menyatakan perbuatan, tindakan fizikal/mental, atau keadaan yang dilakukan.",
         icon: "fa-solid fa-bolt-lightning",
         theme: "from-amber-600 to-red-500",
         bossName: "KINETIC CYBORG OVERLORD",
         levels: [
-          { prompt: "HIT the VERB (Fast Action):", correct: "Gallop", distractors: ["Stallion", "Swift"], expl: "'Gallop' is a verb describing horse motion!" },
-          { prompt: "Spot the Impact VERB:", correct: "Shatter", distractors: ["Glass", "Fragile"], expl: "'Shatter' is a verb meaning to smash into pieces!" },
-          { prompt: "HIT the Mental Action VERB:", correct: "Investigate", distractors: ["Detective", "Curious"], expl: "'Investigate' is a verb meaning to examine systematically!" },
-          { prompt: "Identify the Speech VERB:", correct: "Articulate", distractors: ["Eloquent", "Speech"], expl: "'Articulate' is a verb meaning to express clearly!" },
-          { prompt: "HIT the Force VERB:", correct: "Propel", distractors: ["Propeller", "Forceful"], expl: "'Propel' is a verb meaning to push or drive forward!" },
-          { prompt: "Find the Science VERB:", correct: "Oscillate", distractors: ["Pendulum", "Rhythmic"], expl: "'Oscillate' is a verb meaning to swing back and forth!" },
-          { prompt: "HIT the Transformation VERB:", correct: "Metamorphose", distractors: ["Chrysalis", "Organic"], expl: "'Metamorphose' is a verb meaning to transform completely!" },
-          { prompt: "Spot the Explaining VERB:", correct: "Elucidate", distractors: ["Clarity", "Lucid"], expl: "'Elucidate' is a verb meaning to make clear!" },
-          { prompt: "HIT the Evidence VERB:", correct: "Corroborate", distractors: ["Evidence", "Certain"], expl: "'Corroborate' is a verb meaning to verify or confirm!" },
+          { 
+            prompt: "HIT the VERB (Fast Action):", 
+            correct: "Gallop", 
+            distractors: ["Stallion", "Swift"], 
+            expl: "'Gallop' is a verb describing the fastest gait of a horse!",
+            defs: {
+              "Gallop": { bm: "Berlari kencang dengan langkah pantas (bagi kuda).", en: "The fastest pace of a horse or other quadruped; to run fast." },
+              "Stallion": { bm: "Kuda jantan dewasa yang belum dikembiri (Kata Nama).", en: "An uncastrated adult male horse (Noun)." },
+              "Swift": { bm: "Laju atau tangkas pergerakannya (Kata Adjektif).", en: "Happening quickly or moving at high speed (Adjective)." }
+            }
+          },
+          { 
+            prompt: "Spot the Impact VERB:", 
+            correct: "Shatter", 
+            distractors: ["Glass", "Fragile"], 
+            expl: "'Shatter' is a verb meaning to break violently into pieces!",
+            defs: {
+              "Shatter": { bm: "Pecah berderai atau hancur menjadi serpihan kecil.", en: "Break or cause to break violently into small pieces." },
+              "Glass": { bm: "Bahan lutsinar rapuh yang biasa dibuat tingkap atau cawan (Kaca / Kata Nama).", en: "A hard, brittle transparent solid substance (Noun)." },
+              "Fragile": { bm: "Mudah pecah atau rosak (Kata Adjektif).", en: "Easily broken or damaged (Adjective)." }
+            }
+          },
+          { 
+            prompt: "HIT the Mental Action VERB:", 
+            correct: "Investigate", 
+            distractors: ["Detective", "Curious"], 
+            expl: "'Investigate' is a verb meaning to systematically examine!",
+            defs: {
+              "Investigate": { bm: "Menyiasat atau memeriksa fakta secara mendalam dan terperinci.", en: "Carry out a systematic or formal inquiry to discover facts." },
+              "Detective": { bm: "Pegawai polis atau penyiasat yang menyiasat kes jenayah (Kata Nama).", en: "A person whose occupation is to investigate crimes (Noun)." },
+              "Curious": { bm: "Ingin tahu atau berminat mendalam tentang sesuatu (Kata Adjektif).", en: "Eager to know or learn something (Adjective)." }
+            }
+          },
+          { 
+            prompt: "Identify the Speech VERB:", 
+            correct: "Articulate", 
+            distractors: ["Eloquent", "Speech"], 
+            expl: "'Articulate' is a verb meaning to express clearly!",
+            defs: {
+              "Articulate": { bm: "Melafazkan atau menyatakan fikiran dengan jelas dan fasih.", en: "Express an idea or feeling fluently and coherently." },
+              "Eloquent": { bm: "Fasih dan memikat susunan bicaranya (Kata Adjektif).", en: "Fluent or persuasive in speaking or writing (Adjective)." },
+              "Speech": { bm: "Syarahan, ucapan, atau kemampuan bertutur (Kata Nama).", en: "The expression of or the ability to express thoughts (Noun)." }
+            }
+          },
+          { 
+            prompt: "HIT the Force VERB:", 
+            correct: "Propel", 
+            distractors: ["Propeller", "Forceful"], 
+            expl: "'Propel' is a verb meaning to drive forward with force!",
+            defs: {
+              "Propel": { bm: "Menolak atau menggerakkan sesuatu ke hadapan dengan daya kuat.", en: "Drive, push, or cause to move in a particular direction." },
+              "Propeller": { bm: "Bilah kipas yang memacu kapal terbang atau bot (Kata Nama).", en: "A mechanical device with blades that propels a craft (Noun)." },
+              "Forceful": { bm: "Kuat, bertenaga, atau tegas (Kata Adjektif).", en: "Strong and assertive; vigorous (Adjective)." }
+            }
+          },
+          { 
+            prompt: "Find the Science VERB:", 
+            correct: "Oscillate", 
+            distractors: ["Pendulum", "Rhythmic"], 
+            expl: "'Oscillate' is a verb meaning to swing back and forth!",
+            defs: {
+              "Oscillate": { bm: "Berayun ke hadapan dan ke belakang secara berkala (Berayun).", en: "Move or swing back and forth at a regular speed." },
+              "Pendulum": { bm: "Beban yang digantung bebas untuk berayun (Kata Nama).", en: "A weight hung from a fixed point so that it can swing freely (Noun)." },
+              "Rhythmic": { bm: "Mempunyai rentak yang teratur (Kata Adjektif).", en: "Having or relating to a regular rhythm (Adjective)." }
+            }
+          },
+          { 
+            prompt: "HIT the Transformation VERB:", 
+            correct: "Metamorphose", 
+            distractors: ["Chrysalis", "Organic"], 
+            expl: "'Metamorphose' is a verb meaning to undergo complete metamorphosis!",
+            defs: {
+              "Metamorphose": { bm: "Berubah bentuk atau rupa sepenuhnya (Bermetamorfosis).", en: "Change or cause to change completely in form or nature." },
+              "Chrysalis": { bm: "Kepompong rama-rama sebelum menetas (Kata Nama).", en: "A quiescent insect pupa, especially of a butterfly (Noun)." },
+              "Organic": { bm: "Semula jadi atau berasal daripada hidupan (Kata Adjektif).", en: "Relating to or derived from living matter (Adjective)." }
+            }
+          },
+          { 
+            prompt: "Spot the Explaining VERB:", 
+            correct: "Elucidate", 
+            distractors: ["Clarity", "Lucid"], 
+            expl: "'Elucidate' is a verb meaning to make clear and explain!",
+            defs: {
+              "Elucidate": { bm: "Menerangkan dan menjelaskan sesuatu agar mudah difahami.", en: "Make something clear; explain." },
+              "Clarity": { bm: "Kejelasan atau ketelusan makna (Kata Nama).", en: "The quality of being clear, in particular easily understood (Noun)." },
+              "Lucid": { bm: "Jelas dan mudah difahami (Kata Adjektif).", en: "Expressed clearly; easy to understand (Adjective)." }
+            }
+          },
+          { 
+            prompt: "HIT the Evidence VERB:", 
+            correct: "Corroborate", 
+            distractors: ["Evidence", "Certain"], 
+            expl: "'Corroborate' is a verb meaning to confirm or give support to a statement!",
+            defs: {
+              "Corroborate": { bm: "Mengesahkan atau menyokong kebenaran sesuatu kenyataan dengan bukti.", en: "Confirm or give support to a statement, theory, or finding." },
+              "Evidence": { bm: "Bahan bukti atau fakta yang menyokong dakwaan (Kata Nama).", en: "The available body of facts or information indicating validity (Noun)." },
+              "Certain": { bm: "Pasti atau yakin tanpa keraguan (Kata Adjektif).", en: "Known for sure; established beyond doubt (Adjective)." }
+            }
+          },
           // Level 10 Boss Pool
-          { prompt: "BOSS RUSH! Hit all VERBS to slice the Kinetic Overlord!", isBoss: true, bossHp: 5, pool: [
-            { correct: "Pulverize", distractors: ["Dust", "Powerful"] },
-            { correct: "Vindicate", distractors: ["Innocence", "Just"] },
-            { correct: "Demolish", distractors: ["Ruins", "Fragile"] },
-            { correct: "Illuminate", distractors: ["Lantern", "Bright"] },
-            { correct: "Accelerate", distractors: ["Speedy", "Velocity"] }
-          ]}
+          { 
+            prompt: "BOSS RUSH! Punch the VERBS with your FIST ✊ to defeat the Kinetic Overlord!", 
+            isBoss: true, 
+            bossHp: 5, 
+            pool: [
+              { 
+                correct: "Pulverize", distractors: ["Dust", "Powerful"],
+                defs: {
+                  "Pulverize": { bm: "Menghancurkan atau melumatkan sesuatu menjadi serbuk halus.", en: "Reduce to fine particles; crush or grind." },
+                  "Dust": { bm: "Habuk atau debu halus (Kata Nama).", en: "Fine, dry powder consisting of tiny particles (Noun)." },
+                  "Powerful": { bm: "Mempunyai kuasa atau kekuatan yang hebat (Kata Adjektif).", en: "Having great power or strength (Adjective)." }
+                }
+              },
+              { 
+                correct: "Demolish", distractors: ["Ruins", "Fragile"],
+                defs: {
+                  "Demolish": { bm: "Merobohkan atau meruntuhkan struktur bangunan.", en: "Pull or knock down a building." },
+                  "Ruins": { bm: "Puing-puing atau sisa runtuhan bangunan (Kata Nama).", en: "The physical destruction or remains of something (Noun)." },
+                  "Fragile": { bm: "Rapuh dan mudah musnah (Kata Adjektif).", en: "Easily broken or destroyed (Adjective)." }
+                }
+              },
+              { 
+                correct: "Illuminate", distractors: ["Lantern", "Bright"],
+                defs: {
+                  "Illuminate": { bm: "Menerangi dengan cahaya atau menjelaskan sesuatu.", en: "Light up or make something clearly visible." },
+                  "Lantern": { bm: "Tanglung atau lampu pembawa cahaya (Kata Nama).", en: "A portable lighting device (Noun)." },
+                  "Bright": { bm: "Terang atau berkilauan (Kata Adjektif).", en: "Giving out or reflecting a lot of light (Adjective)." }
+                }
+              },
+              { 
+                correct: "Accelerate", distractors: ["Speedy", "Velocity"],
+                defs: {
+                  "Accelerate": { bm: "Memecut atau menambah kelajuan sesuatu pergerakan.", en: "Increase in rate, amount, or speed." },
+                  "Speedy": { bm: "Cepat atau pantas (Kata Adjektif).", en: "Done or occurring quickly (Adjective)." },
+                  "Velocity": { bm: "Halaju sesaran objek bagi setiap unit masa (Kata Nama).", en: "The speed of something in a given direction (Noun)." }
+                }
+              },
+              { 
+                correct: "Vindicate", distractors: ["Innocence", "Just"],
+                defs: {
+                  "Vindicate": { bm: "Membersihkan nama seseorang daripada tuduhan atau syak wasangka.", en: "Clear someone of blame or suspicion." },
+                  "Innocence": { bm: "Keadaan tidak bersalah (Kata Nama).", en: "The state of being innocent of a crime (Noun)." },
+                  "Just": { bm: "Adil dan saksama (Kata Adjektif).", en: "Based on or behaving according to what is morally right (Adjective)." }
+                }
+              }
+            ]
+          }
         ]
       },
       adjective: {
         name: "Adjectives (Kata Adjektif)",
         tag: "ADJECTIVE",
-        definitionBM: "Kata adjektif ialah perkataan yang menerangkan sifat, keadaan, rupa, atau ciri sesuatu kata nama.",
         icon: "fa-solid fa-palette",
         theme: "from-purple-600 to-pink-500",
         bossName: "CHROMATIC SPECTRE TITAN",
         levels: [
-          { prompt: "HIT the ADJECTIVE (Describing Size):", correct: "Colossal", distractors: ["Giant", "Expand"], expl: "'Colossal' is an adjective describing gigantic scale!" },
-          { prompt: "Spot the Texture ADJECTIVE:", correct: "Velvety", distractors: ["Silk", "Soften"], expl: "'Velvety' is an adjective describing soft, smooth touch!" },
-          { prompt: "HIT the Light ADJECTIVE:", correct: "Luminous", distractors: ["Lantern", "Glow"], expl: "'Luminous' is an adjective meaning radiating bright light!" },
-          { prompt: "Identify the Character ADJECTIVE:", correct: "Tenacious", distractors: ["Grit", "Persist"], expl: "'Tenacious' is an adjective meaning firm and determined!" },
-          { prompt: "HIT the Storm ADJECTIVE:", correct: "Tempestuous", distractors: ["Storm", "Howl"], expl: "'Tempestuous' is an adjective meaning stormy and turbulent!" },
-          { prompt: "Find the Sound ADJECTIVE:", correct: "Resonant", distractors: ["Echo", "Reverberate"], expl: "'Resonant' is an adjective describing deep, rich sound!" },
-          { prompt: "HIT the Detail ADJECTIVE:", correct: "Meticulous", distractors: ["Precision", "Carefully"], expl: "'Meticulous' is an adjective meaning showing extreme care!" },
-          { prompt: "Spot the Brief Time ADJECTIVE:", correct: "Ephemeral", distractors: ["Moment", "Vanish"], expl: "'Ephemeral' is an adjective meaning lasting for a short time!" },
-          { prompt: "HIT the Everywhere ADJECTIVE:", correct: "Ubiquitous", distractors: ["Everywhere", "Presence"], expl: "'Ubiquitous' is an adjective meaning found everywhere!" },
+          { 
+            prompt: "HIT the ADJECTIVE (Describing Size):", 
+            correct: "Colossal", 
+            distractors: ["Giant", "Expand"], 
+            expl: "'Colossal' is an adjective describing gigantic scale!",
+            defs: {
+              "Colossal": { bm: "Tersangat besar, luar biasa gergasi saiznya.", en: "Extremely large; gigantic." },
+              "Giant": { bm: "Makhluk gergasi (Kata Nama).", en: "An imaginary or mythical being of superhuman size (Noun)." },
+              "Expand": { bm: "Mengembang atau meluaskan saiz (Kata Kerja).", en: "Become or make larger or more extensive (Verb)." }
+            }
+          },
+          { 
+            prompt: "Spot the Texture ADJECTIVE:", 
+            correct: "Velvety", 
+            distractors: ["Silk", "Soften"], 
+            expl: "'Velvety' is an adjective describing soft, smooth touch!",
+            defs: {
+              "Velvety": { bm: "Lembut, halus, dan gebu seperti kain baldu.", en: "Having a smooth, soft appearance or feel like velvet." },
+              "Silk": { bm: "Kain sutera yang halus tenunannya (Kata Nama).", en: "A fine, strong, soft lustrous fiber produced by silkworms (Noun)." },
+              "Soften": { bm: "Melembutkan sesuatu tekstur atau nada (Kata Kerja).", en: "Make or become less hard (Verb)." }
+            }
+          },
+          { 
+            prompt: "HIT the Light ADJECTIVE:", 
+            correct: "Luminous", 
+            distractors: ["Lantern", "Glow"], 
+            expl: "'Luminous' is an adjective meaning radiating bright light!",
+            defs: {
+              "Luminous": { bm: "Bercahaya terang benderang atau memancarkan sinar.", en: "Full of or shedding light; bright or shining, especially in the dark." },
+              "Lantern": { bm: "Lampu berkaca pelindung angin (Kata Nama).", en: "A lamp with a transparent case protecting the flame (Noun)." },
+              "Glow": { bm: "Memancarkan cahaya malap tanpa api (Kata Kerja).", en: "Give out steady light without a flame (Verb)." }
+            }
+          },
+          { 
+            prompt: "Identify the Character ADJECTIVE:", 
+            correct: "Tenacious", 
+            distractors: ["Grit", "Persist"], 
+            expl: "'Tenacious' is an adjective meaning firm and determined!",
+            defs: {
+              "Tenacious": { bm: "Sangat gigih, tabah, dan tidak mudah berputus asa.", en: "Tending to keep a firm hold of something; persistent and determined." },
+              "Grit": { bm: "Ketabahan dan keberanian jiwa (Kata Nama).", en: "Courage and resolve; strength of character (Noun)." },
+              "Persist": { bm: "Meneruskan usaha tanpa henti (Kata Kerja).", en: "Continue firmly or obstinately in an action (Verb)." }
+            }
+          },
+          { 
+            prompt: "HIT the Storm ADJECTIVE:", 
+            correct: "Tempestuous", 
+            distractors: ["Storm", "Howl"], 
+            expl: "'Tempestuous' is an adjective meaning stormy and turbulent!",
+            defs: {
+              "Tempestuous": { bm: "Bergelora hebat, ribut bercampur angin kencang.", en: "Characterized by strong and turbulent or conflicting emotion; stormy." },
+              "Storm": { bm: "Ribut taufan yang dahsyat (Kata Nama).", en: "A violent disturbance of the atmosphere with strong winds (Noun)." },
+              "Howl": { bm: "Melolong kuat seperti angin ribut atau serigala (Kata Kerja).", en: "Make a long, loud, doleful cry (Verb)." }
+            }
+          },
+          { 
+            prompt: "Find the Sound ADJECTIVE:", 
+            correct: "Resonant", 
+            distractors: ["Echo", "Reverberate"], 
+            expl: "'Resonant' is an adjective describing deep, rich sound!",
+            defs: {
+              "Resonant": { bm: "Bergema merdu, nyaring dan mendalam bunyinya.", en: "Deep, clear, and continuing to sound or ring." },
+              "Echo": { bm: "Gema pantulan bunyi daripada dinding atau bukit (Kata Nama).", en: "A sound or series of sounds caused by the reflection of sound waves (Noun)." },
+              "Reverberate": { bm: "Bergema atau memantul berulang kali (Kata Kerja).", en: "Be repeated several times as an echo (Verb)." }
+            }
+          },
+          { 
+            prompt: "HIT the Detail ADJECTIVE:", 
+            correct: "Meticulous", 
+            distractors: ["Precision", "Carefully"], 
+            expl: "'Meticulous' is an adjective meaning showing extreme care and detail!",
+            defs: {
+              "Meticulous": { bm: "Sangat teliti, cermat, dan berhati-hati dalam setiap perincian.", en: "Showing great attention to detail; very careful and precise." },
+              "Precision": { bm: "Kejituan atau ketepatan ukuran (Kata Nama).", en: "The quality, condition, or fact of being exact and accurate (Noun)." },
+              "Carefully": { bm: "Dengan berhati-hati (Kata Keterangan / Adverb).", en: "In a way that deliberately avoids harm or errors (Adverb)." }
+            }
+          },
+          { 
+            prompt: "Spot the Brief Time ADJECTIVE:", 
+            correct: "Ephemeral", 
+            distractors: ["Moment", "Vanish"], 
+            expl: "'Ephemeral' is an adjective meaning lasting for a very short time!",
+            defs: {
+              "Ephemeral": { bm: "Hanya kekal untuk masa yang sangat singkat (Sepintas lalu).", en: "Lasting for a very short time." },
+              "Moment": { bm: "Satu detik masa yang singkat (Kata Nama).", en: "A very brief period of time (Noun)." },
+              "Vanish": { bm: "Lenyap atau hilang daripada pandangan (Kata Kerja).", en: "Disappear suddenly and completely (Verb)." }
+            }
+          },
+          { 
+            prompt: "HIT the Everywhere ADJECTIVE:", 
+            correct: "Ubiquitous", 
+            distractors: ["Everywhere", "Presence"], 
+            expl: "'Ubiquitous' is an adjective meaning found everywhere!",
+            defs: {
+              "Ubiquitous": { bm: "Ada di mana-mana sahaja pada masa yang sama.", en: "Present, appearing, or found everywhere." },
+              "Everywhere": { bm: "Di merata-rata tempat (Kata Keterangan / Adverb).", en: "In or to all places (Adverb)." },
+              "Presence": { bm: "Kehadiran atau keberadaan fizikal (Kata Nama).", en: "The state or fact of existing, occurring, or being present (Noun)." }
+            }
+          },
           // Level 10 Boss Pool
-          { prompt: "BOSS RUSH! Hit all ADJECTIVES to shatter the Chromatic Titan!", isBoss: true, bossHp: 5, pool: [
-            { correct: "Invaluable", distractors: ["Treasure", "Enrich"] },
-            { correct: "Voracious", distractors: ["Appetite", "Devour"] },
-            { correct: "Luminescent", distractors: ["Bulb", "Shine"] },
-            { correct: "Magnificent", distractors: ["Royalty", "Praise"] },
-            { correct: "Formidable", distractors: ["Monster", "Fight"] }
-          ]}
+          { 
+            prompt: "BOSS RUSH! Punch the ADJECTIVES with your FIST ✊ to shatter the Titan!", 
+            isBoss: true, 
+            bossHp: 5, 
+            pool: [
+              { 
+                correct: "Invaluable", distractors: ["Treasure", "Enrich"],
+                defs: {
+                  "Invaluable": { bm: "Terlalu bernilai dan tidak ternilai harganya.", en: "Extremely useful; indispensable and priceless." },
+                  "Treasure": { bm: "Harta karun yang berharga (Kata Nama).", en: "A quantity of precious metals, gems, or other valuable objects (Noun)." },
+                  "Enrich": { bm: "Memperkaya atau menambah nilai (Kata Kerja).", en: "Improve or enhance the quality or value of (Verb)." }
+                }
+              },
+              { 
+                correct: "Voracious", distractors: ["Appetite", "Devour"],
+                defs: {
+                  "Voracious": { bm: "Sangat gelojoh atau bernafsu besar dalam makan/membaca.", en: "Wanting or devouring great quantities of food or activity." },
+                  "Appetite": { bm: "Selera makan (Kata Nama).", en: "A natural desire to satisfy a bodily need, especially for food (Noun)." },
+                  "Devour": { bm: "Melahap atau menelan dengan rakus (Kata Kerja).", en: "Eat food or prey hungrily or quickly (Verb)." }
+                }
+              },
+              { 
+                correct: "Magnificent", distractors: ["Royalty", "Praise"],
+                defs: {
+                  "Magnificent": { bm: "Sangat indah, megah, dan mengagumkan.", en: "Impressively beautiful, elaborate, or extravagant; striking." },
+                  "Royalty": { bm: "Kerabat diraja (Kata Nama).", en: "People of royal status (Noun)." },
+                  "Praise": { bm: "Memuji kebaikan atau keindahan (Kata Kerja).", en: "Express warm approval or admiration of (Verb)." }
+                }
+              },
+              { 
+                correct: "Formidable", distractors: ["Monster", "Fight"],
+                defs: {
+                  "Formidable": { bm: "Hebat dan menggerunkan hingga menimbulkan rasa hormat/takut.", en: "Inspiring fear or respect through being impressively large, powerful, or intense." },
+                  "Monster": { bm: "Raksasa atau makhluk menakutkan (Kata Nama).", en: "An imaginary creature that is typically large, ugly, and frightening (Noun)." },
+                  "Fight": { bm: "Berjuang atau bertarung (Kata Kerja).", en: "Take part in a violent struggle involving the exchange of physical blows (Verb)." }
+                }
+              },
+              { 
+                correct: "Luminescent", distractors: ["Bulb", "Shine"],
+                defs: {
+                  "Luminescent": { bm: "Memancarkan cahaya sejuk tanpa haba tinggi.", en: "Emitting light not caused by heat." },
+                  "Bulb": { bm: "Mentol lampu (Kata Nama).", en: "A glass bulb containing gas providing light by passage of electric current (Noun)." },
+                  "Shine": { bm: "Menyinari atau memancarkan cahaya (Kata Kerja).", en: "Give out or reflect light; be bright (Verb)." }
+                }
+              }
+            ]
+          }
         ]
       },
       adverb: {
         name: "Adverbs (Kata Keterangan)",
         tag: "ADVERB",
-        definitionBM: "Kata keterangan (adverb) ialah perkataan yang menerangkan kata kerja, sifat, atau cara sesuatu berlaku.",
         icon: "fa-solid fa-gauge-high",
         theme: "from-emerald-600 to-teal-500",
         bossName: "TEMPORAL PHANTOM OF SPEED",
         levels: [
-          { prompt: "HIT the ADVERB (Manner):", correct: "Gracefully", distractors: ["Dancer", "Grace"], expl: "'Gracefully' is an adverb describing HOW an action happens!" },
-          { prompt: "Spot the Time ADVERB:", correct: "Frequently", distractors: ["Often-times", "Frequent"], expl: "'Frequently' is an adverb showing how often something happens!" },
-          { prompt: "HIT the Place ADVERB:", correct: "Everywhere", distractors: ["Location", "Explore"], expl: "'Everywhere' is an adverb detailing WHERE!" },
-          { prompt: "Identify the Degree ADVERB:", correct: "Extremely", distractors: ["Extreme", "Limit"], expl: "'Extremely' is an adverb modifying adjectives or verbs!" },
-          { prompt: "HIT the Manner ADVERB:", correct: "Reluctantly", distractors: ["Hesitant", "Refusal"], expl: "'Reluctantly' is an adverb describing hesitant action!" },
-          { prompt: "Find the Certainty ADVERB:", correct: "Undoubtedly", distractors: ["Certain", "Doubt"], expl: "'Undoubtedly' is an adverb expressing no doubt!" },
-          { prompt: "HIT the Timing ADVERB:", correct: "Simultaneously", distractors: ["Timing", "Coincide"], expl: "'Simultaneously' is an adverb meaning at the exact same moment!" },
-          { prompt: "Spot the Accidental ADVERB:", correct: "Inadvertently", distractors: ["Accident", "Careless"], expl: "'Inadvertently' is an adverb meaning unintentionally!" },
-          { prompt: "HIT the Secret ADVERB:", correct: "Surreptitiously", distractors: ["Secret", "Stealthy"], expl: "'Surreptitiously' is an adverb meaning done stealthily!" },
+          { 
+            prompt: "HIT the ADVERB (Manner):", 
+            correct: "Gracefully", 
+            distractors: ["Dancer", "Grace"], 
+            expl: "'Gracefully' is an adverb describing HOW an action happens!",
+            defs: {
+              "Gracefully": { bm: "Dengan lemah gemalai, elok dan mempesonakan gerak-gerinya.", en: "In an attractively elegant and effortless manner." },
+              "Dancer": { bm: "Penari (Kata Nama).", en: "A person who dances or performs dance routines (Noun)." },
+              "Grace": { bm: "Keanggunan atau kehalusan budi (Kata Nama).", en: "Simple elegance or refinement of movement (Noun)." }
+            }
+          },
+          { 
+            prompt: "Spot the Time ADVERB:", 
+            correct: "Frequently", 
+            distractors: ["Constant", "Habit"], 
+            expl: "'Frequently' is an adverb showing how often something happens!",
+            defs: {
+              "Frequently": { bm: "Kerap kali atau berulang-ulang berlakunya.", en: "Regularly or habitually; often." },
+              "Constant": { bm: "Kekal tidak berubah atau berterusan (Kata Adjektif).", en: "Occurring continuously over a period of time (Adjective)." },
+              "Habit": { bm: "Tabiat atau kebiasaan (Kata Nama).", en: "A settled or regular tendency or practice (Noun)." }
+            }
+          },
+          { 
+            prompt: "HIT the Place ADVERB:", 
+            correct: "Everywhere", 
+            distractors: ["Location", "Explore"], 
+            expl: "'Everywhere' is an adverb detailing WHERE something is!",
+            defs: {
+              "Everywhere": { bm: "Di merata-rata tempat, di seluruh penjuru.", en: "In or to all places." },
+              "Location": { bm: "Lokasi atau kedudukan tapak (Kata Nama).", en: "A particular place or position (Noun)." },
+              "Explore": { bm: "Meneroka atau menjelajah kawasan baru (Kata Kerja).", en: "Travel through an unfamiliar area in order to learn about it (Verb)." }
+            }
+          },
+          { 
+            prompt: "Identify the Degree ADVERB:", 
+            correct: "Extremely", 
+            distractors: ["Extreme", "Limit"], 
+            expl: "'Extremely' is an adverb modifying adjectives or verbs to an extreme degree!",
+            defs: {
+              "Extremely": { bm: "Tersangat, amat, atau pada tahap yang luar biasa.", en: "To a very high degree; very." },
+              "Extreme": { bm: "Melampau atau pada tahap tertinggi (Kata Adjektif).", en: "Reaching a high or the highest degree; very great (Adjective)." },
+              "Limit": { bm: "Had sempadan (Kata Nama/Kerja).", en: "A point beyond which something does not or may not extend (Noun)." }
+            }
+          },
+          { 
+            prompt: "HIT the Manner ADVERB:", 
+            correct: "Reluctantly", 
+            distractors: ["Hesitant", "Refusal"], 
+            expl: "'Reluctantly' is an adverb describing hesitant, unwilling action!",
+            defs: {
+              "Reluctantly": { bm: "Secara berat hati atau enggan melakukannya.", en: "In an unwilling and hesitant way." },
+              "Hesitant": { bm: "Ragu-ragu atau teragak-agak (Kata Adjektif).", en: "Tentative, unsure, or slow in acting or speaking (Adjective)." },
+              "Refusal": { bm: "Penolakan terhadap sesuatu tawaran (Kata Nama).", en: "An act of stating that you will not accept an offer (Noun)." }
+            }
+          },
+          { 
+            prompt: "Find the Certainty ADVERB:", 
+            correct: "Undoubtedly", 
+            distractors: ["Certain", "Doubt"], 
+            expl: "'Undoubtedly' is an adverb expressing absolute certainty!",
+            defs: {
+              "Undoubtedly": { bm: "Tidak dapat disangkal lagi, sudah pasti.", en: "Without doubt; certainly." },
+              "Certain": { bm: "Yakin atau pasti (Kata Adjektif).", en: "Known for sure; established beyond doubt (Adjective)." },
+              "Doubt": { bm: "Perasaan ragu atau curiga (Kata Nama).", en: "A feeling of uncertainty or lack of conviction (Noun)." }
+            }
+          },
+          { 
+            prompt: "HIT the Timing ADVERB:", 
+            correct: "Simultaneously", 
+            distractors: ["Timing", "Coincide"], 
+            expl: "'Simultaneously' is an adverb meaning at the exact same moment!",
+            defs: {
+              "Simultaneously": { bm: "Secara serentak pada waktu yang sama tepat.", en: "At the same time." },
+              "Timing": { bm: "Ketetapan masa berlaku (Kata Nama).", en: "The choice, judgment, or control of when something should be done (Noun)." },
+              "Coincide": { bm: "Berlaku serentak atau bertembung (Kata Kerja).", en: "Occur at or during the same time (Verb)." }
+            }
+          },
+          { 
+            prompt: "Spot the Accidental ADVERB:", 
+            correct: "Inadvertently", 
+            distractors: ["Accident", "Careless"], 
+            expl: "'Inadvertently' is an adverb meaning unintentionally or without realizing!",
+            defs: {
+              "Inadvertently": { bm: "Tanpa disengajakan atau secara tidak sengaja terlepas pandang.", en: "Without intention; accidentally." },
+              "Accident": { bm: "Kemalangan atau peristiwa tidak diduga (Kata Nama).", en: "An unfortunate incident that happens unexpectedly (Noun)." },
+              "Careless": { bm: "Cuai dan tidak berhati-hati (Kata Adjektif).", en: "Not giving sufficient attention or thought (Adjective)." }
+            }
+          },
+          { 
+            prompt: "HIT the Secret ADVERB:", 
+            correct: "Surreptitiously", 
+            distractors: ["Secret", "Stealthy"], 
+            expl: "'Surreptitiously' is an adverb meaning done stealthily and secretly!",
+            defs: {
+              "Surreptitiously": { bm: "Secara sembunyi-sembunyi agar tidak disedari sesiapa.", en: "In a way that attempts to avoid notice or attention; secretively." },
+              "Secret": { bm: "Rahsia yang disorokkan (Kata Nama/Adjektif).", en: "Not known or seen or not meant to be known or seen (Noun/Adjective)." },
+              "Stealthy": { bm: "Licik dan senyap gerakannya (Kata Adjektif).", en: "Behaving or done in a cautious and surreptitious manner (Adjective)." }
+            }
+          },
           // Level 10 Boss Pool
-          { prompt: "BOSS RUSH! Hit all ADVERBS to outpace the Temporal Phantom!", isBoss: true, bossHp: 5, pool: [
-            { correct: "Spontaneously", distractors: ["Sudden", "Impulse"] },
-            { correct: "Vigorously", distractors: ["Energy", "Strength"] },
-            { correct: "Relentlessly", distractors: ["Persistent", "Chaser"] },
-            { correct: "Diligently", distractors: ["Hardworking", "Labor"] },
-            { correct: "Invariably", distractors: ["Permanent", "Always-fact"] }
-          ]}
+          { 
+            prompt: "BOSS RUSH! Punch the ADVERBS with your FIST ✊ to outpace the Phantom!", 
+            isBoss: true, 
+            bossHp: 5, 
+            pool: [
+              { 
+                correct: "Vigorously", distractors: ["Energy", "Strength"],
+                defs: {
+                  "Vigorously": { bm: "Dengan penuh bertenaga, cergas dan bersemangat kuat.", en: "In a way that involves physical strength, effort, or energy; strenuously." },
+                  "Energy": { bm: "Tenaga daya kerja (Kata Nama).", en: "The strength and vitality required for sustained activity (Noun)." },
+                  "Strength": { bm: "Kekuatan fizikal (Kata Nama).", en: "The quality or state of being physically strong (Noun)." }
+                }
+              },
+              { 
+                correct: "Relentlessly", distractors: ["Persistent", "Chaser"],
+                defs: {
+                  "Relentlessly": { bm: "Tanpa henti-henti dan tanpa mengalah walau sesaat.", en: "In an unceasingly intense or harsh way." },
+                  "Persistent": { bm: "Cekal berterusan (Kata Adjektif).", en: "Continuing firmly or obstinately in a course of action (Adjective)." },
+                  "Chaser": { bm: "Pengejar (Kata Nama).", en: "A person or thing that chases (Noun)." }
+                }
+              },
+              { 
+                correct: "Diligently", distractors: ["Hardworking", "Labor"],
+                defs: {
+                  "Diligently": { bm: "Dengan tekun, rajin, dan penuh kesungguhan.", en: "In a way that shows care and conscientiousness in one's work or duties." },
+                  "Hardworking": { bm: "Rajin bekerja (Kata Adjektif).", en: "Tending to work with energy and commitment (Adjective)." },
+                  "Labor": { bm: "Tenaga buruh atau kerja keras (Kata Nama).", en: "Work, especially hard physical work (Noun)." }
+                }
+              },
+              { 
+                correct: "Invariably", distractors: ["Permanent", "Always-fact"],
+                defs: {
+                  "Invariably": { bm: "Sentiasa berlaku demikian tanpa sebarang pengecualian.", en: "In every case or on every occasion; always." },
+                  "Permanent": { bm: "Kekal untuk selama-lamanya (Kata Adjektif).", en: "Lasting or intended to last indefinitely (Adjective)." },
+                  "Always-fact": { bm: "Fakta mutlak (Kata Nama gabungan).", en: "A continuous truth (Phrase)." }
+                }
+              },
+              { 
+                correct: "Spontaneously", distractors: ["Sudden", "Impulse"],
+                defs: {
+                  "Spontaneously": { bm: "Secara spontan tanpa dirancang terlebih dahulu.", en: "As a result of a sudden impulse and without premeditation." },
+                  "Sudden": { bm: "Tiba-tiba (Kata Adjektif).", en: "Occurring or done quickly and unexpectedly (Adjective)." },
+                  "Impulse": { bm: "Dorongan hati yang mendadak (Kata Nama).", en: "A sudden strong and unreflective urge to act (Noun)." }
+                }
+              }
+            ]
+          }
         ]
       },
       preposition: {
         name: "Prepositions (Kata Sendi)",
         tag: "PREPOSITION",
-        definitionBM: "Kata sendi nama ialah perkataan yang menghubungkan kata nama dengan perkataan lain dalam ayat (tempat, arah, masa).",
         icon: "fa-solid fa-arrows-split-up-and-left",
         theme: "from-rose-600 to-orange-500",
         bossName: "DIMENSIONAL GATE KEEPER",
         levels: [
-          { prompt: "HIT the PREPOSITION (Location Under):", correct: "Beneath", distractors: ["Basement", "Underneath-part"], expl: "'Beneath' is a preposition showing position directly under!" },
-          { prompt: "Spot the Direction PREPOSITION:", correct: "Through", distractors: ["Passage", "Tunnel"], expl: "'Through' is a preposition showing movement through a space!" },
-          { prompt: "HIT the Relationship PREPOSITION:", correct: "Between", distractors: ["Middle", "Divide"], expl: "'Between' is a preposition connecting two points!" },
-          { prompt: "Identify the Time PREPOSITION:", correct: "During", distractors: ["Duration", "Happen"], expl: "'During' is a preposition meaning throughout a period!" },
-          { prompt: "HIT the Side PREPOSITION:", correct: "Beside", distractors: ["Next-door", "Neighbor"], expl: "'Beside' is a preposition meaning at the side of!" },
-          { prompt: "Find the Conflict PREPOSITION:", correct: "Against", distractors: ["Opponent", "Rival"], expl: "'Against' is a preposition expressing opposition or contact!" },
-          { prompt: "HIT the Spread PREPOSITION:", correct: "Throughout", distractors: ["Entirety", "Spread"], expl: "'Throughout' is a preposition covering all parts!" },
-          { prompt: "Spot the Distance PREPOSITION:", correct: "Beyond", distractors: ["Distant", "Horizon"], expl: "'Beyond' is a preposition meaning further than!" },
-          { prompt: "HIT the Surroundings PREPOSITION:", correct: "Amidst", distractors: ["Center", "Surrounding"], expl: "'Amidst' is a preposition meaning surrounded by!" },
+          { 
+            prompt: "HIT the PREPOSITION (Location Under):", 
+            correct: "Beneath", 
+            distractors: ["Basement", "Underneath-part"], 
+            expl: "'Beneath' is a preposition showing position directly under!",
+            defs: {
+              "Beneath": { bm: "Di bahagian bawah atau di bawah permukaan sesuatu.", en: "Extending or directly underneath, below." },
+              "Basement": { bm: "Ruang bawah tanah sesebuah bangunan (Kata Nama).", en: "The floor of a building which is partly or entirely below ground level (Noun)." },
+              "Underneath-part": { bm: "Bahagian dasar bawah (Kata Nama).", en: "The bottom component of an object (Noun)." }
+            }
+          },
+          { 
+            prompt: "Spot the Direction PREPOSITION:", 
+            correct: "Through", 
+            distractors: ["Passage", "Tunnel"], 
+            expl: "'Through' is a preposition showing movement in one side and out the other!",
+            defs: {
+              "Through": { bm: "Menerusi, menembusi atau melalui ruang dari satu hujung ke hujung lain.", en: "Moving in one side and out of the other side of an opening or space." },
+              "Passage": { bm: "Lorong laluan (Kata Nama).", en: "A narrow way, typically having walls on either side, allowing passage (Noun)." },
+              "Tunnel": { bm: "Terowong bawah tanah (Kata Nama).", en: "An artificial underground passage, especially one built through a hill (Noun)." }
+            }
+          },
+          { 
+            prompt: "HIT the Relationship PREPOSITION:", 
+            correct: "Between", 
+            distractors: ["Middle", "Divide"], 
+            expl: "'Between' is a preposition indicating connection or space separating two points!",
+            defs: {
+              "Between": { bm: "Di antara dua pihak, objek, atau jarak masa.", en: "At, into, or across the space separating two objects, places, or points." },
+              "Middle": { bm: "Bahagian tengah (Kata Nama).", en: "The center point or position at an equal distance from the sides (Noun)." },
+              "Divide": { bm: "Membahagikan kepada pecahan (Kata Kerja).", en: "Separate or be separated into parts (Verb)." }
+            }
+          },
+          { 
+            prompt: "Identify the Time PREPOSITION:", 
+            correct: "During", 
+            distractors: ["Duration", "Happen"], 
+            expl: "'During' is a preposition meaning throughout the course or period of an event!",
+            defs: {
+              "During": { bm: "Sepanjang tempoh berlakunya sesuatu peristiwa (Semasa).", en: "Throughout the course or duration of a period of time." },
+              "Duration": { bm: "Tempoh masa berlanjutan (Kata Nama).", en: "The time during which something continues (Noun)." },
+              "Happen": { bm: "Berlaku atau terbit (Kata Kerja).", en: "Take place through change or by nature (Verb)." }
+            }
+          },
+          { 
+            prompt: "HIT the Side PREPOSITION:", 
+            correct: "Beside", 
+            distractors: ["Next-door", "Neighbor"], 
+            expl: "'Beside' is a preposition meaning at the side of or next to!",
+            defs: {
+              "Beside": { bm: "Di sebelah atau di sisi seseorang/sesuatu.", en: "At the side of; next to." },
+              "Next-door": { bm: "Pintu sebelah (Kata Keterangan / Adjektif).", en: "In or to an adjacent house or room (Adverb/Adjective)." },
+              "Neighbor": { bm: "Jiran tetangga (Kata Nama).", en: "A person living near or next door to the speaker or person referred to (Noun)." }
+            }
+          },
+          { 
+            prompt: "Find the Conflict PREPOSITION:", 
+            correct: "Against", 
+            distractors: ["Opponent", "Rival"], 
+            expl: "'Against' is a preposition expressing opposition or close contact!",
+            defs: {
+              "Against": { bm: "Menentang, berlawanan dengan, atau bersandar pada.", en: "In opposition to; in contact with and supported by." },
+              "Opponent": { bm: "Lawan atau pihak bertentangan (Kata Nama).", en: "Someone who competes against or fights another in a contest (Noun)." },
+              "Rival": { bm: "Pesaing utama (Kata Nama).", en: "A person or thing competing with another for the same objective (Noun)." }
+            }
+          },
+          { 
+            prompt: "HIT the Spread PREPOSITION:", 
+            correct: "Throughout", 
+            distractors: ["Entirety", "Spread"], 
+            expl: "'Throughout' is a preposition meaning all the way through!",
+            defs: {
+              "Throughout": { bm: "Di seluruh bahagian atau sepanjang masa.", en: "In every part of a place or object; from beginning to end of an event." },
+              "Entirety": { bm: "Keseluruhan kuantiti (Kata Nama).", en: "The whole of something (Noun)." },
+              "Spread": { bm: "Menyebarkan atau membentangkan (Kata Kerja).", en: "Open out so as to extend its surface area (Verb)." }
+            }
+          },
+          { 
+            prompt: "Spot the Distance PREPOSITION:", 
+            correct: "Beyond", 
+            distractors: ["Distant", "Horizon"], 
+            expl: "'Beyond' is a preposition meaning at or to the further side of!",
+            defs: {
+              "Beyond": { bm: "Di sebalik, melepasi, atau lebih jauh daripada sempadan.", en: "At or to the further side of; more extensive than." },
+              "Distant": { bm: "Jauh kedudukannya (Kata Adjektif).", en: "Far away in space or time (Adjective)." },
+              "Horizon": { bm: "Kaki langit pertemuan bumi dan langit (Kata Nama).", en: "The line at which the earth's surface and the sky appear to meet (Noun)." }
+            }
+          },
+          { 
+            prompt: "HIT the Surroundings PREPOSITION:", 
+            correct: "Amidst", 
+            distractors: ["Center", "Surrounding"], 
+            expl: "'Amidst' is a preposition meaning surrounded by or in the middle of!",
+            defs: {
+              "Amidst": { bm: "Di tengah-tengah atau dikelilingi oleh banyak perkara.", en: "In the middle of or surrounded by." },
+              "Center": { bm: "Pusat tumpuan tengah (Kata Nama).", en: "The middle point of a circle or sphere (Noun)." },
+              "Surrounding": { bm: "Kawasan sekitaran (Kata Nama / Adjektif).", en: "All round a particular place or thing (Noun/Adjective)." }
+            }
+          },
           // Level 10 Boss Pool
-          { prompt: "BOSS RUSH! Hit all PREPOSITIONS to break the Dimensional Gate!", isBoss: true, bossHp: 5, pool: [
-            { correct: "Notwithstanding", distractors: ["Objection", "Decline"] },
-            { correct: "Underneath", distractors: ["Underground", "Bottom"] },
-            { correct: "Across", distractors: ["Travel", "Distance"] },
-            { correct: "Towards", distractors: ["Destination", "Aim"] },
-            { correct: "Concerning", distractors: ["Subject", "Worry"] }
-          ]}
+          { 
+            prompt: "BOSS RUSH! Punch the PREPOSITIONS with your FIST ✊ to shatter the Gate!", 
+            isBoss: true, 
+            bossHp: 5, 
+            pool: [
+              { 
+                correct: "Notwithstanding", distractors: ["Objection", "Decline"],
+                defs: {
+                  "Notwithstanding": { bm: "Walaupun, kendatipun, atau tanpa terhalang oleh.", en: "In spite of; despite." },
+                  "Objection": { bm: "Bantahan rasmi (Kata Nama).", en: "An expression or feeling of disapproval or opposition (Noun)." },
+                  "Decline": { bm: "Menolak atau kemerosotan (Kata Kerja/Nama).", en: "Diminish in strength or politely refuse (Verb)." }
+                }
+              },
+              { 
+                correct: "Underneath", distractors: ["Underground", "Bottom"],
+                defs: {
+                  "Underneath": { bm: "Tepat di bahagian bawah terlindung.", en: "Situated directly below or under." },
+                  "Underground": { bm: "Di bawah tanah (Kata Adjektif/Nama).", en: "Beneath the surface of the ground (Adjective/Noun)." },
+                  "Bottom": { bm: "Bahagian paling bawah dasar (Kata Nama).", en: "The lowest point or part of something (Noun)." }
+                }
+              },
+              { 
+                correct: "Across", distractors: ["Travel", "Distance"],
+                defs: {
+                  "Across": { bm: "Merentasi dari satu sisi ke sisi seberang.", en: "From one side to the other side of something." },
+                  "Travel": { bm: "Melancong atau bermusafir (Kata Kerja).", en: "Make a journey, typically of some length (Verb)." },
+                  "Distance": { bm: "Jarak ruang ukuran (Kata Nama).", en: "An amount of space between two things or people (Noun)." }
+                }
+              },
+              { 
+                correct: "Towards", distractors: ["Destination", "Aim"],
+                defs: {
+                  "Towards": { bm: "Menghala ke arah sasaran tertentu.", en: "In the direction of." },
+                  "Destination": { bm: "Destinasi tempat yang dituju (Kata Nama).", en: "The place to which someone or something is going or being sent (Noun)." },
+                  "Aim": { bm: "Matlamat atau membidik sasaran (Kata Kerja/Nama).", en: "Point or direct at a target (Verb/Noun)." }
+                }
+              },
+              { 
+                correct: "Concerning", distractors: ["Subject", "Worry"],
+                defs: {
+                  "Concerning": { bm: "Mengenai, menyentuh tentang hal perkara.", en: "On the subject of or in connection with; about." },
+                  "Subject": { bm: "Subjek topik perbincangan (Kata Nama).", en: "A person or thing that is being discussed, described, or dealt with (Noun)." },
+                  "Worry": { bm: "Kebimbangan hati (Kata Kerja/Nama).", en: "Feel or cause to feel anxious or troubled (Verb/Noun)." }
+                }
+              }
+            ]
+          }
         ]
       },
       pronoun: {
         name: "Pronouns (Kata Ganti Nama)",
         tag: "PRONOUN",
-        definitionBM: "Kata ganti nama ialah perkataan yang menggantikan kata nama bagi orang, benda, atau tempat.",
         icon: "fa-solid fa-users",
         theme: "from-sky-600 to-indigo-500",
         bossName: "THE IDENTITY COLOSSUS",
         levels: [
-          { prompt: "HIT the Subject PRONOUN:", correct: "They", distractors: ["People", "Crowd"], expl: "'They' is a subject pronoun standing for plural nouns!" },
-          { prompt: "Spot the Object PRONOUN:", correct: "Them", distractors: ["Friends", "Gather"], expl: "'Them' is an objective pronoun!" },
-          { prompt: "HIT the Possessive PRONOUN:", correct: "Ours", distractors: ["Belonging", "Own"], expl: "'Ours' is an independent possessive pronoun showing ownership!" },
-          { prompt: "Find the Reflexive PRONOUN:", correct: "Themselves", distractors: ["Together", "Partners"], expl: "'Themselves' is a reflexive pronoun referring back to subjects!" },
-          { prompt: "HIT the Indefinite PRONOUN:", correct: "Someone", distractors: ["Individual", "Human"], expl: "'Someone' is an indefinite pronoun for an unspecified person!" },
-          { prompt: "Spot the Pointer PRONOUN:", correct: "These", distractors: ["Items", "Things"], expl: "'These' functions as a demonstrative pronoun!" },
-          { prompt: "HIT the Relative PRONOUN:", correct: "Whomever", distractors: ["Anybody", "Identify"], expl: "'Whomever' is a formal objective relative pronoun!" },
-          { prompt: "Identify the Alternative PRONOUN:", correct: "Neither", distractors: ["None-item", "Reject"], expl: "'Neither' is a pronoun meaning not one nor the other!" },
-          { prompt: "HIT the Mutual PRONOUN expression:", correct: "Each other", distractors: ["Teammates", "Unite"], expl: "'Each other' functions as a reciprocal pronoun!" },
+          { 
+            prompt: "HIT the Subject PRONOUN:", 
+            correct: "They", 
+            distractors: ["People", "Crowd"], 
+            expl: "'They' is a subject pronoun replacing plural persons or items!",
+            defs: {
+              "They": { bm: "Mereka (kata ganti nama diri ketiga jamak).", en: "Used to refer to two or more people or things previously mentioned." },
+              "People": { bm: "Orang ramai atau manusia (Kata Nama).", en: "Human beings in general or considered collectively (Noun)." },
+              "Crowd": { bm: "Kumpulan orang yang berhimpun ramai (Kata Nama).", en: "A large number of people gathered together (Noun)." }
+            }
+          },
+          { 
+            prompt: "Spot the Object PRONOUN:", 
+            correct: "Them", 
+            distractors: ["Friends", "Gather"], 
+            expl: "'Them' is an objective pronoun receiving the action of a verb!",
+            defs: {
+              "Them": { bm: "Mereka (sebagai objek yang menerima perbuatan).", en: "Used as the object of a verb or preposition to refer to people or things." },
+              "Friends": { bm: "Kawan-kawan atau sahabat (Kata Nama).", en: "Persons with whom one has a bond of mutual affection (Noun)." },
+              "Gather": { bm: "Berkumpul bersama-sama (Kata Kerja).", en: "Come together; assemble or accumulate (Verb)." }
+            }
+          },
+          { 
+            prompt: "HIT the Possessive PRONOUN:", 
+            correct: "Ours", 
+            distractors: ["Belonging", "Own"], 
+            expl: "'Ours' is an independent possessive pronoun showing ownership!",
+            defs: {
+              "Ours": { bm: "Kepunyaan kami atau milik kita bersama.", en: "Used to refer to something belonging to or associated with the speaker and one or more other people." },
+              "Belonging": { bm: "Barang kepunyaan peribadi (Kata Nama).", en: "Things that belong to someone (Noun)." },
+              "Own": { bm: "Mempunyai hak milik sendiri (Kata Kerja/Adjektif).", en: "Have something as one's own; possess (Verb/Adjective)." }
+            }
+          },
+          { 
+            prompt: "Find the Reflexive PRONOUN:", 
+            correct: "Themselves", 
+            distractors: ["Together", "Partners"], 
+            expl: "'Themselves' is a reflexive pronoun referring back to a plural subject!",
+            defs: {
+              "Themselves": { bm: "Diri mereka sendiri (merujuk kembali kepada subjek).", en: "Used as the object of a verb when the subject and object are the same people." },
+              "Together": { bm: "Bersama-sama dalam satu masa (Kata Keterangan / Adverb).", en: "With or in proximity to another person or people (Adverb)." },
+              "Partners": { bm: "Rakan kongsi (Kata Nama).", en: "People who take part in an undertaking with others (Noun)." }
+            }
+          },
+          { 
+            prompt: "HIT the Indefinite PRONOUN:", 
+            correct: "Someone", 
+            distractors: ["Individual", "Human"], 
+            expl: "'Someone' is an indefinite pronoun for an unspecified person!",
+            defs: {
+              "Someone": { bm: "Seseorang yang tidak ditentukan secara khusus.", en: "An unknown or unspecified person; somebody." },
+              "Individual": { bm: "Individu perseorangan (Kata Nama).", en: "A single human being as distinct from a group (Noun)." },
+              "Human": { bm: "Manusia yang bernyawa (Kata Nama).", en: "A human being, especially a person as distinguished from other animals (Noun)." }
+            }
+          },
+          { 
+            prompt: "Spot the Pointer PRONOUN:", 
+            correct: "These", 
+            distractors: ["Items", "Things"], 
+            expl: "'These' functions as a demonstrative pronoun indicating nearby plural things!",
+            defs: {
+              "These": { bm: "Ini semua (merujuk kepada benda-benda berdekatan).", en: "Identifying specific people or things close at hand (Demonstrative Pronoun)." },
+              "Items": { bm: "Barang-barang atau butiran benda (Kata Nama).", en: "Individual articles or units, especially in a collection or list (Noun)." },
+              "Things": { bm: "Perkara atau benda maujud (Kata Nama).", en: "Material objects without life or consciousness (Noun)." }
+            }
+          },
+          { 
+            prompt: "HIT the Relative PRONOUN:", 
+            correct: "Whomever", 
+            distractors: ["Anybody", "Identify"], 
+            expl: "'Whomever' is a formal objective relative pronoun!",
+            defs: {
+              "Whomever": { bm: "Sesiapa sahaja yang berkenaan (sebagai objek).", en: "Whatever person; anyone that (used as an object in formal English)." },
+              "Anybody": { bm: "Sesiapa sahaja (Kata Ganti Tak Tentu).", en: "Anyone (Indefinite Pronoun)." },
+              "Identify": { bm: "Mengenal pasti identiti (Kata Kerja).", en: "Establish or indicate who or what someone is (Verb)." }
+            }
+          },
+          { 
+            prompt: "Identify the Alternative PRONOUN:", 
+            correct: "Neither", 
+            distractors: ["None-item", "Reject"], 
+            expl: "'Neither' is a pronoun meaning not the one nor the other of two people or things!",
+            defs: {
+              "Neither": { bm: "Bukan salah satu daripada kedua-duanya (Tiada satu pun).", en: "Not the one nor the other of two people or things." },
+              "None-item": { bm: "Ketiadaan sebarang barang (Frasa Nama).", en: "Absence of any entity (Noun phrase)." },
+              "Reject": { bm: "Menolak permohonan atau cadangan (Kata Kerja).", en: "Dismiss as inadequate, inappropriate, or not to one's taste (Verb)." }
+            }
+          },
+          { 
+            prompt: "HIT the Mutual PRONOUN expression:", 
+            correct: "Each other", 
+            distractors: ["Teammates", "Unite"], 
+            expl: "'Each other' functions as a reciprocal pronoun!",
+            defs: {
+              "Each other": { bm: "Satu sama lain (kata ganti nama timbal balik).", en: "Each of two or more people in a reciprocal action." },
+              "Teammates": { bm: "Rakan sepasukan (Kata Nama).", en: "Fellow members of a team (Noun)." },
+              "Unite": { bm: "Bersatu padu (Kata Kerja).", en: "Come or bring together for a common purpose (Verb)." }
+            }
+          },
           // Level 10 Boss Pool
-          { prompt: "BOSS RUSH! Hit all PRONOUNS to defeat the Identity Colossus!", isBoss: true, bossHp: 5, pool: [
-            { correct: "Whosoever", distractors: ["Identity", "Person"] },
-            { correct: "Yourselves", distractors: ["Group", "Members"] },
-            { correct: "Everybody", distractors: ["Population", "Citizens"] },
-            { correct: "Mine", distractors: ["Possession", "Claim"] },
-            { correct: "Whatever", distractors: ["Choice", "Anything"] }
-          ]}
+          { 
+            prompt: "BOSS RUSH! Punch the PRONOUNS with your FIST ✊ to defeat the Colossus!", 
+            isBoss: true, 
+            bossHp: 5, 
+            pool: [
+              { 
+                correct: "Whosoever", distractors: ["Identity", "Person"],
+                defs: {
+                  "Whosoever": { bm: "Barang siapa atau sesiapa jua.", en: "Whoever; whichever person." },
+                  "Identity": { bm: "Identiti keperibadian (Kata Nama).", en: "The fact of being who or what a person or thing is (Noun)." },
+                  "Person": { bm: "Seorang insan manusia (Kata Nama).", en: "A human being regarded as an individual (Noun)." }
+                }
+              },
+              { 
+                correct: "Yourselves", distractors: ["Group", "Members"],
+                defs: {
+                  "Yourselves": { bm: "Diri kamu semua sendiri.", en: "You in person (used as the object of a verb when addressing multiple people)." },
+                  "Group": { bm: "Sekumpulan orang (Kata Nama).", en: "A number of people or things that are located close together (Noun)." },
+                  "Members": { bm: "Ahli-ahli dalam pertubuhan (Kata Nama).", en: "Persons belonging to a specific society or group (Noun)." }
+                }
+              },
+              { 
+                correct: "Everybody", distractors: ["Population", "Citizens"],
+                defs: {
+                  "Everybody": { bm: "Setiap orang / semua orang tanpa terkecuali.", en: "Every person." },
+                  "Population": { bm: "Jumlah penduduk sesebuah negeri (Kata Nama).", en: "All the inhabitants of a particular place (Noun)." },
+                  "Citizens": { bm: "Warganegara yang sah (Kata Nama).", en: "Legally recognized subjects or nationals of a state (Noun)." }
+                }
+              },
+              { 
+                correct: "Mine", distractors: ["Possession", "Claim"],
+                defs: {
+                  "Mine": { bm: "Milik kepunyaan saya secara mutlak.", en: "Used to refer to a thing or things belonging to or associated with the speaker." },
+                  "Possession": { bm: "Harta yang dimiliki (Kata Nama).", en: "The state of having, owning, or controlling something (Noun)." },
+                  "Claim": { bm: "Menuntut hak pemilikan (Kata Kerja/Nama).", en: "State that one has a right to something (Verb/Noun)." }
+                }
+              },
+              { 
+                correct: "Whatever", distractors: ["Choice", "Anything"],
+                defs: {
+                  "Whatever": { bm: "Apa-apa sahaja yang dipilih atau dilakukan.", en: "Used to refer to anything or everything that." },
+                  "Choice": { bm: "Pilihan yang dibuat (Kata Nama).", en: "An act of selecting or making a decision (Noun)." },
+                  "Anything": { bm: "Sebarang benda (Kata Ganti Nama).", en: "A thing of any kind (Pronoun)." }
+                }
+              }
+            ]
+          }
         ]
       }
     };
@@ -780,7 +1526,6 @@
       lastGestureTime: 0,
       mousePos: { x: -100, y: -100, prevX: -100, prevY: -100, isDown: false, vel: 0 },
       isFistActive: false,
-      isSliceActive: false,
       // Level 10 Boss state
       isBossBattle: false,
       bossHpMax: 5,
@@ -804,9 +1549,8 @@
     const hudCanvas = document.getElementById('hud-vfx-canvas');
     const hudCtx = hudCanvas.getContext('2d');
 
-    // VFX Particles and Slash Trails
+    // VFX Particles
     const vfxParticles = [];
-    const slashTrails = [];
 
     async function checkCameraPermissions() {
       if (navigator.permissions && navigator.permissions.query) {
@@ -947,7 +1691,7 @@
         }
 
         document.getElementById('start-cam-title').innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400"></i> Camera Active!';
-        document.getElementById('start-cam-desc').innerText = "Stand or sit back! Make a Genggam Fist ✊ or Karate Slice 🖐️!";
+        document.getElementById('start-cam-desc').innerText = "Stand or sit back! Make a Genggam Fist ✊ to punch!";
         const btnText = document.getElementById('btn-force-cam-text');
         if (btnText) btnText.innerText = "Camera Active";
 
@@ -957,18 +1701,7 @@
         const isDenied = lastError && (lastError.name === 'NotAllowedError' || lastError.name === 'PermissionDeniedError');
         const isInUse = lastError && (lastError.name === 'NotReadableError' || lastError.name === 'TrackStartError');
 
-        if (isDenied) {
-          showPermissionBlockedUI("Camera permission was denied. Please click the <b>lock icon 🔒</b> at top left of the address bar and set Camera to <b>Allow</b>, then refresh.");
-        } else if (isInUse) {
-          showPermissionBlockedUI("Camera is in use by another application. Close other camera apps and click retry.");
-        } else {
-          statusDot.className = "w-3 h-3 rounded-full bg-amber-400";
-          statusLabel.innerText = "Cam Standby";
-        }
-      }
-    }
-
-    function triggerHitOnIndex(index, hitX, hitY, gestureType) {
+    function triggerHitOnIndex(index, hitX, hitY) {
       if (gameState.isLocked) return;
       gameState.isLocked = true;
       clearInterval(gameState.timerId);
@@ -976,14 +1709,9 @@
       const hitData = currentOptionsData[index];
       const isCorrect = hitData.isCorrect;
 
-      if (gestureType === 'SLICE') {
-        sound.playSlice();
-      } else {
-        sound.playPunch();
-      }
+      sound.playPunch();
 
-      const vfxText = gestureType === 'SLICE' ? 'SLASH!' : 'POW!';
-      triggerImpactBurst(vfxText, isCorrect);
+      triggerImpactBurst('POW!', isCorrect);
       spawnVfxExplosion(hitX, hitY, isCorrect ? '#facc15' : '#ef4444');
 
       const arena = document.getElementById('arena-screen');
@@ -1058,7 +1786,7 @@
         }
       }
 
-      displayExplanation(true, `SUPER HIT! '${word}' IS CORRECT!`, currentLevelData.expl);
+      displayWordFeedback(true, word, `SUPER HIT! '${word}' IS THE CORRECT ANSWER!`);
     }
 
     function handleFailurePunch(word) {
@@ -1067,7 +1795,7 @@
       gameState.lives--;
 
       const tag = CURRICULUM[gameState.categoryKey].tag;
-      displayExplanation(false, `OOPS! '${word}' is not a ${tag}!`, currentLevelData.expl || "Watch out for distractors!");
+      displayWordFeedback(false, word, `OOPS! '${word}' is not a ${tag}!`);
     }
 
     function handleTimeExpired() {
@@ -1077,10 +1805,11 @@
       gameState.lives--;
       gameState.totalCount++;
 
-      displayExplanation(false, "TIME'S UP! The monster slipped away!", currentLevelData.expl || "Be fast with your gestures!");
+      const correctWord = currentLevelData.correct;
+      displayWordFeedback(false, correctWord, `TIME'S UP! The monster got away! The answer was '${correctWord}'.`);
     }
 
-    function displayExplanation(isSuccess, title, text) {
+    function displayWordFeedback(isSuccess, word, titleMsg) {
       updateHUD();
 
       const dialog = document.getElementById('dialog-feedback');
@@ -1088,20 +1817,35 @@
       const iconWrap = document.getElementById('dialog-icon-wrap');
       const titleEl = document.getElementById('dialog-title');
       const textEl = document.getElementById('dialog-explanation');
-      const malayDefEl = document.getElementById('dialog-malay-def');
+      const wordHead = document.getElementById('dialog-word-head');
+      const wordTag = document.getElementById('dialog-word-tag');
+      const defBmEl = document.getElementById('dialog-word-def-bm');
+      const defEnEl = document.getElementById('dialog-word-def-en');
 
-      titleEl.innerText = title;
-      textEl.innerText = text;
+      titleEl.innerText = isSuccess ? "SUPER HIT!" : "MISSED HIT!";
+      textEl.innerText = titleMsg;
 
-      // Always populate Malay Definition for the current category
-      const currentCat = CURRICULUM[gameState.categoryKey];
-      if (malayDefEl && currentCat) {
-        malayDefEl.innerText = currentCat.definitionBM;
+      // Extract specific word definition
+      let wordDef = null;
+      if (currentLevelData && currentLevelData.defs && currentLevelData.defs[word]) {
+        wordDef = currentLevelData.defs[word];
+      }
+
+      const catTag = CURRICULUM[gameState.categoryKey].tag;
+      if (wordTag) wordTag.innerText = catTag;
+      if (wordHead) wordHead.innerText = word;
+
+      if (wordDef) {
+        defBmEl.innerHTML = `<b>BM:</b> ${wordDef.bm}`;
+        defEnEl.innerHTML = `<b>EN:</b> ${wordDef.en}`;
+      } else {
+        defBmEl.innerHTML = `<b>BM:</b> Maksud perkataan '${word}' relevan dalam kategori ${catTag}.`;
+        defEnEl.innerHTML = `<b>EN:</b> Definition of '${word}' relevant to ${catTag}.`;
       }
 
       if (isSuccess) {
         iconWrap.className = "w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-2 rounded-full bg-emerald-500 flex items-center justify-center text-3xl sm:text-4xl text-slate-950 border-3 border-white shadow-xl";
-        iconWrap.innerHTML = '<i class="fa-solid fa-trophy"></i>';
+        iconWrap.innerHTML = '<i class="fa-solid fa-hand-fist"></i>';
         card.className = "bg-gradient-to-b from-slate-900 to-indigo-950 border-4 border-yellow-400 p-5 sm:p-7 rounded-3xl max-w-lg w-full text-center shadow-2xl transform scale-100 transition-all";
       } else {
         iconWrap.className = "w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-2 rounded-full bg-red-600 flex items-center justify-center text-3xl sm:text-4xl text-white border-3 border-white shadow-xl";
@@ -1125,7 +1869,7 @@
             loadLevelQuestion();
           }
         }
-      }, 2300);
+      }, 2600);
     }
 
     function triggerGameOver() {
@@ -1211,13 +1955,6 @@
         hudCtx.textAlign = 'center';
         hudCtx.textBaseline = 'middle';
         hudCtx.fillText('\uf6de', x, y);
-      } else if (gesture === 'SLICE') {
-        hudCtx.strokeStyle = '#38bdf8';
-        hudCtx.lineWidth = 5;
-        hudCtx.beginPath();
-        hudCtx.moveTo(x - 30, y + 30);
-        hudCtx.lineTo(x + 30, y - 30);
-        hudCtx.stroke();
       } else {
         hudCtx.strokeStyle = '#facc15';
         hudCtx.lineWidth = 3;
@@ -1528,7 +2265,7 @@
       const landmarks = results.multiHandLandmarks[0];
       const wrist = landmarks[0];
 
-      // Gesture Classification: Fist (Genggam) or Slice (Karate Chop)
+      // Gesture Classification: Fist (Genggam) Only
       const fingerTips = [8, 12, 16, 20];
       const fingerPips = [6, 10, 14, 18];
       let curledFingers = 0;
@@ -1542,7 +2279,6 @@
       }
 
       const isFist = curledFingers >= 3;
-      const isOpenHand = curledFingers <= 1;
 
       // Update menu preview indicator
       if (menuFistPill) {
@@ -1561,31 +2297,21 @@
       const handScreenX = (1.0 - landmarks[9].x) * rect.width;
       const handScreenY = landmarks[9].y * rect.height;
 
-      // Draw active reticle
-      drawHandReticle(handScreenX, handScreenY, isFist ? 'FIST' : (isOpenHand ? 'SLICE' : 'OPEN'));
+      // Draw active reticle (FIST vs AIMING)
+      drawHandReticle(handScreenX, handScreenY, isFist ? 'FIST' : 'OPEN');
 
-      // Check hit collision (Punch or Slice only)
+      // Check hit collision on clenched fist ONLY
       const now = performance.now();
       if (isFist && now - gameState.lastGestureTime > 500) {
         gameState.lastGestureTime = now;
-        checkHitCollision(handScreenX, handScreenY, 'PUNCH');
-      } else if (isOpenHand && now - gameState.lastGestureTime > 450) {
-        const prevHandX = gameState.mousePos.prevX || handScreenX;
-        const prevHandY = gameState.mousePos.prevY || handScreenY;
-        const speed = Math.hypot(handScreenX - prevHandX, handScreenY - prevHandY);
-        
-        if (speed > 18) {
-          gameState.lastGestureTime = now;
-          addSlashTrail(prevHandX, prevHandY, handScreenX, handScreenY);
-          checkHitCollision(handScreenX, handScreenY, 'SLICE');
-        }
+        checkHitCollision(handScreenX, handScreenY);
       }
 
       gameState.mousePos.prevX = handScreenX;
       gameState.mousePos.prevY = handScreenY;
     }
 
-    function checkHitCollision(x, y, gestureType) {
+    function checkHitCollision(x, y) {
       if (gameState.isLocked) return;
       const placards = document.querySelectorAll('.monster-placard');
 
@@ -1602,7 +2328,7 @@
           y >= relativeTop - hitMargin &&
           y <= relativeTop + pRect.height + hitMargin
         ) {
-          triggerHitOnIndex(idx, x, y, gestureType);
+          triggerHitOnIndex(idx, x, y);
         }
       });
     }
@@ -1768,7 +2494,7 @@
         placard.onclick = (e) => {
           e.stopPropagation();
           sound.init();
-          triggerHitOnIndex(idx, e.clientX, e.clientY, 'PUNCH');
+          triggerHitOnIndex(idx, e.clientX, e.clientY);
         };
 
         container.appendChild(placard);
@@ -1844,10 +2570,6 @@
 
     function restartMission() {
       startMission();
-    }
-
-    function addSlashTrail(x1, y1, x2, y2) {
-      slashTrails.push({ x1, y1, x2, y2, life: 1.0 });
     }
   </script>
 
@@ -1927,28 +2649,9 @@
       // Synchronize placards with 3D monster chest
       syncPlacardsTo3D();
 
-      // Render 2D HUD Canvas (Sparks and Slash Trails)
+      // Render 2D HUD Canvas (Sparks and Punch Reticle)
       if (hudCtx) {
         hudCtx.clearRect(0, 0, hudCanvas.width, hudCanvas.height);
-
-        // Slash trails
-        for (let i = slashTrails.length - 1; i >= 0; i--) {
-          const st = slashTrails[i];
-          st.life -= 0.06;
-          if (st.life <= 0) {
-            slashTrails.splice(i, 1);
-            continue;
-          }
-          hudCtx.save();
-          hudCtx.strokeStyle = `rgba(56, 189, 248, ${st.life})`;
-          hudCtx.lineWidth = 14 * st.life;
-          hudCtx.lineCap = 'round';
-          hudCtx.beginPath();
-          hudCtx.moveTo(st.x1, st.y1);
-          hudCtx.lineTo(st.x2, st.y2);
-          hudCtx.stroke();
-          hudCtx.restore();
-        }
 
         // VFX particles
         for (let i = vfxParticles.length - 1; i >= 0; i--) {
@@ -1976,7 +2679,7 @@
           drawHandReticle(
             gameState.mousePos.x, 
             gameState.mousePos.y, 
-            gameState.mousePos.isDown ? 'FIST' : (gameState.mousePos.vel > 1.2 ? 'SLICE' : 'OPEN')
+            gameState.mousePos.isDown ? 'FIST' : 'OPEN'
           );
         }
       }
@@ -2003,28 +2706,18 @@
           const currX = clientX - rect.left;
           const currY = clientY - rect.top;
 
-          if (gameState.mousePos.x > 0) {
-            const dist = Math.hypot(currX - gameState.mousePos.x, currY - gameState.mousePos.y);
-            gameState.mousePos.vel = dist / 16;
-          }
-
           gameState.mousePos.prevX = gameState.mousePos.x;
           gameState.mousePos.prevY = gameState.mousePos.y;
           gameState.mousePos.x = currX;
           gameState.mousePos.y = currY;
           gameState.mousePos.isDown = isDown;
-
-          if (gameState.mousePos.vel > 1.4) {
-            addSlashTrail(gameState.mousePos.prevX, gameState.mousePos.prevY, currX, currY);
-            checkHitCollision(currX, currY, 'SLICE');
-          }
         };
 
         arena.addEventListener('mousemove', (e) => updatePointer(e.clientX, e.clientY, gameState.mousePos.isDown));
         arena.addEventListener('mousedown', (e) => {
           sound.init();
           updatePointer(e.clientX, e.clientY, true);
-          checkHitCollision(gameState.mousePos.x, gameState.mousePos.y, 'PUNCH');
+          checkHitCollision(gameState.mousePos.x, gameState.mousePos.y);
         });
         window.addEventListener('mouseup', () => { gameState.mousePos.isDown = false; });
 
@@ -2035,7 +2728,7 @@
           sound.init();
           if (e.touches && e.touches[0]) {
             updatePointer(e.touches[0].clientX, e.touches[0].clientY, true);
-            checkHitCollision(gameState.mousePos.x, gameState.mousePos.y, 'PUNCH');
+            checkHitCollision(gameState.mousePos.x, gameState.mousePos.y);
           }
         }, { passive: true });
         window.addEventListener('touchend', () => { gameState.mousePos.isDown = false; });
