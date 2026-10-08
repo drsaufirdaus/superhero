@@ -1022,7 +1022,7 @@
     }
 
     /* ==========================================================================
-       CAMERA & MEDIAPIPE GESTURE DETECTION (FIST ✊ ONLY)
+       CAMERA & MEDIAPIPE GESTURE DETECTION (DUAL HANDS ✊ MULTI-TRACKING)
        ========================================================================== */
     let handsInstance = null;
     let cameraUtilInstance = null;
@@ -1037,10 +1037,10 @@
             locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
           });
           handsInstance.setOptions({
-            maxNumHands: 1,
-            modelComplexity: 1,
-            minDetectionConfidence: 0.6,
-            minTrackingConfidence: 0.6
+            maxNumHands: 2, // Enable two hands for simultaneous punching!
+            modelComplexity: 0,
+            minDetectionConfidence: 0.55,
+            minTrackingConfidence: 0.55
           });
           handsInstance.onResults(onHandResults);
         }
@@ -1115,79 +1115,99 @@
     function onHandResults(results) {
       const fistPill = document.getElementById('standby-fist-pill');
       const arenaFistPill = document.getElementById('arena-fist-indicator');
-      const glove = document.getElementById('gesture-glove');
+      const glove0 = document.getElementById('gesture-glove-0');
+      const glove1 = document.getElementById('gesture-glove-1');
+      const gloveEls = [glove0, glove1];
+
+      // Reset visibility
+      gloveEls.forEach(g => { if (g) g.classList.add('hidden'); });
 
       if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
         if (fistPill) {
           fistPill.textContent = 'NO HAND';
           fistPill.className = 'text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-md font-mono';
         }
-        if (arenaFistPill) arenaFistPill.textContent = 'FIST: WAITING';
-        if (glove) glove.classList.add('hidden');
+        if (arenaFistPill) arenaFistPill.textContent = 'FISTS: WAITING';
         gameState.fistDetected = false;
         return;
       }
 
-      const landmarks = results.multiHandLandmarks[0];
-      const wrist = landmarks[0];
-      const indexTip = landmarks[8];
-      const middleTip = landmarks[12];
-      const ringTip = landmarks[16];
-      const pinkyTip = landmarks[20];
+      const container = document.getElementById('arena-viewport');
+      const isArenaVisible = container && !document.getElementById('arena-screen').classList.contains('hidden');
+      const width = container ? container.clientWidth : 800;
+      const height = container ? container.clientHeight : 450;
 
-      // Fist Detection: Check if fingertips are curled close to the wrist vs knuckle PIP
-      const isCurled = (tipIdx, pipIdx) => {
-        const dWrist = Math.hypot(landmarks[tipIdx].x - wrist.x, landmarks[tipIdx].y - wrist.y);
-        const dPip = Math.hypot(landmarks[pipIdx].x - wrist.x, landmarks[pipIdx].y - wrist.y);
-        return dWrist < dPip * 1.15;
-      };
+      let fistCount = 0;
+      const totalHands = results.multiHandLandmarks.length;
 
-      const curledCount = [
-        isCurled(8, 6),
-        isCurled(12, 10),
-        isCurled(16, 14),
-        isCurled(20, 18)
-      ].filter(Boolean).length;
+      results.multiHandLandmarks.forEach((landmarks, hIdx) => {
+        if (hIdx > 1) return; // Support up to 2 hands
 
-      const isFist = curledCount >= 3;
-      gameState.fistDetected = isFist;
+        const wrist = landmarks[0];
+        // Fist Detection: Check curled finger tips relative to wrist vs knuckles
+        const isCurled = (tipIdx, pipIdx) => {
+          const dWrist = Math.hypot(landmarks[tipIdx].x - wrist.x, landmarks[tipIdx].y - wrist.y);
+          const dPip = Math.hypot(landmarks[pipIdx].x - wrist.x, landmarks[pipIdx].y - wrist.y);
+          return dWrist < dPip * 1.15;
+        };
 
-      // Mirrored hand coordinates for on-screen cursor
-      const screenX = (1 - landmarks[9].x); // Mirrored horizontal
-      const screenY = landmarks[9].y;
+        const curledCount = [
+          isCurled(8, 6),
+          isCurled(12, 10),
+          isCurled(16, 14),
+          isCurled(20, 18)
+        ].filter(Boolean).length;
 
+        const isFist = curledCount >= 3;
+        if (isFist) fistCount++;
+
+        // Mirrored coordinate calculation
+        const screenX = (1 - landmarks[9].x);
+        const screenY = landmarks[9].y;
+        const gloveX = screenX * width;
+        const gloveY = screenY * height;
+
+        // Render matching glove in arena
+        const glove = gloveEls[hIdx];
+        if (isArenaVisible && glove) {
+          glove.classList.remove('hidden');
+          glove.style.left = `${gloveX}px`;
+          glove.style.top = `${gloveY}px`;
+
+          // If this hand is clenched into a fist, test punch collision
+          if (isFist && !gameState.isPaused && !gameState.isGameOver && document.getElementById('feedback-modal').classList.contains('hidden')) {
+            checkHitCollision(gloveX, gloveY);
+          }
+        }
+      });
+
+      gameState.fistDetected = fistCount > 0;
+
+      // Update Standby pill on home screen
       if (fistPill) {
-        if (isFist) {
-          fistPill.textContent = '✊ FIST DETECTED!';
-          fistPill.className = 'text-[10px] bg-amber-500 text-slate-950 font-black px-2 py-0.5 rounded-md font-mono';
+        if (fistCount >= 2) {
+          fistPill.textContent = '✊✊ 2 FISTS DETECTED!';
+          fistPill.className = 'text-[10px] bg-emerald-400 text-slate-950 font-black px-2 py-0.5 rounded-md font-mono';
+        } else if (fistCount === 1) {
+          fistPill.textContent = '✊ 1 FIST READY!';
+          fistPill.className = 'text-[10px] bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded-md font-mono';
         } else {
-          fistPill.textContent = '✋ OPEN HAND';
+          fistPill.textContent = `✋ ${totalHands} HAND(S) OPEN`;
           fistPill.className = 'text-[10px] bg-cyan-900 text-cyan-200 px-2 py-0.5 rounded-md font-mono';
         }
       }
 
-      // If in arena, update glove and test collisions
-      const arenaScreen = document.getElementById('arena-screen');
-      if (!arenaScreen.classList.contains('hidden')) {
-        const container = document.getElementById('arena-viewport');
-        const width = container.clientWidth;
-        const height = container.clientHeight;
-        const gloveX = screenX * width;
-        const gloveY = screenY * height;
-
-        if (glove) {
-          glove.classList.remove('hidden');
-          glove.style.left = `${gloveX}px`;
-          glove.style.top = `${gloveY}px`;
-        }
-
-        if (arenaFistPill) {
-          arenaFistPill.textContent = isFist ? '✊ PUNCH READY!' : '✋ OPEN HAND';
-          arenaFistPill.className = isFist ? 'bg-amber-500 text-slate-950 px-2 py-0.5 rounded-lg font-bold font-mono text-[10px]' : 'bg-slate-900 border border-slate-700 px-2 py-0.5 rounded-lg text-slate-400 font-mono text-[10px]';
-        }
-
-        if (isFist && !gameState.isPaused && !gameState.isGameOver) {
-          checkHitCollision(gloveX, gloveY);
+      // Update In-Arena status indicator
+      if (arenaFistPill) {
+        if (fistCount >= 2) {
+          arenaFistPill.textContent = '✊✊ DUAL PUNCH READY!';
+          arenaFistPill.className = 'bg-emerald-500 text-slate-950 px-2 py-0.5 rounded-lg font-black font-mono text-[10px] animate-pulse';
+        } else if (fistCount === 1) {
+          arenaFistPill.textContent = '✊ 1 PUNCH READY!';
+          arenaFistPill.className = 'bg-amber-400 text-slate-950 px-2 py-0.5 rounded-lg font-bold font-mono text-[10px]';
+        } else {
+          arenaFistPill.textContent = `✋ ${totalHands} HAND(S) DETECTED`;
+          arenaFistPill.className = 'bg-slate-900 border border-slate-700 px-2 py-0.5 rounded-lg text-slate-400 font-mono text-[10px]';
         }
       }
     }
@@ -1515,8 +1535,16 @@
       const nameEl = document.getElementById('feedback-word-name');
       if (nameEl) nameEl.textContent = `"${(option.w || '').toUpperCase()}"`;
 
-      const defEl = document.getElementById('feedback-def');
-      if (defEl) defEl.textContent = option.def || "Definition available in curriculum.";
+      // Set accurate Malay (BM) and English (EN) definitions
+      const defBmEl = document.getElementById('feedback-def-bm');
+      if (defBmEl) {
+        defBmEl.textContent = option.bm || "Maksud perkataan dalam Bahasa Melayu.";
+      }
+
+      const defEnEl = document.getElementById('feedback-def-en');
+      if (defEnEl) {
+        defEnEl.textContent = option.def || "English definition of the word.";
+      }
 
       if (isSuccess) {
         card.className = 'w-full max-w-md bg-slate-900 border-2 border-emerald-400 rounded-3xl p-5 text-center shadow-2xl transition-all scale-100 opacity-100 relative overflow-hidden';
