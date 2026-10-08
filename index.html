@@ -1,4 +1,28 @@
-<!-- ... existing code ... -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Super Saufi - 3D Gesture Punch Arcade</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Lilita One & Nunito -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Three.js (r128) for 3D Toon Monsters -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <!-- MediaPipe Hands & Camera Utils -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
   <style>
     * {
       user-select: none;
@@ -14,41 +38,90 @@
       min-height: 100vh;
       min-height: 100dvh;
     }
-    /* Vibrant ambient arcade glow elements */
-    .arcade-glow-mesh {
-      background-image: 
-        radial-gradient(at 85% 15%, rgba(236, 72, 153, 0.18) 0px, transparent 50%),
-        radial-gradient(at 15% 85%, rgba(245, 158, 11, 0.18) 0px, transparent 50%),
-        radial-gradient(at 80% 80%, rgba(6, 182, 212, 0.15) 0px, transparent 50%);
-    }
     .font-arcade {
       font-family: 'Lilita One', cursive;
       letter-spacing: 0.05em;
     }
-<!-- ... existing code ... -->
+    .stroke-black-sm {
+      text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+    }
+    .stroke-black-lg {
+      text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 0 4px 10px rgba(0,0,0,0.8);
+    }
+    .arcade-glow-mesh {
+      background-image: 
+        radial-gradient(at 85% 15%, rgba(236, 72, 153, 0.22) 0px, transparent 50%),
+        radial-gradient(at 15% 85%, rgba(245, 158, 11, 0.22) 0px, transparent 50%),
+        radial-gradient(at 80% 80%, rgba(6, 182, 212, 0.20) 0px, transparent 50%);
+    }
+    /* Animated Punch Effect */
+    @keyframes comicPow {
+      0% { transform: translate(-50%, -50%) scale(0.3) rotate(-15deg); opacity: 0; }
+      50% { transform: translate(-50%, -50%) scale(1.3) rotate(10deg); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(1.0) rotate(0deg); opacity: 0; }
+    }
+    .animate-pow {
+      animation: comicPow 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 15px rgba(251, 191, 36, 0.4); }
+      50% { box-shadow: 0 0 30px rgba(251, 191, 36, 0.8); }
+    }
+    .pulse-glow {
+      animation: pulseGlow 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="flex flex-col justify-between min-h-screen relative overflow-hidden">
+
   <!-- Direct persistent webcam element (processed off-screen) -->
   <video id="live-webcam-feed" playsinline muted autoplay class="fixed -top-[9999px] -left-[9999px] w-[640px] h-[480px] pointer-events-none opacity-0"></video>
 
-  <!-- Main Game Container -->
+  <!-- Top Navigation Bar -->
+  <header class="w-full bg-slate-950/80 border-b border-indigo-500/30 px-3 py-2 sm:px-6 sm:py-2.5 flex items-center justify-between z-30 backdrop-blur-md">
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-tr from-amber-500 to-yellow-300 rounded-xl flex items-center justify-center text-slate-950 shadow-md">
+        <i class="fa-solid fa-hand-back-fist text-lg sm:text-xl"></i>
+      </div>
+      <div>
+        <h1 class="font-arcade text-lg sm:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-400 to-orange-400 stroke-black-sm">
+          SUPER SAUFI
+        </h1>
+        <p class="text-[10px] text-cyan-300 font-extrabold uppercase tracking-wider hidden sm:block">3D Gesture Punch Arcade</p>
+      </div>
+    </div>
+
+    <!-- Right Controls: Audio Mute & Cam Status -->
+    <div class="flex items-center gap-2">
+      <button onclick="toggleAudio()" id="btn-audio" class="px-2.5 py-1 sm:px-3 sm:py-1.5 bg-slate-800 hover:bg-slate-700 text-yellow-300 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center gap-1.5 shadow">
+        <i class="fa-solid fa-volume-high" id="audio-icon"></i> <span class="hidden sm:inline">SFX</span>
+      </button>
+      <div id="nav-cam-indicator" class="flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 border border-slate-700 rounded-xl text-[11px] font-bold text-slate-400">
+        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse" id="cam-led"></span>
+        <span id="cam-status-text">Cam Standby</span>
+      </div>
+    </div>
+  </header>
+
   <main class="flex-1 w-full max-w-7xl mx-auto p-2 sm:p-4 flex flex-col items-center justify-center relative z-10 arcade-glow-mesh">
 
-    <!-- 1. HOME SCREEN -->
-    <section id="home-screen" class="w-full max-w-5xl flex flex-col items-center gap-3 py-1">
-      <!-- Hero Banner & Instructions -->
+    <!-- 1. HOME SCREEN VIEW -->
+    <section id="home-screen" class="w-full max-w-5xl flex flex-col items-center gap-2.5 py-1">
+      <!-- Hero Title -->
       <div class="text-center w-full max-w-3xl">
-        <div class="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500/25 via-pink-500/20 to-cyan-500/25 border border-amber-300/60 px-4 py-1 rounded-full text-yellow-300 text-xs sm:text-sm font-extrabold mb-1 shadow-lg shadow-amber-500/10">
+        <div class="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500/25 via-pink-500/20 to-cyan-500/25 border border-amber-300/60 px-4 py-0.5 rounded-full text-yellow-300 text-xs sm:text-sm font-extrabold mb-1 shadow-lg shadow-amber-500/10">
           <i class="fa-solid fa-hand-back-fist text-amber-300 animate-bounce"></i> Stand / Sit & Punch with Clench Fist ✊ (Genggam Penumbuk)
         </div>
         <h2 class="font-arcade text-3xl sm:text-5xl text-white stroke-black-lg leading-tight tracking-wide">
           PUNCH THE <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-400 to-orange-400">CORRECT MONSTER</span>!
         </h2>
-        <p class="text-xs sm:text-sm text-slate-200 font-semibold max-w-xl mx-auto -mt-0.5">
-          Master 12 English & Malay grammar categories! Defeat 99 levels, then crush the 60s Titan Boss at Level 100!
+        <p class="text-xs sm:text-sm text-slate-200 font-semibold max-w-xl mx-auto">
+          Master 12 English & Malay grammar categories! Conquer 99 levels, then crush the 60s Titan Boss at Level 100!
         </p>
       </div>
 
       <!-- Registration & Standby Cam Row -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 w-full bg-slate-900/85 border-2 border-indigo-500/40 p-3.5 rounded-3xl shadow-2xl backdrop-blur-md">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 w-full bg-slate-900/90 border-2 border-indigo-500/40 p-3 rounded-2xl shadow-2xl backdrop-blur-md">
         <!-- Student Info Fields -->
         <div class="md:col-span-2 flex flex-col justify-center space-y-2">
           <div class="flex items-center gap-2 text-yellow-300 text-xs font-black uppercase tracking-wider">
@@ -90,13 +163,13 @@
       </div>
 
       <!-- Category Badges Showcase -->
-      <div class="w-full bg-slate-900/80 border border-slate-800 p-2.5 rounded-2xl backdrop-blur-sm">
-        <div class="flex items-center justify-between mb-1.5">
+      <div class="w-full bg-slate-900/80 border border-slate-800 p-2 rounded-2xl backdrop-blur-sm">
+        <div class="flex items-center justify-between mb-1">
           <div class="flex items-center gap-1.5 text-xs font-black text-amber-300 uppercase tracking-wider">
             <i class="fa-solid fa-medal text-yellow-400"></i> Master Badges Earned (<span id="badges-count-text">0</span>/12)
           </div>
-          <button onclick="openCertificateModal()" id="btn-show-cert" class="text-[10px] sm:text-[11px] bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black px-2.5 py-1 rounded-lg transition shadow flex items-center gap-1">
-            <i class="fa-solid fa-award"></i> View Certificate
+          <button onclick="openCertificateModal()" id="btn-show-cert" class="text-[10px] sm:text-[11px] bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black px-2.5 py-0.5 rounded-lg transition shadow flex items-center gap-1">
+            <i class="fa-solid fa-award"></i> Certificate
           </button>
         </div>
         <div id="badges-container" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-12 gap-1 text-center">
@@ -105,31 +178,1435 @@
       </div>
 
       <!-- Categories Selection Grid (Compact, Colorful, & Well-Fitted) -->
-      <div class="w-full bg-slate-900/80 border-2 border-slate-800/90 p-3 rounded-2xl shadow-xl backdrop-blur-sm">
+      <div class="w-full bg-slate-900/85 border-2 border-slate-800/90 p-2.5 rounded-2xl shadow-xl backdrop-blur-sm">
         <div class="flex items-center justify-between mb-2">
-          <h3 class="font-arcade text-base sm:text-lg text-yellow-300 stroke-black-sm flex items-center gap-1.5">
+          <h3 class="font-arcade text-sm sm:text-base text-yellow-300 stroke-black-sm flex items-center gap-1.5">
             <i class="fa-solid fa-gamepad text-cyan-400"></i> SELECT GRAMMAR MISSION (12 KATEGORI)
           </h3>
           <span class="text-[10px] font-black text-cyan-300 bg-cyan-950/70 border border-cyan-500/40 px-2 py-0.5 rounded-full uppercase">
             100 Levels Each
           </span>
         </div>
-        <!-- 6-column compact grid on medium/large screens, 3-column on small screens -->
         <div id="category-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 w-full">
-          <!-- Populated dynamically via JS with vibrant themed cards -->
+          <!-- Populated dynamically via JS -->
         </div>
       </div>
 
       <!-- Start Mission Action Button -->
-      <button onclick="startMission()" class="w-full max-w-md py-3.5 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-arcade text-xl sm:text-2xl rounded-2xl shadow-xl shadow-amber-500/25 transition transform active:scale-95 flex items-center justify-center gap-3 border-2 border-yellow-200">
+      <button onclick="startMission()" class="w-full max-w-md py-3 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-arcade text-xl sm:text-2xl rounded-2xl shadow-xl shadow-amber-500/25 transition transform active:scale-95 flex items-center justify-center gap-3 border-2 border-yellow-200">
         <i class="fa-solid fa-play animate-pulse"></i> START MISSION (MULA)
       </button>
     </section>
-<!-- ... existing code ... -->
-```
 
-```html:Super Saufi - 3D Gesture Punch Arcade:super_saufi.html
-<!-- ... existing code ... -->
+    <!-- 2. IN-GAME ARENA VIEW -->
+    <section id="arena-screen" class="w-full h-full flex flex-col items-center justify-between relative hidden">
+      <!-- Arena Top HUD -->
+      <div class="w-full max-w-5xl bg-slate-950/85 border border-indigo-500/40 rounded-2xl p-2 sm:p-3 flex items-center justify-between gap-2 shadow-2xl backdrop-blur-md z-20">
+        <div class="flex items-center gap-2">
+          <button onclick="togglePauseGame()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-yellow-300 flex items-center justify-center border border-slate-600 transition shadow">
+            <i class="fa-solid fa-pause"></i>
+          </button>
+          <div>
+            <span id="hud-category-name" class="font-arcade text-xs sm:text-sm text-yellow-300 stroke-black-sm block truncate max-w-[140px] sm:max-w-[220px]">NOUNS</span>
+            <span id="hud-level-text" class="text-[10px] text-cyan-300 font-extrabold uppercase tracking-wider">LEVEL 1 / 100</span>
+          </div>
+        </div>
+
+        <!-- Timer / Boss Bar -->
+        <div class="flex-1 max-w-xs px-2 flex flex-col items-center">
+          <div class="flex items-center justify-between w-full text-[10px] font-black text-slate-300 mb-0.5">
+            <span id="timer-label"><i class="fa-solid fa-stopwatch mr-1 text-amber-400"></i> TIME</span>
+            <span id="timer-val" class="font-mono text-yellow-300">15s</span>
+          </div>
+          <div class="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-700">
+            <div id="timer-bar" class="h-full bg-gradient-to-r from-amber-400 to-yellow-300 transition-all duration-200 w-full"></div>
+          </div>
+        </div>
+
+        <!-- Score, Combo & Hearts -->
+        <div class="flex items-center gap-3">
+          <div class="text-right">
+            <div class="text-[10px] font-bold text-slate-400">SCORE</div>
+            <div id="hud-score" class="font-arcade text-base sm:text-xl text-yellow-300 stroke-black-sm">0</div>
+          </div>
+          <div id="hud-hearts" class="flex items-center gap-1 text-rose-500 text-sm sm:text-base">
+            <i class="fa-solid fa-heart"></i>
+            <i class="fa-solid fa-heart"></i>
+            <i class="fa-solid fa-heart"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Question / Mission Banner -->
+      <div id="arena-question-banner" class="w-full max-w-3xl bg-gradient-to-r from-indigo-900/90 via-purple-900/90 to-indigo-900/90 border-2 border-yellow-400/80 rounded-2xl p-2 sm:p-3 text-center shadow-2xl my-1 z-20 backdrop-blur-md">
+        <div class="text-[10px] sm:text-xs font-black text-cyan-300 uppercase tracking-widest mb-0.5">
+          <i class="fa-solid fa-bullseye text-yellow-400 mr-1"></i> TARGET MISSION / MISI SASARAN
+        </div>
+        <h3 id="question-text" class="font-arcade text-base sm:text-2xl text-white stroke-black-sm">
+          Punch the monster with the NOUN!
+        </h3>
+      </div>
+
+      <!-- 3D Scene + Mirrored Video Arena Area -->
+      <div id="arena-viewport" class="w-full flex-1 min-h-[380px] sm:min-h-[440px] max-h-[68vh] relative rounded-3xl overflow-hidden border-2 border-indigo-600/40 shadow-2xl bg-slate-950 flex items-center justify-center">
+        <!-- Live mirrored camera feed background -->
+        <canvas id="arena-webcam-canvas" class="absolute inset-0 w-full h-full object-cover transform -scale-x-100 opacity-40"></canvas>
+
+        <!-- Three.js 3D Monster Canvas -->
+        <canvas id="three-monster-canvas" class="absolute inset-0 w-full h-full pointer-events-auto"></canvas>
+
+        <!-- Gesture Glove Cursor Overlay -->
+        <div id="gesture-glove" class="absolute w-14 h-14 pointer-events-none transform -translate-x-1/2 -translate-y-1/2 z-30 transition-transform duration-75 hidden">
+          <div class="w-full h-full rounded-full bg-amber-400/30 border-2 border-amber-300 flex items-center justify-center shadow-lg shadow-amber-500/50 pulse-glow">
+            <i class="fa-solid fa-hand-back-fist text-2xl text-yellow-300"></i>
+          </div>
+        </div>
+
+        <!-- 2D Projected Word Placards Container (Mounted over 3D monsters) -->
+        <div id="monster-placards-layer" class="absolute inset-0 pointer-events-none z-20">
+          <!-- Placards generated dynamically -->
+        </div>
+
+        <!-- Boss Rush HP Bar (Level 100) -->
+        <div id="boss-hud-overlay" class="absolute top-2 inset-x-4 max-w-lg mx-auto bg-slate-950/90 border-2 border-red-500/80 rounded-2xl p-2 z-20 hidden flex-col items-center">
+          <div class="flex items-center justify-between w-full text-xs font-black text-red-400 uppercase mb-1">
+            <span><i class="fa-solid fa-skull mr-1"></i> TITAN BOSS FRENZY (60s)</span>
+            <span id="boss-hp-text" class="text-yellow-300 font-mono">100%</span>
+          </div>
+          <div class="w-full h-3 bg-slate-900 rounded-full overflow-hidden border border-red-800">
+            <div id="boss-hp-bar" class="h-full bg-gradient-to-r from-red-600 via-orange-500 to-yellow-400 transition-all duration-150 w-full"></div>
+          </div>
+          <div class="text-[10px] text-slate-300 mt-1 font-bold">
+            Punch correct words: <span class="text-green-400">+20 pts</span> | Wrong words: <span class="text-rose-400">-10 pts</span>!
+          </div>
+        </div>
+
+        <!-- Comic "POW!" hit explosion sprite container -->
+        <div id="comic-hit-effects" class="absolute inset-0 pointer-events-none z-30"></div>
+      </div>
+
+      <!-- Arena Bottom Status & Fallback Guidance -->
+      <div class="w-full max-w-5xl py-1.5 px-3 flex items-center justify-between text-[11px] font-bold text-slate-300 z-20">
+        <div class="flex items-center gap-2">
+          <span class="text-yellow-300"><i class="fa-solid fa-hand-back-fist"></i> Clench Fist ✊</span>
+          <span class="text-slate-500">|</span>
+          <span class="text-cyan-300"><i class="fa-solid fa-arrow-pointer"></i> Touch / Click Fallback Enabled</span>
+        </div>
+        <div id="arena-fist-indicator" class="bg-slate-900 border border-slate-700 px-2 py-0.5 rounded-lg text-slate-400 font-mono text-[10px]">
+          FIST: WAITING
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. PAUSE MODAL -->
+    <div id="pause-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center z-50 hidden p-4">
+      <div class="w-full max-w-md bg-slate-900 border-2 border-indigo-500/60 rounded-3xl p-6 text-center shadow-2xl">
+        <div class="w-14 h-14 mx-auto bg-amber-500/20 rounded-2xl flex items-center justify-center text-amber-300 text-3xl mb-3 border border-amber-400/40">
+          <i class="fa-solid fa-pause"></i>
+        </div>
+        <h3 class="font-arcade text-3xl text-yellow-300 stroke-black-sm mb-1">GAME PAUSED</h3>
+        <p class="text-slate-300 text-xs sm:text-sm font-semibold mb-5">
+          Take a deep breath and rest your arms! Your progress is safe.
+        </p>
+        <div class="flex flex-col gap-2">
+          <button onclick="togglePauseGame()" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-arcade text-lg rounded-xl shadow-lg transition">
+            RESUME MISSION (SAMBUNG)
+          </button>
+          <button onclick="quitToHome()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition border border-slate-700">
+            QUIT TO MENU (KELUAR)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. HIT / WORD DEFINITION FEEDBACK MODAL -->
+    <div id="feedback-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4">
+      <div id="feedback-card" class="w-full max-w-md bg-slate-900 border-2 border-amber-400 rounded-3xl p-5 text-center shadow-2xl transform transition-all scale-95 opacity-0">
+        <div id="feedback-icon-box" class="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center text-3xl mb-2">
+          <!-- Icon injected by JS -->
+        </div>
+        <h3 id="feedback-title" class="font-arcade text-2xl stroke-black-sm mb-1 text-yellow-300">SUPER HIT!</h3>
+        <p id="feedback-subtitle" class="text-xs font-bold text-slate-300 mb-3">Great job identifying the target word!</p>
+
+        <!-- Word Definition Box (BM & EN) -->
+        <div class="w-full bg-slate-950/90 border border-indigo-700/60 rounded-2xl p-3 text-left mb-4">
+          <div class="flex items-center justify-between text-[11px] font-black uppercase text-amber-300 mb-1">
+            <span><i class="fa-solid fa-book-open mr-1"></i> Maksud Perkataan (Definition)</span>
+            <span id="feedback-word-tag" class="px-2 py-0.5 bg-indigo-900/60 rounded text-[9px] text-cyan-200">NOUN</span>
+          </div>
+          <div id="feedback-word-name" class="font-arcade text-lg text-white mb-1">"BICYCLE"</div>
+          <div class="text-xs text-slate-200 font-semibold mb-1">
+            <span class="text-amber-400 font-bold">BM:</span> <span id="feedback-def-bm">Sebuah kenderaan dua roda yang dikayuh.</span>
+          </div>
+          <div class="text-xs text-slate-300 font-semibold">
+            <span class="text-cyan-400 font-bold">EN:</span> <span id="feedback-def-en">A two-wheeled vehicle that you pedal.</span>
+          </div>
+        </div>
+
+        <button onclick="dismissFeedbackModal()" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-arcade text-base rounded-xl shadow-lg transition">
+          CONTINUE (TERUSKAN) <i class="fa-solid fa-arrow-right ml-1"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- 5. MISSION COMPLETE / GAME OVER SUMMARY -->
+    <div id="endgame-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-50 hidden p-4">
+      <div class="w-full max-w-lg bg-slate-900 border-2 border-yellow-400 rounded-3xl p-6 text-center shadow-2xl">
+        <div id="endgame-badge-icon" class="w-16 h-16 mx-auto bg-gradient-to-tr from-amber-500 to-yellow-400 text-slate-950 rounded-2xl flex items-center justify-center text-4xl mb-3 shadow-lg">
+          <i class="fa-solid fa-trophy"></i>
+        </div>
+        <h3 id="endgame-title" class="font-arcade text-3xl sm:text-4xl text-yellow-300 stroke-black-sm mb-1">STAGE CLEARED!</h3>
+        <p id="endgame-subtitle" class="text-xs sm:text-sm text-slate-300 font-semibold mb-4">
+          You conquered this grammar mission and defeated the Titan Boss!
+        </p>
+
+        <!-- Student Summary & Performance Grid -->
+        <div class="w-full bg-slate-950/90 border border-indigo-700/60 rounded-2xl p-3.5 text-left mb-4 space-y-2">
+          <div class="flex items-center justify-between text-xs text-slate-300 border-b border-slate-800 pb-2">
+            <div>
+              <span class="font-bold text-amber-300" id="endgame-student-name">Saufi Aiman</span> 
+              <span class="text-slate-400 text-[11px]" id="endgame-student-meta">(5 Jujur - SK Seri Saujana)</span>
+            </div>
+            <span class="px-2 py-0.5 bg-cyan-950 text-cyan-300 text-[10px] font-black rounded uppercase" id="endgame-cat-tag">NOUNS</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center pt-1">
+            <div class="bg-slate-900 p-2 rounded-xl border border-slate-800">
+              <span class="text-[10px] font-extrabold text-slate-400 uppercase block">FINAL SCORE</span>
+              <span id="endgame-score" class="font-arcade text-lg text-yellow-300">1,240</span>
+            </div>
+            <div class="bg-slate-900 p-2 rounded-xl border border-slate-800">
+              <span class="text-[10px] font-extrabold text-slate-400 uppercase block">ACCURACY</span>
+              <span id="endgame-accuracy" class="font-arcade text-lg text-emerald-400">92%</span>
+            </div>
+            <div class="bg-slate-900 p-2 rounded-xl border border-slate-800">
+              <span class="text-[10px] font-extrabold text-slate-400 uppercase block">LIVES LEFT</span>
+              <span id="endgame-lives" class="font-arcade text-lg text-rose-400">3/3</span>
+            </div>
+          </div>
+          <div class="text-[11px] text-slate-300 bg-slate-900/60 p-2 rounded-xl border border-slate-800 text-center font-semibold" id="endgame-praise">
+            🌟 Syabas! Penguasaan tatabahasa anda sangat mantap dan cekap!
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-2">
+          <button onclick="quitToHome()" class="flex-1 py-3 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-arcade text-base rounded-xl shadow-lg transition">
+            RETURN TO MENU (MENU UTAMA)
+          </button>
+          <button onclick="openCertificateModal()" class="py-3 px-4 bg-slate-800 hover:bg-slate-700 text-yellow-300 font-bold text-xs rounded-xl border border-slate-700 transition">
+            <i class="fa-solid fa-award mr-1"></i> CERTIFICATE
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. CERTIFICATE OF EXCELLENCE MODAL -->
+    <div id="cert-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-50 hidden p-3">
+      <div class="w-full max-w-2xl bg-slate-900 border-2 border-yellow-400 rounded-3xl p-4 sm:p-5 flex flex-col items-center shadow-2xl">
+        <div class="flex items-center justify-between w-full mb-3">
+          <div class="flex items-center gap-2 text-yellow-300 font-arcade text-lg">
+            <i class="fa-solid fa-award text-amber-400"></i> OFFICIAL CERTIFICATE OF EXCELLENCE
+          </div>
+          <button onclick="closeCertificateModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Rendered Certificate Canvas Preview -->
+        <div class="w-full aspect-[16/10] bg-white rounded-2xl overflow-hidden shadow-2xl border-4 border-amber-400 relative">
+          <canvas id="cert-canvas" class="w-full h-full object-contain"></canvas>
+        </div>
+
+        <div class="flex items-center justify-between w-full mt-3 gap-2">
+          <span class="text-[11px] text-slate-400 font-semibold">
+            Complete all 12 categories to earn the Grand Grammar Master seal!
+          </span>
+          <button onclick="downloadCertificate()" class="py-2 px-4 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs rounded-xl transition shadow flex items-center gap-1.5">
+            <i class="fa-solid fa-download"></i> Download PNG
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. MINIMALIST HIDDEN ADMIN MODAL -->
+    <div id="admin-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4">
+      <div class="w-full max-w-sm bg-slate-900 border border-slate-700 rounded-3xl p-5 shadow-2xl text-left">
+        <div class="flex items-center justify-between mb-3">
+          <h4 class="text-xs font-black text-slate-300 uppercase tracking-wider"><i class="fa-solid fa-lock mr-1.5 text-amber-400"></i> Admin Panel</h4>
+          <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="admin-login-view" class="space-y-2">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 mb-0.5">Username</label>
+            <input type="text" id="admin-user-input" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1 text-xs text-white outline-none">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 mb-0.5">Password</label>
+            <input type="password" id="admin-pass-input" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1 text-xs text-white outline-none">
+          </div>
+          <button onclick="authenticateAdmin()" class="w-full py-1.5 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl transition mt-2">Login</button>
+        </div>
+        <div id="admin-config-view" class="space-y-3 hidden">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-300 mb-1">Google Sheets Webhook URL</label>
+            <input type="text" id="admin-sheet-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-white outline-none font-mono">
+          </div>
+          <div class="flex gap-2">
+            <button onclick="saveAdminConfig()" class="flex-1 py-1.5 bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl">Save</button>
+            <button onclick="testAdminSheet()" class="py-1.5 px-3 bg-slate-800 text-cyan-300 border border-slate-700 font-bold text-xs rounded-xl">Test</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer with Almost Invisible Admin Trigger -->
+  <footer class="w-full py-1.5 px-4 text-center text-[10px] text-slate-500 z-10 flex items-center justify-between">
+    <span>Super Saufi Arcade © 2026 - Educational Grammar Gesture Platform</span>
+    <!-- Minimalist, almost invisible admin dot -->
+    <button onclick="openAdminModal()" class="w-2 h-2 rounded-full bg-slate-800 hover:bg-slate-600 transition" title="Settings"></button>
+  </footer>
+
+  <script>
+    /* ==========================================================================
+       CURRICULUM & VOCABULARY DICTIONARY (12 Official Parts of Speech)
+       Categorized from high-frequency to low-frequency with bilingual definitions
+       ========================================================================== */
+    const CURRICULUM = {
+      nouns: {
+        name: "Nouns (Kata Nama)",
+        tag: "Kata Nama",
+        icon: "fa-cubes",
+        color: "from-amber-500 to-yellow-400",
+        words: [
+          { w: "cat", bm: "kucing", def_bm: "Haiwan peliharaan berkaki empat.", def_en: "A small domesticated carnivorous mammal." },
+          { w: "apple", bm: "epal", def_bm: "Sejenis buah manis dan rangup.", def_en: "A round fruit with red or green skin." },
+          { w: "book", bm: "buku", def_bm: "Himpunan kertas berjilid untuk membaca.", def_en: "A written work published in printed pages." },
+          { w: "school", bm: "sekolah", def_bm: "Tempat menuntut ilmu dan belajar.", def_en: "An institution for educating students." },
+          { w: "bicycle", bm: "basikal", def_bm: "Kenderaan dua roda yang dikayuh.", def_en: "A two-wheeled vehicle pedaled by foot." },
+          { w: "elephant", bm: "gajah", def_bm: "Haiwan darat yang paling besar berbelalai.", def_en: "A very large mammal with a trunk." },
+          { w: "doctor", bm: "doktor", def_bm: "Pakar perubatan yang merawat pesakit.", def_en: "A person qualified to treat sick people." },
+          { w: "computer", bm: "komputer", def_bm: "Alat elektronik untuk memproses data.", def_en: "An electronic device for storing data." },
+          { w: "dinosaur", bm: "dinasour", def_bm: "Reptilia purba yang telah pupus.", def_en: "An extinct prehistoric reptile." },
+          { w: "astronaut", bm: "angkasawan", def_bm: "Orang yang dilatih menjelajah angkasa.", def_en: "A person trained to travel in a spacecraft." },
+          { w: "microscope", bm: "mikroskop", def_bm: "Alat untuk melihat objek seni.", def_en: "An instrument used to view tiny objects." },
+          { w: "architecture", bm: "seni bina", def_bm: "Seni mereka bentuk bangunan.", def_en: "The art or practice of designing buildings." }
+        ]
+      },
+      verbs: {
+        name: "Verbs (Kata Kerja)",
+        tag: "Kata Kerja",
+        icon: "fa-person-running",
+        color: "from-rose-500 to-red-500",
+        words: [
+          { w: "run", bm: "lari", def_bm: "Bergerak pantas menggunakan kaki.", def_en: "To move rapidly on foot." },
+          { w: "jump", bm: "lompat", def_bm: "Melonjakkan badan ke udara.", def_en: "To push oneself into the air using feet." },
+          { w: "eat", bm: "makan", def_bm: "Memasukkan makanan ke dalam mulut.", def_en: "To consume food into the body." },
+          { w: "sleep", bm: "tidur", def_bm: "Berehat dengan menutup mata.", def_en: "To rest with suspended consciousness." },
+          { w: "swim", bm: "berenang", def_bm: "Bergerak di dalam air.", def_en: "To propel oneself through water." },
+          { w: "dance", bm: "menari", def_bm: "Bergerak mengikut rentak muzik.", def_en: "To move rhythmically to music." },
+          { w: "explore", bm: "meneroka", def_bm: "Menyiasat kawasan yang baharu.", def_en: "To travel through an unfamiliar area to learn." },
+          { w: "invent", bm: "mencipta", def_bm: "Menghasilkan rekaan yang belum wujud.", def_en: "To create or design something new." },
+          { w: "accelerate", bm: "memecut", def_bm: "Menambah kelajuan pergerakan.", def_en: "To increase speed rapidly." },
+          { w: "investigate", bm: "menyiasat", def_bm: "Mengkaji sesuatu secara terperinci.", def_en: "To carry out a systematic inquiry." }
+        ]
+      },
+      adjectives: {
+        name: "Adjectives (Kata Adjektif)",
+        tag: "Kata Adjektif",
+        icon: "fa-wand-magic-sparkles",
+        color: "from-pink-500 to-purple-500",
+        words: [
+          { w: "happy", bm: "gembira", def_bm: "Perasaan riang dan sukacita.", def_en: "Feeling or showing pleasure and joy." },
+          { w: "big", bm: "besar", def_bm: "Mempunyai saiz yang luas atau tinggi.", def_en: "Of considerable size or extent." },
+          { w: "bright", bm: "terang", def_bm: "Memancarkan cahaya yang jelas.", def_en: "Giving out or reflecting much light." },
+          { w: "clever", bm: "pandai", def_bm: "Cepat memahami dan pintar.", def_en: "Quick to understand and intelligent." },
+          { w: "brave", bm: "berani", def_bm: "Tidak takut menghadapi cabaran.", def_en: "Ready to face danger or pain without fear." },
+          { w: "delicious", bm: "lazat", def_bm: "Makanan yang mempunyai rasa enak.", def_en: "Highly pleasant to the taste." },
+          { w: "enormous", bm: "sangat besar", def_bm: "Saiz yang teramat luar biasa besarnya.", def_en: "Extremely large; gigantic." },
+          { w: "mysterious", bm: "misteri", def_bm: "Sukar difahami atau dijelaskan.", def_en: "Difficult or impossible to understand." }
+        ]
+      },
+      adverbs: {
+        name: "Adverbs (Kata Keterangan)",
+        tag: "Kata Keterangan",
+        icon: "fa-bolt-lightning",
+        color: "from-cyan-500 to-blue-500",
+        words: [
+          { w: "quickly", bm: "dengan pantas", def_bm: "Melakukan sesuatu dalam masa singkat.", def_en: "At a fast speed; rapidly." },
+          { w: "loudly", bm: "dengan kuat", def_bm: "Bunyi yang dapat didengar jelas.", def_en: "With a great deal of volume." },
+          { w: "carefully", bm: "dengan teliti", def_bm: "Melakukan sesuatu dengan berwaspada.", def_en: "In a way that avoids harm or mistakes." },
+          { w: "happily", bm: "dengan gembira", def_bm: "Dalam keadaan senang hati.", def_en: "In a cheerful and joyous manner." },
+          { w: "suddenly", bm: "secara tiba-tiba", def_bm: "Berlaku tanpa diduga.", def_en: "Quickly and unexpectedly." },
+          { w: "eagerly", bm: "dengan bersungguh", def_bm: "Menunjukkan minat yang mendalam.", def_en: "With keen excitement or desire." },
+          { w: "frequently", bm: "kerap kali", def_bm: "Berulang dalam jarak masa pendek.", def_en: "Happening often or repeatedly." }
+        ]
+      },
+      prepositions: {
+        name: "Prepositions (Kata Sendi)",
+        tag: "Kata Sendi",
+        icon: "fa-location-dot",
+        color: "from-emerald-500 to-teal-500",
+        words: [
+          { w: "under", bm: "di bawah", def_bm: "Berada pada kedudukan lebih rendah.", def_en: "Extending or directly below something." },
+          { w: "between", bm: "di antara", def_bm: "Di tengah-tengah dua objek atau titik.", def_en: "In the middle of two things." },
+          { w: "behind", bm: "di belakang", def_bm: "Pada bahagian belakang sesuatu benda.", def_en: "At or towards the back of something." },
+          { w: "across", bm: "merentasi", def_bm: "Dari satu bahagian ke bahagian lain.", def_en: "From one side to the other." },
+          { w: "through", bm: "menembusi", def_bm: "Bergerak masuk dan keluar dari sesuatu.", def_en: "Moving in one side and out of the other." },
+          { w: "against", bm: "menyandar pada", def_bm: "Menentang atau merapatkan ke dinding.", def_en: "In contact with or opposed to." }
+        ]
+      },
+      pronouns: {
+        name: "Pronouns (Kata Ganti Nama)",
+        tag: "Kata Ganti Nama",
+        icon: "fa-users",
+        color: "from-violet-500 to-indigo-500",
+        words: [
+          { w: "he", bm: "dia (lelaki)", def_bm: "Merujuk kepada orang lelaki.", def_en: "Used to refer to a male person." },
+          { w: "they", bm: "mereka", def_bm: "Merujuk kepada kumpulan orang.", def_en: "Used to refer to two or more people." },
+          { w: "we", bm: "kami / kita", def_bm: "Merujuk kepada penutur dan temannya.", def_en: "Used by a speaker to include others." },
+          { w: "mine", bm: "kepunyaan saya", def_bm: "Milik peribadi diri sendiri.", def_en: "Belonging to or associated with me." },
+          { w: "someone", bm: "seseorang", def_bm: "Satu individu yang tidak ditentukan.", def_en: "An unknown or unspecified person." },
+          { w: "ourselves", bm: "diri kami sendiri", def_bm: "Menegaskan diri penutur sendiri.", def_en: "We or us personally." }
+        ]
+      },
+      conjunctions: {
+        name: "Conjunctions (Kata Hubung)",
+        tag: "Kata Hubung",
+        icon: "fa-link",
+        color: "from-orange-500 to-amber-500",
+        words: [
+          { w: "because", bm: "kerana", def_bm: "Menerangkan sebab atau alasan.", def_en: "For the reason that; since." },
+          { w: "although", bm: "walaupun", def_bm: "Menunjukkan keadaan pertentangan.", def_en: "In spite of the fact that; even though." },
+          { w: "unless", bm: "kecuali jika", def_bm: "Menunjukkan syarat tertentu.", def_en: "Except if; on the condition that." },
+          { w: "while", bm: "sementara", def_bm: "Semasa perkara lain sedang berlaku.", def_en: "During the time that." },
+          { w: "therefore", bm: "oleh itu", def_bm: "Menunjukkan akibat atau rumusan.", def_en: "For that reason; consequently." },
+          { w: "whereas", bm: "sedangkan", def_bm: "Membandingkan dua fakta yang berbeza.", def_en: "In contrast or comparison with the fact that." }
+        ]
+      },
+      determiners: {
+        name: "Determiners (Kata Penentu)",
+        tag: "Kata Penentu",
+        icon: "fa-tag",
+        color: "from-lime-500 to-emerald-500",
+        words: [
+          { w: "these", bm: "ini (jamak)", def_bm: "Menunjukkan benda dekat yang banyak.", def_en: "Indicating plural objects close at hand." },
+          { w: "those", bm: "itu (jamak)", def_bm: "Menunjukkan benda jauh yang banyak.", def_en: "Indicating plural objects further away." },
+          { w: "every", bm: "setiap", def_bm: "Merujuk kepada semua tanpa kecuali.", def_en: "Used to refer to all the individual members." },
+          { w: "several", bm: "beberapa", def_bm: "Bilangan lebih dari dua tetapi sedikit.", def_en: "More than two but not many." },
+          { w: "another", bm: "yang lain", def_bm: "Satu lagi pilihan berasingan.", def_en: "An additional person or thing." }
+        ]
+      },
+      interrogatives: {
+        name: "Interrogatives (Kata Tanya)",
+        tag: "Kata Tanya",
+        icon: "fa-circle-question",
+        color: "from-sky-500 to-cyan-500",
+        words: [
+          { w: "where", bm: "di mana", def_bm: "Bertanya tentang tempat atau lokasi.", def_en: "In or to what place or position." },
+          { w: "whose", bm: "siapakah punya", def_bm: "Bertanya tentang hak milik siapa.", def_en: "Belonging to or associated with which person." },
+          { w: "which", bm: "yang mana satu", def_bm: "Meminta pilihan antara beberapa benda.", def_en: "Asking for information specifying one or more." },
+          { w: "why", bm: "mengapa", def_bm: "Bertanya tentang sebab atau punca.", def_en: "For what reason or purpose." },
+          { w: "how often", bm: "berapa kerap", def_bm: "Bertanya tentang kekerapan kejadian.", def_en: "Asking about the frequency of an event." }
+        ]
+      },
+      numerals: {
+        name: "Numerals (Kata Bilangan)",
+        tag: "Kata Bilangan",
+        icon: "fa-arrow-down-1-9",
+        color: "from-teal-500 to-blue-600",
+        words: [
+          { w: "twelve", bm: "dua belas", def_bm: "Nombor cardinal selepas sebelas (12).", def_en: "Equivalent to the sum of six and six." },
+          { w: "fifteen", bm: "lima belas", def_bm: "Nombor cardinal iaitu 15.", def_en: "One more than fourteen; 15." },
+          { w: "thousand", bm: "seribu", def_bm: "Nombor bernilai 1,000.", def_en: "The number equivalent to ten hundreds." },
+          { w: "million", bm: "sejuta", def_bm: "Nombor bernilai 1,000,000.", def_en: "The number equivalent to one thousand thousands." },
+          { w: "quarter", bm: "suku", def_bm: "Satu daripada empat bahagian sama (1/4).", def_en: "Each of four equal or corresponding parts." }
+        ]
+      },
+      exclamations: {
+        name: "Exclamations (Kata Seru)",
+        tag: "Kata Seru",
+        icon: "fa-comment-dots",
+        color: "from-fuchsia-500 to-pink-600",
+        words: [
+          { w: "wow!", bm: "wah!", def_bm: "Menunjukkan rasa kagum dan takjub.", def_en: "Expressing astonishment or admiration." },
+          { w: "hooray!", bm: "hore!", def_bm: "Sorakan kegembiraan dan kemenangan.", def_en: "Expressing joy or celebration." },
+          { w: "brilliant!", bm: "hebat sekali!", def_bm: "Pujian terhadap sesuatu yang cemerlang.", def_en: "Exceptionally clever or talented." },
+          { w: "ouch!", bm: "aduh!", def_bm: "Jeritan apabila merasa sakit tiba-tiba.", def_en: "Expressing sharp sudden pain." },
+          { w: "pardon!", bm: "maafkan saya!", def_bm: "Ungkapan meminta maaf atau mengulang perkataan.", def_en: "Used to ask someone to repeat what they said." }
+        ]
+      },
+      discourse: {
+        name: "Discourse Markers (Penanda Wacana)",
+        tag: "Penanda Wacana",
+        icon: "fa-signs-post",
+        color: "from-amber-600 to-orange-600",
+        words: [
+          { w: "however", bm: "walau bagaimanapun", def_bm: "Memperkenalkan fakta yang bertentangan.", def_en: "Used to introduce a statement that contrasts." },
+          { w: "furthermore", bm: "tambahan pula", def_bm: "Menambah hujah atau maklumat lanjutan.", def_en: "In addition; moreover." },
+          { w: "therefore", bm: "oleh yang demikian", def_bm: "Kesimpulan logik daripada pernyataan sebelumnya.", def_en: "As a consequence; for that reason." },
+          { w: "meanwhile", bm: "dalam masa yang sama", def_bm: "Berlaku serentak dengan peristiwa lain.", def_en: "In the intervening period of time." },
+          { w: "in addition", bm: "di samping itu", def_bm: "Menyertakan maklumat sampingan.", def_en: "As an extra person, thing, or circumstance." }
+        ]
+      }
+    };
+
+    /* ==========================================================================
+       GAME STATE MANAGEMENT
+       ========================================================================== */
+    const gameState = {
+      categoryKey: 'nouns',
+      currentLevel: 1,
+      maxLevel: 100,
+      score: 0,
+      lives: 3,
+      streak: 0,
+      timerSec: 15,
+      timerMax: 15,
+      timerInterval: null,
+      isPaused: false,
+      isGameOver: false,
+      isBossLevel: false,
+      bossHP: 100,
+      student: { name: "Saufi Aiman", class: "5 Jujur", school: "SK Seri Saujana" },
+      sheetWebhookUrl: localStorage.getItem('saufi_sheet_webhook') || '',
+      completedCategories: JSON.parse(localStorage.getItem('saufi_completed_cats') || '[]'),
+      currentOptions: [], // { word, isCorrect, monsterIndex, def_bm, def_en, tag }
+      audioMuted: false,
+      cameraActive: false,
+      fistDetected: false,
+      totalAnswered: 0,
+      totalCorrect: 0
+    };
+
+    /* ==========================================================================
+       SYNTHESIZED WEB AUDIO API (SFX)
+       ========================================================================== */
+    let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function toggleAudio() {
+      gameState.audioMuted = !gameState.audioMuted;
+      const icon = document.getElementById('audio-icon');
+      if (gameState.audioMuted) {
+        icon.className = 'fa-solid fa-volume-xmark text-rose-400';
+      } else {
+        icon.className = 'fa-solid fa-volume-high text-yellow-300';
+        playSfx('ding');
+      }
+    }
+
+    function playSfx(type) {
+      if (gameState.audioMuted) return;
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        if (type === 'punch') {
+          // Punch Thump + Whoosh
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(140, now);
+          osc.frequency.exponentialRampToValueAtTime(35, now + 0.18);
+          gain.gain.setValueAtTime(0.9, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.18);
+        } else if (type === 'correct') {
+          // Cheerful dual ding
+          [523.25, 659.25, 783.99].forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+            gain.gain.setValueAtTime(0.3, now + idx * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.25);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.08);
+            osc.stop(now + idx * 0.08 + 0.25);
+          });
+        } else if (type === 'wrong') {
+          // Buzz thump
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(160, now);
+          osc.frequency.linearRampToValueAtTime(110, now + 0.25);
+          gain.gain.setValueAtTime(0.5, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.25);
+        } else if (type === 'boss_hit') {
+          // Deep impact explosion
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(90, now);
+          osc.frequency.exponentialRampToValueAtTime(25, now + 0.3);
+          gain.gain.setValueAtTime(0.6, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        }
+      } catch (e) {
+        console.warn("Audio sfx error:", e);
+      }
+    }
+
+    let threeScene, threeCamera, threeRenderer;
+    const monsters3D = [];
+    let titanBoss3D = null;
+
+    function initThreeJS() {
+      const canvas = document.getElementById('three-monster-canvas');
+      const container = document.getElementById('arena-viewport');
+      if (!canvas || !container) return;
+
+      const width = container.clientWidth || 800;
+      const height = container.clientHeight || 450;
+
+      threeScene = new THREE.Scene();
+      threeCamera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+      threeCamera.position.set(0, 0, 9);
+
+      threeRenderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      threeRenderer.setSize(width, height);
+      threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      // Lights
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+      threeScene.add(ambientLight);
+
+      const dirLight = new THREE.DirectionalLight(0xfff5ea, 0.9);
+      dirLight.position.set(5, 10, 7);
+      threeScene.add(dirLight);
+
+      // Create Cute 3D Monsters
+      buildCuteMonsters();
+
+      window.addEventListener('resize', onWindowResize);
+      animateThreeLoop();
+    }
+
+    function onWindowResize() {
+      const container = document.getElementById('arena-viewport');
+      if (!container || !threeRenderer || !threeCamera) return;
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      threeCamera.aspect = width / height;
+      threeCamera.updateProjectionMatrix();
+      threeRenderer.setSize(width, height);
+    }
+
+    function buildCuteMonsters() {
+      // Clear previous
+      monsters3D.forEach(m => threeScene.remove(m.mesh));
+      monsters3D.length = 0;
+
+      const configs = [
+        { color: 0xff6b8b, hornColor: 0xffd166, name: 'pinky', x: -3.3 },
+        { color: 0x48dbfb, hornColor: 0x1dd1a1, name: 'minty', x: 0.0 },
+        { color: 0xfeca57, hornColor: 0xff9ff3, name: 'starry', x: 3.3 }
+      ];
+
+      configs.forEach((cfg, i) => {
+        const group = new THREE.Group();
+
+        // Body (Cute sphere)
+        const bodyGeo = new THREE.SphereGeometry(1.0, 32, 32);
+        const bodyMat = new THREE.MeshToonMaterial({ color: cfg.color });
+        const body = new THREE.Mesh(bodyGeo, bodyMat);
+        group.add(body);
+
+        // Blushing cheeks
+        [-0.45, 0.45].forEach(xOff => {
+          const cheekGeo = new THREE.SphereGeometry(0.18, 16, 16);
+          const cheekMat = new THREE.MeshBasicMaterial({ color: 0xff477e });
+          const cheek = new THREE.Mesh(cheekGeo, cheekMat);
+          cheek.position.set(xOff, -0.15, 0.88);
+          cheek.scale.set(1.2, 0.6, 0.4);
+          group.add(cheek);
+        });
+
+        // Eyes
+        [-0.32, 0.32].forEach(xOff => {
+          const eyeGeo = new THREE.SphereGeometry(0.16, 16, 16);
+          const eyeMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+          const eye = new THREE.Mesh(eyeGeo, eyeMat);
+          eye.position.set(xOff, 0.15, 0.92);
+          group.add(eye);
+
+          // Eye glint
+          const glintGeo = new THREE.SphereGeometry(0.06, 8, 8);
+          const glintMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+          const glint = new THREE.Mesh(glintGeo, glintMat);
+          glint.position.set(xOff + 0.04, 0.2, 1.04);
+          group.add(glint);
+        });
+
+        // Cute Horn / Ears
+        const hornGeo = new THREE.ConeGeometry(0.25, 0.6, 16);
+        const hornMat = new THREE.MeshToonMaterial({ color: cfg.hornColor });
+        [-0.4, 0.4].forEach((xOff, idx) => {
+          const horn = new THREE.Mesh(hornGeo, hornMat);
+          horn.position.set(xOff, 0.95, 0);
+          horn.rotation.z = (idx === 0 ? 0.3 : -0.3);
+          group.add(horn);
+        });
+
+        group.position.set(cfg.x, -0.2, 0);
+        threeScene.add(group);
+
+        monsters3D.push({
+          mesh: group,
+          baseX: cfg.x,
+          baseY: -0.2,
+          isKnockedOut: false,
+          knockVelocity: new THREE.Vector3(),
+          idlePhase: i * 1.5
+        });
+      });
+
+      // Build Level 100 Titan Boss
+      buildTitanBoss();
+    }
+
+    function buildTitanBoss() {
+      titanBoss3D = new THREE.Group();
+
+      const coreGeo = new THREE.DodecahedronGeometry(1.6, 1);
+      const coreMat = new THREE.MeshToonMaterial({ color: 0xff3838, wireframe: false });
+      const core = new THREE.Mesh(coreGeo, coreMat);
+      titanBoss3D.add(core);
+
+      // Rotating Spikes / Rings
+      const ringGeo = new THREE.TorusGeometry(2.3, 0.15, 16, 64);
+      const ringMat = new THREE.MeshToonMaterial({ color: 0xf1c40f });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = Math.PI / 2.5;
+      titanBoss3D.add(ring);
+      titanBoss3D.ringMesh = ring;
+
+      // Boss Red Glowing Eyes
+      [-0.6, 0.6].forEach(xOff => {
+        const eyeGeo = new THREE.SphereGeometry(0.3, 16, 16);
+        const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+        const eye = new THREE.Mesh(eyeGeo, eyeMat);
+        eye.position.set(xOff, 0.3, 1.4);
+        titanBoss3D.add(eye);
+      });
+
+      titanBoss3D.position.set(0, 0.2, -1.0);
+      titanBoss3D.visible = false;
+      threeScene.add(titanBoss3D);
+    }
+
+    let clock = new THREE.Clock();
+    function animateThreeLoop() {
+      requestAnimationFrame(animateThreeLoop);
+      const delta = clock.getDelta();
+      const elapsed = clock.getElapsedTime();
+
+      // Animate Standard Monsters
+      monsters3D.forEach((m, idx) => {
+        if (!m.isKnockedOut) {
+          // Floating cute breathing bounce
+          m.mesh.position.y = m.baseY + Math.sin(elapsed * 2.5 + m.idlePhase) * 0.18;
+          m.mesh.rotation.y = Math.sin(elapsed * 1.8 + m.idlePhase) * 0.15;
+          m.mesh.rotation.z = Math.cos(elapsed * 2.0 + m.idlePhase) * 0.05;
+        } else {
+          // Knockout spinning trajectory
+          m.mesh.position.addScaledVector(m.knockVelocity, delta);
+          m.mesh.rotation.x += 10 * delta;
+          m.mesh.rotation.y += 12 * delta;
+          m.knockVelocity.y -= 12 * delta; // Gravity
+        }
+      });
+
+      // Animate Boss if visible
+      if (titanBoss3D && titanBoss3D.visible) {
+        titanBoss3D.position.y = 0.2 + Math.sin(elapsed * 3) * 0.25;
+        titanBoss3D.rotation.y += 0.8 * delta;
+        if (titanBoss3D.ringMesh) {
+          titanBoss3D.ringMesh.rotation.z += 1.8 * delta;
+        }
+      }
+
+      // Synchronize 2D Placards with 3D monster screen positions
+      syncPlacardsTo3D();
+
+      if (threeRenderer && threeScene && threeCamera) {
+        threeRenderer.render(threeScene, threeCamera);
+      }
+    }
+
+    function triggerMonsterKnockout(index) {
+      if (!monsters3D[index]) return;
+      playSfx('punch');
+      const m = monsters3D[index];
+      m.isKnockedOut = true;
+      m.knockVelocity.set((index - 1) * 3, 5.5, -4.5);
+
+      setTimeout(() => {
+        // Reset monster position
+        m.isKnockedOut = false;
+        m.mesh.position.set(m.baseX, m.baseY, 0);
+        m.mesh.rotation.set(0, 0, 0);
+      }, 700);
+    }
+
+    function syncPlacardsTo3D() {
+      const container = document.getElementById('arena-viewport');
+      if (!container || !threeCamera) return;
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+
+      gameState.currentOptions.forEach((opt, idx) => {
+        const placard = document.getElementById(`monster-placard-${idx}`);
+        if (!placard) return;
+
+        let posX = 0, posY = 0;
+        if (gameState.isBossLevel) {
+          // In Boss mode, placards are spread in distinct quadrants
+          const bossCoords = [
+            { x: width * 0.22, y: height * 0.35 },
+            { x: width * 0.78, y: height * 0.35 },
+            { x: width * 0.50, y: height * 0.75 }
+          ];
+          const pos = bossCoords[idx % 3];
+          posX = pos.x;
+          posY = pos.y;
+        } else {
+          // Standard Level: follow 3D monster chest
+          const m = monsters3D[opt.monsterIndex];
+          if (m && !m.isKnockedOut) {
+            const v = new THREE.Vector3();
+            m.mesh.getWorldPosition(v);
+            v.y -= 0.1; // Place over belly
+            v.project(threeCamera);
+
+            posX = (v.x * 0.5 + 0.5) * width;
+            posY = (-(v.y * 0.5) + 0.5) * height;
+          }
+        }
+
+        placard.style.left = `${posX}px`;
+        placard.style.top = `${posY}px`;
+      });
+    }
+
+    /* ==========================================================================
+       CAMERA & MEDIAPIPE GESTURE DETECTION (FIST ✊ ONLY)
+       ========================================================================== */
+    let handsInstance = null;
+    let cameraUtilInstance = null;
+    let isProcessingFrame = false;
+
+    function initCameraAndHands() {
+      try {
+        if (window.Hands) {
+          handsInstance = new Hands({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+          });
+          handsInstance.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.6,
+            minTrackingConfidence: 0.6
+          });
+          handsInstance.onResults(onHandResults);
+        }
+      } catch (err) {
+        console.warn("MediaPipe Hands initialization error:", err);
+      }
+      startCameraDirect(false);
+    }
+
+    async function startCameraDirect(userInitiated = false) {
+      const video = document.getElementById('live-webcam-feed');
+      if (!video) return;
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
+          audio: false
+        });
+        video.srcObject = stream;
+        video.play();
+        gameState.cameraActive = true;
+
+        document.getElementById('cam-status-text').textContent = 'Cam Active';
+        document.getElementById('cam-led').className = 'w-2 h-2 rounded-full bg-emerald-400';
+        const placeholder = document.getElementById('standby-placeholder');
+        if (placeholder) placeholder.classList.add('hidden');
+
+        // Start processing video frames
+        processVideoFrames();
+      } catch (err) {
+        console.warn("Camera access denied or unavailable:", err);
+        document.getElementById('cam-status-text').textContent = 'Touch / Mouse Mode';
+        document.getElementById('cam-led').className = 'w-2 h-2 rounded-full bg-cyan-400';
+      }
+    }
+
+    function processVideoFrames() {
+      const video = document.getElementById('live-webcam-feed');
+      const menuCanvas = document.getElementById('menu-webcam-canvas');
+      const arenaCanvas = document.getElementById('arena-webcam-canvas');
+
+      function drawFrame() {
+        if (video.readyState >= 2) {
+          // 1. Draw to menu standby box if visible
+          if (!document.getElementById('home-screen').classList.contains('hidden') && menuCanvas) {
+            const ctx = menuCanvas.getContext('2d');
+            menuCanvas.width = video.videoWidth || 320;
+            menuCanvas.height = video.videoHeight || 240;
+            ctx.drawImage(video, 0, 0, menuCanvas.width, menuCanvas.height);
+          }
+          // 2. Draw to arena background if in-game
+          if (!document.getElementById('arena-screen').classList.contains('hidden') && arenaCanvas) {
+            const ctx = arenaCanvas.getContext('2d');
+            arenaCanvas.width = video.videoWidth || 640;
+            arenaCanvas.height = video.videoHeight || 480;
+            ctx.drawImage(video, 0, 0, arenaCanvas.width, arenaCanvas.height);
+          }
+
+          // 3. Process hand landmarks with MediaPipe
+          if (handsInstance && !isProcessingFrame) {
+            isProcessingFrame = true;
+            handsInstance.send({ image: video }).finally(() => {
+              isProcessingFrame = false;
+            });
+          }
+        }
+        requestAnimationFrame(drawFrame);
+      }
+      requestAnimationFrame(drawFrame);
+    }
+
+    function onHandResults(results) {
+      const fistPill = document.getElementById('standby-fist-pill');
+      const arenaFistPill = document.getElementById('arena-fist-indicator');
+      const glove = document.getElementById('gesture-glove');
+
+      if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
+        if (fistPill) {
+          fistPill.textContent = 'NO HAND';
+          fistPill.className = 'text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-md font-mono';
+        }
+        if (arenaFistPill) arenaFistPill.textContent = 'FIST: WAITING';
+        if (glove) glove.classList.add('hidden');
+        gameState.fistDetected = false;
+        return;
+      }
+
+      const landmarks = results.multiHandLandmarks[0];
+      const wrist = landmarks[0];
+      const indexTip = landmarks[8];
+      const middleTip = landmarks[12];
+      const ringTip = landmarks[16];
+      const pinkyTip = landmarks[20];
+
+      // Fist Detection: Check if fingertips are curled close to the wrist vs knuckle PIP
+      const isCurled = (tipIdx, pipIdx) => {
+        const dWrist = Math.hypot(landmarks[tipIdx].x - wrist.x, landmarks[tipIdx].y - wrist.y);
+        const dPip = Math.hypot(landmarks[pipIdx].x - wrist.x, landmarks[pipIdx].y - wrist.y);
+        return dWrist < dPip * 1.15;
+      };
+
+      const curledCount = [
+        isCurled(8, 6),
+        isCurled(12, 10),
+        isCurled(16, 14),
+        isCurled(20, 18)
+      ].filter(Boolean).length;
+
+      const isFist = curledCount >= 3;
+      gameState.fistDetected = isFist;
+
+      // Mirrored hand coordinates for on-screen cursor
+      const screenX = (1 - landmarks[9].x); // Mirrored horizontal
+      const screenY = landmarks[9].y;
+
+      if (fistPill) {
+        if (isFist) {
+          fistPill.textContent = '✊ FIST DETECTED!';
+          fistPill.className = 'text-[10px] bg-amber-500 text-slate-950 font-black px-2 py-0.5 rounded-md font-mono';
+        } else {
+          fistPill.textContent = '✋ OPEN HAND';
+          fistPill.className = 'text-[10px] bg-cyan-900 text-cyan-200 px-2 py-0.5 rounded-md font-mono';
+        }
+      }
+
+      // If in arena, update glove and test collisions
+      const arenaScreen = document.getElementById('arena-screen');
+      if (!arenaScreen.classList.contains('hidden')) {
+        const container = document.getElementById('arena-viewport');
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        const gloveX = screenX * width;
+        const gloveY = screenY * height;
+
+        if (glove) {
+          glove.classList.remove('hidden');
+          glove.style.left = `${gloveX}px`;
+          glove.style.top = `${gloveY}px`;
+        }
+
+        if (arenaFistPill) {
+          arenaFistPill.textContent = isFist ? '✊ PUNCH READY!' : '✋ OPEN HAND';
+          arenaFistPill.className = isFist ? 'bg-amber-500 text-slate-950 px-2 py-0.5 rounded-lg font-bold font-mono text-[10px]' : 'bg-slate-900 border border-slate-700 px-2 py-0.5 rounded-lg text-slate-400 font-mono text-[10px]';
+        }
+
+        if (isFist && !gameState.isPaused && !gameState.isGameOver) {
+          checkHitCollision(gloveX, gloveY);
+        }
+      }
+    }
+
+    function checkHitCollision(x, y) {
+      if (gameState.isHitCooldown) return;
+
+      gameState.currentOptions.forEach((opt, idx) => {
+        const placard = document.getElementById(`monster-placard-${idx}`);
+        if (!placard) return;
+
+        const rect = placard.getBoundingClientRect();
+        const containerRect = document.getElementById('arena-viewport').getBoundingClientRect();
+        const plX = rect.left - containerRect.left + rect.width / 2;
+        const plY = rect.top - containerRect.top + rect.height / 2;
+
+        const dist = Math.hypot(x - plX, y - plY);
+        if (dist < 75) {
+          executePunchOnOption(idx, plX, plY);
+        }
+      });
+    }
+
+    function executePunchOnOption(optIndex, hitX, hitY) {
+      gameState.isHitCooldown = true;
+      setTimeout(() => { gameState.isHitCooldown = false; }, 850);
+
+      const option = gameState.currentOptions[optIndex];
+      if (!option) return;
+
+      // Spawn Comic "POW!" Effect
+      spawnComicPow(hitX, hitY);
+
+      // Trigger 3D Knockout tumble
+      triggerMonsterKnockout(option.monsterIndex);
+
+      if (gameState.isBossLevel) {
+        // Level 100 Boss Logic (+20 pts for correct, -10 pts for wrong)
+        if (option.isCorrect) {
+          playSfx('boss_hit');
+          gameState.score += 20;
+          gameState.bossHP = Math.max(0, gameState.bossHP - 15);
+          updateBossHUD();
+          if (gameState.bossHP <= 0) {
+            handleVictory();
+            return;
+          }
+        } else {
+          playSfx('wrong');
+          gameState.score = Math.max(0, gameState.score - 10);
+        }
+        updateHUD();
+        loadBossWave();
+      } else {
+        // Standard Levels 1-99
+        gameState.totalAnswered++;
+        clearInterval(gameState.timerInterval);
+
+        if (option.isCorrect) {
+          gameState.totalCorrect++;
+          gameState.streak++;
+          gameState.score += 100 + (gameState.streak * 15);
+          playSfx('correct');
+          showFeedbackModal(true, option);
+        } else {
+          gameState.streak = 0;
+          gameState.lives--;
+          playSfx('wrong');
+          updateHUD();
+          showFeedbackModal(false, option);
+        }
+      }
+    }
+
+    function spawnComicPow(x, y) {
+      const container = document.getElementById('comic-hit-effects');
+      if (!container) return;
+
+      const pow = document.createElement('div');
+      pow.className = 'absolute z-40 font-arcade text-3xl sm:text-5xl text-yellow-300 stroke-black-lg pointer-events-none animate-pow font-black tracking-widest';
+      pow.textContent = 'POW!';
+      pow.style.left = `${x}px`;
+      pow.style.top = `${y}px`;
+      container.appendChild(pow);
+
+      setTimeout(() => pow.remove(), 600);
+    }
+
+    function startMission() {
+      // Validate Student Info
+      const nameInput = document.getElementById('input-student-name').value.trim();
+      const classInput = document.getElementById('input-student-class').value.trim();
+      const schoolInput = document.getElementById('input-student-school').value.trim();
+
+      if (nameInput) gameState.student.name = nameInput;
+      if (classInput) gameState.student.class = classInput;
+      if (schoolInput) gameState.student.school = schoolInput;
+
+      gameState.currentLevel = 1;
+      gameState.score = 0;
+      gameState.lives = 3;
+      gameState.streak = 0;
+      gameState.isGameOver = false;
+      gameState.isPaused = false;
+      gameState.totalAnswered = 0;
+      gameState.totalCorrect = 0;
+
+      document.getElementById('home-screen').classList.add('hidden');
+      document.getElementById('arena-screen').classList.remove('hidden');
+
+      if (!threeScene) {
+        initThreeJS();
+      }
+
+      loadLevel(gameState.currentLevel);
+    }
+
+    function loadLevel(levelNum) {
+      gameState.currentLevel = levelNum;
+      updateHUD();
+
+      if (levelNum === 100) {
+        // Start 60-Second Boss Frenzy
+        startBossFrenzy();
+      } else {
+        startStandardLevel();
+      }
+    }
+
+    function startStandardLevel() {
+      gameState.isBossLevel = false;
+      if (titanBoss3D) titanBoss3D.visible = false;
+      monsters3D.forEach(m => m.mesh.visible = true);
+      document.getElementById('boss-hud-overlay').classList.add('hidden');
+
+      const cat = CURRICULUM[gameState.categoryKey];
+      document.getElementById('hud-category-name').textContent = cat.name.toUpperCase();
+      document.getElementById('hud-level-text').textContent = `LEVEL ${gameState.currentLevel} / 100`;
+      document.getElementById('question-text').textContent = `PUNCH THE MONSTER WITH THE ${cat.tag.toUpperCase()}!`;
+
+      // Select target correct word from category
+      const targetWord = cat.words[(gameState.currentLevel - 1) % cat.words.length];
+
+      // Select 2 distractors from other categories
+      const otherKeys = Object.keys(CURRICULUM).filter(k => k !== gameState.categoryKey);
+      const distractor1 = getRandomWordFrom(otherKeys[Math.floor(Math.random() * otherKeys.length)]);
+      const distractor2 = getRandomWordFrom(otherKeys[Math.floor(Math.random() * otherKeys.length)]);
+
+      const options = [
+        { ...targetWord, isCorrect: true, tag: cat.tag },
+        { ...distractor1.word, isCorrect: false, tag: distractor1.catTag },
+        { ...distractor2.word, isCorrect: false, tag: distractor2.catTag }
+      ];
+
+      // Shuffle options across the 3 cute monsters
+      options.sort(() => Math.random() - 0.5);
+      options.forEach((opt, idx) => opt.monsterIndex = idx);
+      gameState.currentOptions = options;
+
+      renderPlacards();
+
+      // Reset and start countdown timer (15 seconds)
+      gameState.timerSec = 15;
+      gameState.timerMax = 15;
+      clearInterval(gameState.timerInterval);
+      updateTimerDisplay();
+
+      gameState.timerInterval = setInterval(() => {
+        if (gameState.isPaused) return;
+        gameState.timerSec--;
+        updateTimerDisplay();
+
+        if (gameState.timerSec <= 0) {
+          clearInterval(gameState.timerInterval);
+          handleTimeOut();
+        }
+      }, 1000);
+    }
+
+    function getRandomWordFrom(catKey) {
+      const cat = CURRICULUM[catKey];
+      const wordObj = cat.words[Math.floor(Math.random() * cat.words.length)];
+      return { word: wordObj, catTag: cat.tag };
+    }
+
+    function startBossFrenzy() {
+      gameState.isBossLevel = true;
+      gameState.bossHP = 100;
+      if (titanBoss3D) titanBoss3D.visible = true;
+      monsters3D.forEach(m => m.mesh.visible = false);
+      document.getElementById('boss-hud-overlay').classList.remove('hidden');
+
+      const cat = CURRICULUM[gameState.categoryKey];
+      document.getElementById('hud-category-name').textContent = "TITAN BOSS FRENZY";
+      document.getElementById('hud-level-text').textContent = "LEVEL 100 - FINAL BOSS";
+      document.getElementById('question-text').textContent = `PUNCH AS MANY ${cat.tag.toUpperCase()} AS YOU CAN!`;
+
+      updateBossHUD();
+      loadBossWave();
+
+      // 60-Second Boss Countdown
+      gameState.timerSec = 60;
+      gameState.timerMax = 60;
+      clearInterval(gameState.timerInterval);
+      updateTimerDisplay();
+
+      gameState.timerInterval = setInterval(() => {
+        if (gameState.isPaused) return;
+        gameState.timerSec--;
+        updateTimerDisplay();
+
+        if (gameState.timerSec <= 0) {
+          clearInterval(gameState.timerInterval);
+          if (gameState.bossHP <= 0) {
+            handleVictory();
+          } else {
+            handleGameOver("Time expired in Boss Battle!");
+          }
+        }
+      }, 1000);
+    }
+
+    function loadBossWave() {
+      const cat = CURRICULUM[gameState.categoryKey];
+      const targetWord = cat.words[Math.floor(Math.random() * cat.words.length)];
+
+      const otherKeys = Object.keys(CURRICULUM).filter(k => k !== gameState.categoryKey);
+      const d1 = getRandomWordFrom(otherKeys[Math.floor(Math.random() * otherKeys.length)]);
+      const d2 = getRandomWordFrom(otherKeys[Math.floor(Math.random() * otherKeys.length)]);
+
+      const options = [
+        { ...targetWord, isCorrect: true, tag: cat.tag },
+        { ...d1.word, isCorrect: false, tag: d1.catTag },
+        { ...d2.word, isCorrect: false, tag: d2.catTag }
+      ];
+      options.sort(() => Math.random() - 0.5);
+      options.forEach((opt, idx) => opt.monsterIndex = idx);
+      gameState.currentOptions = options;
+
+      renderPlacards();
+    }
+
+    function renderPlacards() {
+      const layer = document.getElementById('monster-placards-layer');
+      layer.innerHTML = '';
+
+      gameState.currentOptions.forEach((opt, idx) => {
+        const placard = document.createElement('div');
+        placard.id = `monster-placard-${idx}`;
+        placard.className = 'absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-auto cursor-pointer transition-all duration-150';
+
+        placard.innerHTML = `
+          <div class="px-4 py-2 sm:px-6 sm:py-2.5 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-2 border-yellow-400/90 shadow-2xl text-center active:scale-95 hover:border-white flex flex-col items-center">
+            <span class="font-arcade text-lg sm:text-2xl text-yellow-300 stroke-black-sm uppercase tracking-wide">${opt.w}</span>
+            <span class="text-[10px] text-cyan-300 font-extrabold uppercase mt-0.5">${opt.bm}</span>
+          </div>
+        `;
+
+        // Direct Click / Touch Fallback
+        placard.onclick = (e) => {
+          const rect = placard.getBoundingClientRect();
+          const containerRect = document.getElementById('arena-viewport').getBoundingClientRect();
+          executePunchOnOption(idx, rect.left - containerRect.left + rect.width / 2, rect.top - containerRect.top + rect.height / 2);
+        };
+
+        layer.appendChild(placard);
+      });
+    }
+
+    function updateBossHUD() {
+      const bar = document.getElementById('boss-hp-bar');
+      const text = document.getElementById('boss-hp-text');
+      if (bar) bar.style.width = `${gameState.bossHP}%`;
+      if (text) text.textContent = `${gameState.bossHP}%`;
+    }
+
+    function updateTimerDisplay() {
+      const bar = document.getElementById('timer-bar');
+      const val = document.getElementById('timer-val');
+      if (val) val.textContent = `${gameState.timerSec}s`;
+      if (bar) {
+        const pct = (gameState.timerSec / gameState.timerMax) * 100;
+        bar.style.width = `${pct}%`;
+        if (pct < 30) {
+          bar.className = 'h-full bg-rose-500 transition-all duration-200';
+        } else {
+          bar.className = 'h-full bg-gradient-to-r from-amber-400 to-yellow-300 transition-all duration-200';
+        }
+      }
+    }
+
+    function updateHUD() {
+      document.getElementById('hud-score').textContent = gameState.score.toLocaleString();
+      const heartsContainer = document.getElementById('hud-hearts');
+      if (heartsContainer) {
+        heartsContainer.innerHTML = '';
+        for (let i = 0; i < 3; i++) {
+          const heart = document.createElement('i');
+          heart.className = i < gameState.lives ? 'fa-solid fa-heart' : 'fa-regular fa-heart text-slate-600';
+          heartsContainer.appendChild(heart);
+        }
+      }
+    }
+
+    function handleTimeOut() {
+      gameState.lives--;
+      updateHUD();
+      playSfx('wrong');
+      if (gameState.lives <= 0) {
+        handleGameOver("Time run out!");
+      } else {
+        loadLevel(gameState.currentLevel + 1);
+      }
+    }
+
+    function showFeedbackModal(isSuccess, option) {
+      const modal = document.getElementById('feedback-modal');
+      const card = document.getElementById('feedback-card');
+      const title = document.getElementById('feedback-title');
+      const subtitle = document.getElementById('feedback-subtitle');
+      const iconBox = document.getElementById('feedback-icon-box');
+
+      document.getElementById('feedback-word-tag').textContent = option.tag;
+      document.getElementById('feedback-word-name').textContent = `"${option.w.toUpperCase()}" (${option.bm})`;
+      document.getElementById('feedback-def-bm').textContent = option.def_bm || "Maksud tersedia dalam kurikulum.";
+      document.getElementById('feedback-def-en').textContent = option.def_en || "Definition available in curriculum.";
+
+      if (isSuccess) {
+        card.className = 'w-full max-w-md bg-slate-900 border-2 border-emerald-400 rounded-3xl p-5 text-center shadow-2xl transition-all scale-100 opacity-100';
+        iconBox.className = 'w-14 h-14 mx-auto rounded-2xl flex items-center justify-center text-3xl mb-2 bg-emerald-500/20 text-emerald-400 border border-emerald-400/40';
+        iconBox.innerHTML = '<i class="fa-solid fa-check"></i>';
+        title.textContent = `SUPER HIT, ${gameState.student.name.toUpperCase()}!`;
+        title.className = 'font-arcade text-2xl stroke-black-sm mb-1 text-emerald-400';
+        subtitle.textContent = 'Great punch! You accurately identified the target word.';
+      } else {
+        card.className = 'w-full max-w-md bg-slate-900 border-2 border-rose-500 rounded-3xl p-5 text-center shadow-2xl transition-all scale-100 opacity-100';
+        iconBox.className = 'w-14 h-14 mx-auto rounded-2xl flex items-center justify-center text-3xl mb-2 bg-rose-500/20 text-rose-400 border border-rose-400/40';
+        iconBox.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+        title.textContent = 'MISSED TARGET!';
+        title.className = 'font-arcade text-2xl stroke-black-sm mb-1 text-rose-400';
+        subtitle.textContent = `That word belongs to ${option.tag}! Review the meaning below:`;
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function dismissFeedbackModal() {
+      document.getElementById('feedback-modal').classList.add('hidden');
+      if (gameState.lives <= 0) {
+        handleGameOver("Ran out of lives!");
+      } else {
+        if (gameState.currentLevel >= gameState.maxLevel) {
+          handleVictory();
+        } else {
+          loadLevel(gameState.currentLevel + 1);
+        }
+      }
+    }
+
+    function togglePauseGame() {
+      gameState.isPaused = !gameState.isPaused;
+      const pauseModal = document.getElementById('pause-modal');
+      if (gameState.isPaused) {
+        pauseModal.classList.remove('hidden');
+      } else {
+        pauseModal.classList.add('hidden');
+      }
+    }
+
+    function quitToHome() {
+      clearInterval(gameState.timerInterval);
+      document.getElementById('pause-modal').classList.add('hidden');
+      document.getElementById('arena-screen').classList.add('hidden');
+      document.getElementById('endgame-modal').classList.add('hidden');
+      document.getElementById('home-screen').classList.remove('hidden');
+      renderBadgesContainer();
+    }
+
+    function handleVictory() {
+      clearInterval(gameState.timerInterval);
+      gameState.isGameOver = true;
+
+      // Award completion badge
+      if (!gameState.completedCategories.includes(gameState.categoryKey)) {
+        gameState.completedCategories.push(gameState.categoryKey);
+        localStorage.setItem('saufi_completed_cats', JSON.stringify(gameState.completedCategories));
+      }
+
+      showEndgameScreen(true);
+      logGameSessionToGoogleSheet();
+    }
+
+    function handleGameOver(reason) {
+      clearInterval(gameState.timerInterval);
+      gameState.isGameOver = true;
+      showEndgameScreen(false, reason);
+      logGameSessionToGoogleSheet();
+    }
+
+    function showEndgameScreen(isVictory, reason = "") {
+      const modal = document.getElementById('endgame-modal');
+      const title = document.getElementById('endgame-title');
+      const subtitle = document.getElementById('endgame-subtitle');
+      const icon = document.getElementById('endgame-badge-icon');
+
+      document.getElementById('endgame-student-name').textContent = gameState.student.name;
+      document.getElementById('endgame-student-meta').textContent = `(${gameState.student.class} - ${gameState.student.school})`;
+      document.getElementById('endgame-cat-tag').textContent = CURRICULUM[gameState.categoryKey].tag;
+      document.getElementById('endgame-score').textContent = gameState.score.toLocaleString();
+
+      const acc = gameState.totalAnswered > 0 ? Math.round((gameState.totalCorrect / gameState.totalAnswered) * 100) : 100;
+      document.getElementById('endgame-accuracy').textContent = `${acc}%`;
+      document.getElementById('endgame-lives').textContent = `${Math.max(0, gameState.lives)}/3`;
+
+      if (isVictory) {
+        title.textContent = 'STAGE CLEARED!';
+        title.className = 'font-arcade text-3xl sm:text-4xl text-yellow-300 stroke-black-sm mb-1';
+        subtitle.textContent = 'Congratulations! You mastered all 100 levels and defeated the Titan Boss!';
+        icon.className = 'w-16 h-16 mx-auto bg-gradient-to-tr from-amber-500 to-yellow-400 text-slate-950 rounded-2xl flex items-center justify-center text-4xl mb-3 shadow-lg';
+        icon.innerHTML = '<i class="fa-solid fa-crown"></i>';
+        document.getElementById('endgame-praise').textContent = '🌟 Syabas! Anda telah dianugerahkan lencana penguasaan penuh!';
+      } else {
+        title.textContent = 'GAME OVER';
+        title.className = 'font-arcade text-3xl sm:text-4xl text-rose-500 stroke-black-sm mb-1';
+        subtitle.textContent = reason || 'Keep practicing! Review your grammar words and try again.';
+        icon.className = 'w-16 h-16 mx-auto bg-slate-800 text-rose-400 rounded-2xl flex items-center justify-center text-4xl mb-3 border border-slate-700';
+        icon.innerHTML = '<i class="fa-solid fa-heart-crack"></i>';
+        document.getElementById('endgame-praise').textContent = '💪 Usaha tangga kejayaan! Jangan berputus asa, cuba sekali lagi!';
+      }
+
+      modal.classList.remove('hidden');
+    }
+
     async function logGameSessionToGoogleSheet() {
       if (!gameState.sheetWebhookUrl) return;
       try {
@@ -164,7 +1641,6 @@
         const isCompleted = gameState.completedCategories.includes(key);
 
         const card = document.createElement('div');
-        // Compact, colorful, and vibrant cards with distinct category themes
         card.className = `p-2 rounded-xl cursor-pointer border-2 transition-all duration-150 flex flex-col justify-between ${
           isSelected 
             ? 'bg-gradient-to-br ' + cat.color + ' border-white text-slate-950 shadow-lg shadow-amber-500/30 scale-[1.03] ring-2 ring-yellow-300' 
@@ -194,4 +1670,164 @@
       gameState.categoryKey = key;
       renderCategoryMenu();
     }
-<!-- ... existing code ... -->
+
+    function renderBadgesContainer() {
+      const container = document.getElementById('badges-container');
+      const countText = document.getElementById('badges-count-text');
+      if (!container) return;
+
+      container.innerHTML = '';
+      const totalKeys = Object.keys(CURRICULUM);
+      countText.textContent = gameState.completedCategories.length;
+
+      totalKeys.forEach(key => {
+        const cat = CURRICULUM[key];
+        const isDone = gameState.completedCategories.includes(key);
+
+        const badge = document.createElement('div');
+        badge.className = `p-1 rounded-xl flex flex-col items-center justify-center border ${
+          isDone ? 'bg-amber-500/20 border-amber-400 text-yellow-300' : 'bg-slate-950/60 border-slate-800 text-slate-600'
+        }`;
+        badge.innerHTML = `
+          <i class="fa-solid ${cat.icon} text-xs mb-0.5"></i>
+          <span class="text-[8px] font-black truncate max-w-full">${cat.tag}</span>
+        `;
+        container.appendChild(badge);
+      });
+    }
+
+    function openCertificateModal() {
+      drawCertificate();
+      document.getElementById('cert-modal').classList.remove('hidden');
+    }
+
+    function closeCertificateModal() {
+      document.getElementById('cert-modal').classList.add('hidden');
+    }
+
+    function drawCertificate() {
+      const canvas = document.getElementById('cert-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = 1200;
+      canvas.height = 750;
+
+      // Background Gradient
+      const grad = ctx.createLinearGradient(0, 0, 1200, 750);
+      grad.addColorStop(0, '#0f172a');
+      grad.addColorStop(1, '#1e1b4b');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1200, 750);
+
+      // Gold Borders
+      ctx.lineWidth = 14;
+      ctx.strokeStyle = '#f59e0b';
+      ctx.strokeRect(25, 25, 1150, 700);
+
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#fef08a';
+      ctx.strokeRect(38, 38, 1124, 674);
+
+      // Certificate Title
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = 'bold 36px "Lilita One", sans-serif';
+      ctx.fillText('SIJIL PENGHARGAAN & KECEMERLANGAN', 600, 120);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '22px "Nunito", sans-serif';
+      ctx.fillText('SUPER SAUFI 3D GESTURE GRAMMAR ARCADE', 600, 160);
+
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = 'italic 18px "Nunito", sans-serif';
+      ctx.fillText('Dengan ini disahkan bahawa / This is proudly presented to:', 600, 240);
+
+      // Student Name
+      ctx.fillStyle = '#fde047';
+      ctx.font = 'bold 50px "Lilita One", sans-serif';
+      ctx.fillText((gameState.student.name || 'Saufi Aiman').toUpperCase(), 600, 310);
+
+      // Class and School
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 24px "Nunito", sans-serif';
+      ctx.fillText(`KELAS: ${gameState.student.class || '5 Jujur'}  |  SEKOLAH: ${gameState.student.school || 'SK Seri Saujana'}`, 600, 360);
+
+      // Accomplishment Paragraph
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = '20px "Nunito", sans-serif';
+      const earnedCount = gameState.completedCategories.length;
+      ctx.fillText(`Telah berjaya menguasai ${earnedCount} daripada 12 Misi Tatabahasa dan menumbuk Monster Titan!`, 600, 440);
+      ctx.fillText(`Demonstrated exceptional agility, vocabulary mastery, and quick reflex coordination.`, 600, 475);
+
+      // Date & Signature line
+      const today = new Date().toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' });
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '16px "Nunito", sans-serif';
+      ctx.fillText(`Tarikh: ${today}`, 120, 620);
+
+      ctx.textAlign = 'right';
+      ctx.fillText('Ketua Pengarah Akademik Super Saufi', 1080, 620);
+      ctx.fillText('Cop & Tandatangan Rasmi', 1080, 645);
+    }
+
+    function downloadCertificate() {
+      const canvas = document.getElementById('cert-canvas');
+      if (!canvas) return;
+      const link = document.createElement('a');
+      link.download = `Sijil_Super_Saufi_${gameState.student.name.replace(/\s+/g, '_')}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    function openAdminModal() {
+      document.getElementById('admin-modal').classList.remove('hidden');
+      document.getElementById('admin-login-view').classList.remove('hidden');
+      document.getElementById('admin-config-view').classList.add('hidden');
+      document.getElementById('admin-user-input').value = '';
+      document.getElementById('admin-pass-input').value = '';
+    }
+
+    function closeAdminModal() {
+      document.getElementById('admin-modal').classList.add('hidden');
+    }
+
+    function authenticateAdmin() {
+      const u = document.getElementById('admin-user-input').value.trim();
+      const p = document.getElementById('admin-pass-input').value.trim();
+      if (u === 'admin' && p === 'adminkacak') {
+        document.getElementById('admin-login-view').classList.add('hidden');
+        document.getElementById('admin-config-view').classList.remove('hidden');
+        document.getElementById('admin-sheet-url').value = gameState.sheetWebhookUrl;
+      }
+    }
+
+    function saveAdminConfig() {
+      const url = document.getElementById('admin-sheet-url').value.trim();
+      gameState.sheetWebhookUrl = url;
+      localStorage.setItem('saufi_sheet_webhook', url);
+      closeAdminModal();
+    }
+
+    function testAdminSheet() {
+      const url = document.getElementById('admin-sheet-url').value.trim();
+      if (!url) return;
+      fetch(url, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ test: true, timestamp: new Date().toLocaleString() })
+      });
+    }
+
+    /* ==========================================================================
+       INITIALIZATION ON LOAD
+       ========================================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      renderCategoryMenu();
+      renderBadgesContainer();
+      initCameraAndHands();
+    });
+  </script>
+</body>
+</html>
