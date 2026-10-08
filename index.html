@@ -1,32 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Super Saufi: 3D Gesture Punch-Out!</title>
-  
-  <!-- Tailwind CSS CDN -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Super Saufi - 3D Gesture Punch Arcade</title>
+
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- High Legibility Google Fonts for Distance Reading -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Lilita+One&family=Bungee&display=swap" rel="stylesheet">
-  
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
-
-  <!-- Three.js CDN for Cute 3D Cartoon Monsters -->
+  <!-- Three.js (Fixed: Explicitly loaded to eliminate THREE is not defined error) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-  <!-- MediaPipe Hands & Camera Utils CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.4.1675466862/camera_utils.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin="anonymous"></script>
+  <!-- MediaPipe Hands -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.min.js" crossorigin="anonymous"></script>
+
+  <!-- Font Awesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Google Fonts: Lilita One, Bungee, Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Lilita+One&family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
 
   <style>
-    /* Distance-Optimized High Legibility Typography */
     body {
-      font-family: 'Fredoka', cursive, sans-serif;
+      font-family: 'Inter', sans-serif;
       user-select: none;
       -webkit-user-select: none;
       touch-action: manipulation;
@@ -37,10 +35,10 @@
     }
     .font-hero {
       font-family: 'Bungee', cursive, sans-serif;
-      letter-spacing: 1px;
+      letter-spacing: 1.5px;
     }
 
-    /* Heavy Outlines for instant readability from 6-8 feet away */
+    /* Comic text strokes for distance readability */
     .hero-text-stroke {
       -webkit-text-stroke: 3px #050505;
       text-shadow: 0 4px 0 #000, 0 8px 16px rgba(0,0,0,0.85);
@@ -53,16 +51,20 @@
       -webkit-text-stroke: 2px #0f172a;
     }
 
-    /* Monster Placards: High-contrast glossy pill mounted on monsters */
+    /* Word Placards mounted with ample spacing */
     .monster-placard {
-      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.7));
-      transition: transform 0.12s ease-out, filter 0.12s ease-out;
+      filter: drop-shadow(0 12px 20px rgba(0,0,0,0.75));
+      transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+      will-change: transform, left, top;
+    }
+    .monster-placard:hover {
+      transform: translate(-50%, -50%) scale(1.08) !important;
     }
     .monster-placard:active {
       transform: translate(-50%, -50%) scale(0.92) !important;
     }
 
-    /* Screen shake on punch/slice hit */
+    /* Screen shake impact */
     @keyframes screenShake {
       0% { transform: translate(0, 0); }
       20% { transform: translate(-10px, 8px) rotate(-0.5deg); }
@@ -74,20 +76,13 @@
     .shake-active {
       animation: screenShake 0.35s ease-out;
     }
-
-    /* Slash trail animation */
-    @keyframes slashFade {
-      0% { opacity: 1; transform: scale(1); }
-      100% { opacity: 0; transform: scale(1.1); }
-    }
   </style>
 </head>
 <body class="bg-slate-950 text-white min-h-[100dvh] flex flex-col justify-between overflow-x-hidden selection:bg-amber-400 selection:text-black">
 
-  <!-- PERSISTENT WEBCAM DECODER (Placed off-screen so Chrome decodes frames without bleeding into background) -->
-  <video id="live-webcam-feed" playsinline autoplay muted class="fixed -top-[9999px] -left-[9999px] w-[320px] h-[240px] pointer-events-none opacity-0 z-[-1]"></video>
+  <!-- Dedicated off-screen camera decoder (maintains 640x480 frame rendering without leaking into menu background) -->
+  <video id="live-webcam-feed" playsinline autoplay muted class="fixed -top-[9999px] -left-[9999px] w-[640px] h-[480px] pointer-events-none opacity-0 z-[-1]"></video>
 
-  <!-- Top Arcade HUD -->
   <header class="w-full bg-gradient-to-r from-red-600 via-amber-500 to-indigo-700 px-3 py-2 sm:py-2.5 shadow-2xl border-b-4 border-amber-300 z-30 flex items-center justify-between">
     <div class="flex items-center gap-2 sm:gap-3">
       <div class="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-300 rounded-2xl flex items-center justify-center border-3 border-slate-950 shadow-lg transform -rotate-3 flex-shrink-0">
@@ -97,7 +92,7 @@
         <h1 class="font-hero text-xl sm:text-3xl text-yellow-300 hero-text-stroke leading-none tracking-wide">
           SUPER SAUFI
         </h1>
-        <p class="text-[11px] sm:text-xs text-amber-100 font-bold hidden sm:block">3D Gesture Smash: Punch • Slice • Flick</p>
+        <p class="text-[11px] sm:text-xs text-amber-100 font-bold hidden sm:block">3D Gesture Smash: Punch ✊ • Slice 🖐️</p>
       </div>
     </div>
 
@@ -145,7 +140,7 @@
     <!-- 1. CATEGORY & MISSION SELECTION MENU -->
     <div id="start-screen" class="w-full max-w-4xl bg-slate-900/95 border-4 border-amber-400 rounded-3xl p-4 sm:p-7 shadow-2xl z-20 backdrop-blur-md flex flex-col items-center text-center my-auto">
       
-      <!-- High Visibility Super Saufi Banner -->
+      <!-- Comic Arena Banner -->
       <div class="inline-block bg-gradient-to-r from-red-500 via-amber-500 to-yellow-400 p-1.5 rounded-2xl mb-3 shadow-xl transform -rotate-1">
         <div class="bg-slate-950 px-6 py-1.5 rounded-xl">
           <span class="font-hero text-xl sm:text-2xl text-yellow-300 tracking-wider">HERO COMIC ARENA</span>
@@ -156,32 +151,28 @@
         SMASH THE CUTE GRAMMAR MONSTERS!
       </h2>
 
-      <!-- Distance Play Hint Banner -->
-      <div class="w-full bg-indigo-950/80 border-2 border-cyan-400/80 rounded-2xl p-2.5 sm:p-3 mb-4 flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs sm:text-sm font-bold text-cyan-100">
+      <!-- Distance Play Hint Banner (Fist & Karate Chop only; Flick removed) -->
+      <div class="w-full bg-indigo-950/80 border-2 border-cyan-400/80 rounded-2xl p-2.5 sm:p-3 mb-4 flex flex-wrap items-center justify-center gap-3 sm:gap-8 text-xs sm:text-sm font-bold text-cyan-100">
         <div class="flex items-center gap-2">
           <span class="w-7 h-7 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center text-base"><i class="fa-solid fa-hand-fist"></i></span>
-          <span><b class="text-yellow-300">PUNCH:</b> Clench Fist ✊</span>
+          <span><b class="text-yellow-300">PUNCH:</b> Clench Fist ✊ (Genggam)</span>
         </div>
         <div class="flex items-center gap-2">
           <span class="w-7 h-7 rounded-full bg-cyan-400 text-slate-950 flex items-center justify-center text-base"><i class="fa-solid fa-hand"></i></span>
-          <span><b class="text-cyan-300">SLICE:</b> Karate Chop 🖐️</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="w-7 h-7 rounded-full bg-pink-400 text-slate-950 flex items-center justify-center text-base"><i class="fa-solid fa-hand-point-up"></i></span>
-          <span><b class="text-pink-300">FLICK:</b> Quick Snap 👆</span>
+          <span><b class="text-cyan-300">SLICE:</b> Karate Chop 🖐️ (Libas Pantas)</span>
         </div>
         <div class="flex items-center gap-2 text-emerald-300">
           <i class="fa-solid fa-mobile-screen"></i> Touch / Click Backup Ready!
         </div>
       </div>
 
-      <!-- Category selection cards (6 parts of speech) -->
+      <!-- Category selection cards (6 parts of speech with clear bilingual titles) -->
       <div class="w-full mb-4">
         <div class="text-xs sm:text-sm font-black text-amber-300 uppercase tracking-wider mb-2.5 flex items-center justify-center gap-2">
           <i class="fa-solid fa-graduation-cap text-base"></i> Select Mission (10 Levels • Boss at Level 10)
         </div>
         <div id="category-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-          <!-- Filled dynamically via JavaScript -->
+          <!-- Filled dynamically via JavaScript with no undefined strings -->
         </div>
       </div>
 
@@ -196,10 +187,10 @@
         </div>
       </div>
 
-      <!-- Action Panel & Direct Camera Preview Box -->
+      <!-- Action Panel & Direct Camera Preview Box (Preview strictly in Cam Standby box) -->
       <div class="w-full bg-slate-950/90 p-3 sm:p-4 rounded-2xl border-2 border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3">
         <div class="flex items-center gap-3 text-left w-full sm:w-auto">
-          <!-- Live Camera Mirror Preview Thumbnail (Confined strictly to this Cam Standby area) -->
+          <!-- Live Camera Mirror Preview Thumbnail (Confined strictly to this Cam Standby area before game starts) -->
           <div id="cam-standby-box" class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-slate-900 border-4 border-amber-400 shadow-xl flex-shrink-0 flex items-center justify-center">
             <canvas id="menu-cam-canvas" class="w-full h-full object-cover transform -scale-x-100 hidden"></canvas>
             <div id="menu-cam-placeholder" class="flex flex-col items-center justify-center text-amber-400 text-2xl p-2 text-center">
@@ -234,9 +225,9 @@
     <!-- 2. IN-GAME ARENA & THREE.JS 3D CANVAS -->
     <div id="arena-screen" class="hidden relative w-full h-[76dvh] max-h-[780px] min-h-[480px] bg-slate-950/80 rounded-3xl overflow-hidden border-4 border-amber-400 shadow-2xl flex flex-col justify-between">
       
-      <!-- Live Mirrored In-Game Camera Background (Player sees themselves in action!) -->
+      <!-- Live Mirrored In-Game Camera Background (Player sees themselves in action during play) -->
       <canvas id="arena-webcam-canvas" class="absolute inset-0 w-full h-full object-cover transform -scale-x-100 z-0 pointer-events-none opacity-60"></canvas>
-      <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-slate-950/80 z-0 pointer-events-none"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/25 to-slate-950/85 z-0 pointer-events-none"></div>
 
       <!-- Three.js 3D Monster WebGL Canvas -->
       <canvas id="three-canvas" class="absolute inset-0 w-full h-full z-10 pointer-events-none"></canvas>
@@ -244,14 +235,14 @@
       <!-- 2D Gesture HUD / Particle VFX Canvas -->
       <canvas id="hud-vfx-canvas" class="absolute inset-0 w-full h-full z-20 pointer-events-none"></canvas>
 
-      <!-- High-Readability Question Banner (Clearly visible from across the room) -->
+      <!-- High-Readability Question Banner (Visible from 6-8 feet away) -->
       <div class="relative z-30 w-full p-2 sm:p-3 bg-gradient-to-b from-slate-950 via-slate-950/85 to-transparent flex flex-col items-center">
         <div class="flex items-center gap-2 sm:gap-3 flex-wrap justify-center text-center">
           <span id="arena-category-badge" class="px-4 py-1 bg-yellow-400 text-slate-950 font-arcade text-lg sm:text-2xl rounded-2xl shadow-lg border-3 border-slate-950 badge-stroke tracking-wider">
             NOUN
           </span>
           <h3 id="arena-question-text" class="font-arcade text-xl sm:text-3xl md:text-4xl text-white hero-text-stroke leading-tight tracking-wide drop-shadow-xl">
-            PUNCH / SLICE / FLICK THE CORRECT NOUN!
+            PUNCH ✊ OR SLICE 🖐️ THE CORRECT ANSWER!
           </h3>
         </div>
 
@@ -272,7 +263,7 @@
         </div>
       </div>
 
-      <!-- 3D Monster Word Placards Container (Pinned dynamically onto 3D monster chest coordinates) -->
+      <!-- 3D Monster Word Placards Container (Pinned dynamically onto 3D monster chest or scattered for Boss) -->
       <div id="monsters-3d-labels" class="absolute inset-0 z-30 pointer-events-auto overflow-hidden">
         <!-- Pinned High-Legibility placards inserted here -->
       </div>
@@ -289,27 +280,38 @@
           <span id="cam-active-badge" class="bg-indigo-950 border border-indigo-600 px-2.5 py-0.5 rounded-full text-indigo-200 text-xs font-bold">
             <i class="fa-solid fa-camera"></i> <span id="cam-active-text">Cam Live</span>
           </span>
-          <button onclick="quitToMainMenu()" class="text-red-400 hover:text-red-300 font-black px-2 py-0.5 bg-red-950/60 rounded border border-red-800">
+          <button onclick="quitToMainMenu()" class="text-red-400 hover:text-red-300 font-black px-3 py-1 bg-red-950/60 rounded-xl border border-red-800 transition">
             Exit
           </button>
         </div>
       </div>
 
-      <!-- Comic Punch / Slash Comic Impact (POW! / BAM! / SLICE!) -->
+      <!-- Comic Punch / Slash Impact Banner (POW! / SLASH!) -->
       <div id="vfx-burst-layer" class="absolute inset-0 pointer-events-none z-40 flex items-center justify-center opacity-0 transition-opacity duration-150">
         <div id="vfx-burst-text" class="font-arcade text-7xl sm:text-9xl text-yellow-300 hero-text-stroke-lg transform -rotate-12 scale-90">
           POW!
         </div>
       </div>
 
-      <!-- Distance Educational Feedback Popup Dialog -->
+      <!-- Distance Educational Feedback Popup Dialog (Includes Malay Grammar Definition) -->
       <div id="dialog-feedback" class="absolute inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-        <div id="dialog-card" class="bg-gradient-to-b from-slate-900 to-indigo-950 border-4 border-yellow-400 p-6 sm:p-8 rounded-3xl max-w-lg w-full text-center shadow-2xl transform scale-95 transition-all">
-          <div id="dialog-icon-wrap" class="w-18 h-18 sm:w-22 sm:h-22 mx-auto mb-3 rounded-full bg-emerald-500 flex items-center justify-center text-4xl sm:text-5xl text-slate-950 border-3 border-white shadow-xl">
+        <div id="dialog-card" class="bg-gradient-to-b from-slate-900 to-indigo-950 border-4 border-yellow-400 p-5 sm:p-7 rounded-3xl max-w-lg w-full text-center shadow-2xl transform scale-95 transition-all">
+          <div id="dialog-icon-wrap" class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-2 rounded-full bg-emerald-500 flex items-center justify-center text-3xl sm:text-4xl text-slate-950 border-3 border-white shadow-xl">
             <i class="fa-solid fa-check"></i>
           </div>
-          <h4 id="dialog-title" class="font-arcade text-3xl sm:text-5xl text-yellow-300 hero-text-stroke mb-2 uppercase">SUPER HIT!</h4>
-          <p id="dialog-explanation" class="text-white text-base sm:text-xl font-bold leading-relaxed mb-4 bg-slate-950/70 p-3 rounded-2xl border border-slate-700">
+          <h4 id="dialog-title" class="font-arcade text-2xl sm:text-4xl text-yellow-300 hero-text-stroke mb-1 uppercase">SUPER HIT!</h4>
+          
+          <!-- Malay Grammar Definition Box -->
+          <div class="mb-3 bg-amber-400/10 border border-amber-400/40 rounded-xl p-2.5 text-left">
+            <span class="text-[11px] font-black uppercase text-amber-300 tracking-wider block mb-0.5">
+              <i class="fa-solid fa-book-bookmark mr-1"></i> Definisi Tatabahasa:
+            </span>
+            <p id="dialog-malay-def" class="text-xs sm:text-sm text-amber-100 font-semibold leading-snug">
+              Kata nama ialah perkataan yang menamakan orang, haiwan, tempat, benda, atau konsep.
+            </p>
+          </div>
+
+          <p id="dialog-explanation" class="text-white text-sm sm:text-base font-bold leading-relaxed mb-3 bg-slate-950/70 p-3 rounded-2xl border border-slate-700">
             'Mountain' is a noun because it identifies a physical object!
           </p>
           <div class="text-xs sm:text-sm text-amber-300 font-black uppercase tracking-wider animate-pulse">
@@ -419,7 +421,7 @@
   </main>
 
   <footer class="w-full bg-slate-950 border-t border-slate-800 text-center py-2 px-4 text-xs text-slate-400 font-bold z-10">
-    Super Saufi © Educational Arcade • Stand & Play with Fist / Slice / Flick • Single File Standalone
+    Super Saufi © Educational Arcade • Stand & Play with Fist Punch ✊ or Karate Slice 🖐️
   </footer>
 
   <script>
@@ -439,7 +441,6 @@
         }
       }
 
-      // Punch impact with bass drop
       playPunch() {
         if (this.isMuted) return;
         this.init();
@@ -462,7 +463,6 @@
         } catch(e) {}
       }
 
-      // Slice sword whoosh sound
       playSlice() {
         if (this.isMuted) return;
         this.init();
@@ -494,7 +494,6 @@
         } catch(e) {}
       }
 
-      // High crisp chime for correct strike
       playCorrect() {
         if (this.isMuted) return;
         this.init();
@@ -602,21 +601,22 @@
       noun: {
         name: "Nouns (Kata Nama)",
         tag: "NOUN",
+        definitionBM: "Kata nama ialah perkataan yang menamakan orang, haiwan, tempat, benda, atau konsep/keadaan.",
         icon: "fa-solid fa-mountain",
         theme: "from-blue-600 to-cyan-500",
         bossName: "TITAN GOLEM OF SUBSTANCE",
         levels: [
-          { prompt: "HIT the NOUN (Animal / Living):", correct: "Cheetah", distractors: ["Rapidly", "Sprint"], expl: "'Cheetah' is a noun naming a living creature!" },
-          { prompt: "Spot the NOUN (Object):", correct: "Umbrella", distractors: ["Rainy", "Shelter-verb"], expl: "'Umbrella' is a physical object noun!" },
+          { prompt: "HIT the NOUN (Living Creature):", correct: "Cheetah", distractors: ["Rapidly", "Sprint"], expl: "'Cheetah' is a noun naming a living creature!" },
+          { prompt: "Spot the NOUN (Physical Object):", correct: "Umbrella", distractors: ["Rainy", "Shelter-verb"], expl: "'Umbrella' is a physical object noun!" },
           { prompt: "HIT the NOUN (Physical Place):", correct: "Laboratory", distractors: ["Scientific", "Analyze"], expl: "'Laboratory' is a noun designating a physical venue!" },
-          { prompt: "Find the Compound NOUN:", correct: "Earthquake", distractors: ["Tremble", "Shaky"], expl: "'Earthquake' is a compound noun representing a physical event!" },
+          { prompt: "Find the Compound NOUN:", correct: "Earthquake", distractors: ["Tremble", "Shaky"], expl: "'Earthquake' is a compound noun representing an event!" },
           { prompt: "HIT the Abstract NOUN (Emotion/State):", correct: "Gratitude", distractors: ["Thankful", "Appreciate"], expl: "'Gratitude' is an abstract noun for thankful feelings!" },
           { prompt: "Identify the Scientific NOUN:", correct: "Atmosphere", distractors: ["Gaseous", "Breathe"], expl: "'Atmosphere' is a scientific noun naming the air blanket around Earth!" },
           { prompt: "HIT the Architecture NOUN:", correct: "Labyrinth", distractors: ["Perplexed", "Twist"], expl: "'Labyrinth' is a noun meaning an intricate maze!" },
           { prompt: "Spot the Noble Character NOUN:", correct: "Benevolence", distractors: ["Generous", "Kindly"], expl: "'Benevolence' is a noun meaning active goodwill!" },
           { prompt: "HIT the Rare Sophisticated NOUN:", correct: "Serendipity", distractors: ["Accidental", "Discover"], expl: "'Serendipity' is a noun meaning valuable chance discovery!" },
           // Level 10 Boss Pool
-          { prompt: "BOSS RUSH! Hit as many NOUNS to drain Boss HP!", isBoss: true, bossHp: 5, pool: [
+          { prompt: "BOSS RUSH! Punch/Slice as many NOUNS to defeat the Titan!", isBoss: true, bossHp: 5, pool: [
             { correct: "Pyramid", distractors: ["Ancient", "Construct"] },
             { correct: "Galaxy", distractors: ["Immense", "Orbiting"] },
             { correct: "Microscope", distractors: ["Tiny", "Magnify"] },
@@ -628,13 +628,14 @@
       verb: {
         name: "Verbs (Kata Kerja)",
         tag: "VERB",
+        definitionBM: "Kata kerja ialah perkataan yang menyatakan perbuatan, tindakan fizikal/mental, atau keadaan yang dilakukan.",
         icon: "fa-solid fa-bolt-lightning",
         theme: "from-amber-600 to-red-500",
         bossName: "KINETIC CYBORG OVERLORD",
         levels: [
           { prompt: "HIT the VERB (Fast Action):", correct: "Gallop", distractors: ["Stallion", "Swift"], expl: "'Gallop' is a verb describing horse motion!" },
           { prompt: "Spot the Impact VERB:", correct: "Shatter", distractors: ["Glass", "Fragile"], expl: "'Shatter' is a verb meaning to smash into pieces!" },
-          { prompt: "HIT the Mental Action VERB:", correct: "Investigate", distractors: ["Detective", "Curious"], expl: "'Investigate' is a verb meaning to examine facts systematically!" },
+          { prompt: "HIT the Mental Action VERB:", correct: "Investigate", distractors: ["Detective", "Curious"], expl: "'Investigate' is a verb meaning to examine systematically!" },
           { prompt: "Identify the Speech VERB:", correct: "Articulate", distractors: ["Eloquent", "Speech"], expl: "'Articulate' is a verb meaning to express clearly!" },
           { prompt: "HIT the Force VERB:", correct: "Propel", distractors: ["Propeller", "Forceful"], expl: "'Propel' is a verb meaning to push or drive forward!" },
           { prompt: "Find the Science VERB:", correct: "Oscillate", distractors: ["Pendulum", "Rhythmic"], expl: "'Oscillate' is a verb meaning to swing back and forth!" },
@@ -654,6 +655,7 @@
       adjective: {
         name: "Adjectives (Kata Adjektif)",
         tag: "ADJECTIVE",
+        definitionBM: "Kata adjektif ialah perkataan yang menerangkan sifat, keadaan, rupa, atau ciri sesuatu kata nama.",
         icon: "fa-solid fa-palette",
         theme: "from-purple-600 to-pink-500",
         bossName: "CHROMATIC SPECTRE TITAN",
@@ -680,6 +682,7 @@
       adverb: {
         name: "Adverbs (Kata Keterangan)",
         tag: "ADVERB",
+        definitionBM: "Kata keterangan (adverb) ialah perkataan yang menerangkan kata kerja, sifat, atau cara sesuatu berlaku.",
         icon: "fa-solid fa-gauge-high",
         theme: "from-emerald-600 to-teal-500",
         bossName: "TEMPORAL PHANTOM OF SPEED",
@@ -706,6 +709,7 @@
       preposition: {
         name: "Prepositions (Kata Sendi)",
         tag: "PREPOSITION",
+        definitionBM: "Kata sendi nama ialah perkataan yang menghubungkan kata nama dengan perkataan lain dalam ayat (tempat, arah, masa).",
         icon: "fa-solid fa-arrows-split-up-and-left",
         theme: "from-rose-600 to-orange-500",
         bossName: "DIMENSIONAL GATE KEEPER",
@@ -732,6 +736,7 @@
       pronoun: {
         name: "Pronouns (Kata Ganti Nama)",
         tag: "PRONOUN",
+        definitionBM: "Kata ganti nama ialah perkataan yang menggantikan kata nama bagi orang, benda, atau tempat.",
         icon: "fa-solid fa-users",
         theme: "from-sky-600 to-indigo-500",
         bossName: "THE IDENTITY COLOSSUS",
@@ -746,7 +751,7 @@
           { prompt: "Identify the Alternative PRONOUN:", correct: "Neither", distractors: ["None-item", "Reject"], expl: "'Neither' is a pronoun meaning not one nor the other!" },
           { prompt: "HIT the Mutual PRONOUN expression:", correct: "Each other", distractors: ["Teammates", "Unite"], expl: "'Each other' functions as a reciprocal pronoun!" },
           // Level 10 Boss Pool
-          { prompt: "BOSS RUSH! Hit all PRONOUNS to reveal the Identity Colossus!", isBoss: true, bossHp: 5, pool: [
+          { prompt: "BOSS RUSH! Hit all PRONOUNS to defeat the Identity Colossus!", isBoss: true, bossHp: 5, pool: [
             { correct: "Whosoever", distractors: ["Identity", "Person"] },
             { correct: "Yourselves", distractors: ["Group", "Members"] },
             { correct: "Everybody", distractors: ["Population", "Citizens"] },
@@ -776,7 +781,6 @@
       mousePos: { x: -100, y: -100, prevX: -100, prevY: -100, isDown: false, vel: 0 },
       isFistActive: false,
       isSliceActive: false,
-      isFlickActive: false,
       // Level 10 Boss state
       isBossBattle: false,
       bossHpMax: 5,
@@ -800,7 +804,7 @@
     const hudCanvas = document.getElementById('hud-vfx-canvas');
     const hudCtx = hudCanvas.getContext('2d');
 
-    // Comic Explosion Particles & Slash Trails
+    // VFX Particles and Slash Trails
     const vfxParticles = [];
     const slashTrails = [];
 
@@ -820,13 +824,11 @@
           };
 
           if (result.state === 'granted') {
-            // Permission already granted previously, safe to start automatically
             startCameraDirect(false);
           } else if (result.state === 'denied') {
             showPermissionBlockedUI();
           }
         } catch(e) {
-          // Permissions API might not support 'camera' query on some browsers; fallback to direct prompt
           cameraState.permissionState = 'prompt';
         }
       }
@@ -850,11 +852,10 @@
     }
 
     function handleUserActivateCamera() {
-      // Triggered by direct user interaction to satisfy Chrome gesture requirement
       startCameraDirect(true);
     }
 
-    // Direct camera acquisition with multi-stage fallback and graceful recovery
+    // Direct camera acquisition
     async function startCameraDirect(userInitiated = false) {
       const statusDot = document.getElementById('cam-status-dot');
       const statusLabel = document.getElementById('cam-status-label');
@@ -870,7 +871,6 @@
       statusDot.className = "w-3 h-3 rounded-full bg-yellow-400 animate-ping";
       statusLabel.innerText = "Connecting...";
 
-      // Stop previous stream tracks cleanly
       if (cameraState.stream) {
         try {
           cameraState.stream.getTracks().forEach(t => t.stop());
@@ -910,7 +910,6 @@
         cameraState.stream = activeStream;
         cameraState.cameraStarted = true;
 
-        // Feed persistent video
         liveVideo.srcObject = activeStream;
         liveVideo.muted = true;
         liveVideo.playsInline = true;
@@ -923,7 +922,6 @@
           console.warn("Autoplay promise warning:", playErr);
         }
 
-        // Show canvas mirror strictly inside menu preview & arena PIP
         if (menuCamCanvas) {
           menuCamCanvas.classList.remove('hidden');
           menuCamCanvas.width = 240;
@@ -949,7 +947,7 @@
         }
 
         document.getElementById('start-cam-title').innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400"></i> Camera Active!';
-        document.getElementById('start-cam-desc').innerText = "Stand or sit back! Make a Genggam Fist ✊, Karate Slice 🖐️, or Flick 👆!";
+        document.getElementById('start-cam-desc').innerText = "Stand or sit back! Make a Genggam Fist ✊ or Karate Slice 🖐️!";
         const btnText = document.getElementById('btn-force-cam-text');
         if (btnText) btnText.innerText = "Camera Active";
 
@@ -962,7 +960,7 @@
         if (isDenied) {
           showPermissionBlockedUI("Camera permission was denied. Please click the <b>lock icon 🔒</b> at top left of the address bar and set Camera to <b>Allow</b>, then refresh.");
         } else if (isInUse) {
-          showPermissionBlockedUI("Camera is in use by another application (e.g. Zoom, Meet, or another tab). Close other camera apps and click retry.");
+          showPermissionBlockedUI("Camera is in use by another application. Close other camera apps and click retry.");
         } else {
           statusDot.className = "w-3 h-3 rounded-full bg-amber-400";
           statusLabel.innerText = "Cam Standby";
@@ -978,15 +976,13 @@
       const hitData = currentOptionsData[index];
       const isCorrect = hitData.isCorrect;
 
-      // Sound according to gesture
       if (gestureType === 'SLICE') {
         sound.playSlice();
       } else {
         sound.playPunch();
       }
 
-      // Visual comic banner & screen shake
-      const vfxText = gestureType === 'SLICE' ? 'SLASH!' : (gestureType === 'FLICK' ? 'SNAP!' : 'POW!');
+      const vfxText = gestureType === 'SLICE' ? 'SLASH!' : 'POW!';
       triggerImpactBurst(vfxText, isCorrect);
       spawnVfxExplosion(hitX, hitY, isCorrect ? '#facc15' : '#ef4444');
 
@@ -999,13 +995,12 @@
         const m = monsters3D[index];
         m.knockedOut = true;
         m.knockVelocity.set(
-          (Math.random() - 0.5) * 4,
+          (Math.random() - 0.5) * 5,
           Math.random() * 4 + 4,
-          -14 // Launch into screen depth!
+          -14
         );
         m.rotVelocity.set(Math.random() * 10, Math.random() * 10, Math.random() * 8);
       } else if (gameState.isBossBattle && bossMonster3D) {
-        // Boss flinches backwards
         bossMonster3D.mesh.position.z = -2.5;
         bossMonster3D.mesh.rotation.y = (Math.random() - 0.5) * 1.5;
       }
@@ -1055,7 +1050,6 @@
           triggerVictory();
           return;
         } else {
-          // Next boss wave
           setTimeout(() => {
             gameState.isLocked = false;
             loadBossWave();
@@ -1094,18 +1088,25 @@
       const iconWrap = document.getElementById('dialog-icon-wrap');
       const titleEl = document.getElementById('dialog-title');
       const textEl = document.getElementById('dialog-explanation');
+      const malayDefEl = document.getElementById('dialog-malay-def');
 
       titleEl.innerText = title;
       textEl.innerText = text;
 
+      // Always populate Malay Definition for the current category
+      const currentCat = CURRICULUM[gameState.categoryKey];
+      if (malayDefEl && currentCat) {
+        malayDefEl.innerText = currentCat.definitionBM;
+      }
+
       if (isSuccess) {
-        iconWrap.className = "w-18 h-18 sm:w-22 sm:h-22 mx-auto mb-3 rounded-full bg-emerald-500 flex items-center justify-center text-4xl sm:text-5xl text-slate-950 border-3 border-white shadow-xl";
+        iconWrap.className = "w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-2 rounded-full bg-emerald-500 flex items-center justify-center text-3xl sm:text-4xl text-slate-950 border-3 border-white shadow-xl";
         iconWrap.innerHTML = '<i class="fa-solid fa-trophy"></i>';
-        card.className = "bg-gradient-to-b from-slate-900 to-indigo-950 border-4 border-yellow-400 p-6 sm:p-8 rounded-3xl max-w-lg w-full text-center shadow-2xl transform scale-100 transition-all";
+        card.className = "bg-gradient-to-b from-slate-900 to-indigo-950 border-4 border-yellow-400 p-5 sm:p-7 rounded-3xl max-w-lg w-full text-center shadow-2xl transform scale-100 transition-all";
       } else {
-        iconWrap.className = "w-18 h-18 sm:w-22 sm:h-22 mx-auto mb-3 rounded-full bg-red-600 flex items-center justify-center text-4xl sm:text-5xl text-white border-3 border-white shadow-xl";
+        iconWrap.className = "w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-2 rounded-full bg-red-600 flex items-center justify-center text-3xl sm:text-4xl text-white border-3 border-white shadow-xl";
         iconWrap.innerHTML = '<i class="fa-solid fa-heart-crack"></i>';
-        card.className = "bg-gradient-to-b from-slate-900 to-red-950 border-4 border-red-500 p-6 sm:p-8 rounded-3xl max-w-lg w-full text-center shadow-2xl transform scale-100 transition-all";
+        card.className = "bg-gradient-to-b from-slate-900 to-red-950 border-4 border-red-500 p-5 sm:p-7 rounded-3xl max-w-lg w-full text-center shadow-2xl transform scale-100 transition-all";
       }
 
       dialog.classList.remove('hidden');
@@ -1124,7 +1125,7 @@
             loadLevelQuestion();
           }
         }
-      }, 2100);
+      }, 2300);
     }
 
     function triggerGameOver() {
@@ -1209,7 +1210,7 @@
         hudCtx.font = '900 28px "Font Awesome 6 Free"';
         hudCtx.textAlign = 'center';
         hudCtx.textBaseline = 'middle';
-        hudCtx.fillText('\uf6de', x, y); // Fist
+        hudCtx.fillText('\uf6de', x, y);
       } else if (gesture === 'SLICE') {
         hudCtx.strokeStyle = '#38bdf8';
         hudCtx.lineWidth = 5;
@@ -1267,7 +1268,7 @@
           </div>
           <div class="overflow-hidden">
             <div class="font-arcade text-xs sm:text-sm text-yellow-300 truncate">${cat.name}</div>
-            <div class="text-[10px] sm:text-xs text-slate-300 font-bold">10 Levels • Titan Boss</div>
+            <div class="text-[9px] sm:text-[10px] text-slate-300 font-bold">10 Levels • Boss at Level 10</div>
           </div>
         `;
         grid.appendChild(card);
@@ -1293,7 +1294,6 @@
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(canvas.clientWidth, canvas.clientHeight);
 
-      // Ambient and directional lighting for cute toon gloss
       const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
       scene.add(ambientLight);
 
@@ -1315,10 +1315,11 @@
     function setupCute3DMonsters() {
       monsters3D.length = 0;
 
+      // Widened offsets (-3.3, 0.0, 3.3) so monsters and word placards never overlap
       const monsterDefs = [
-        { color: 0xf472b6, xOffset: -3.0, type: 'bunny', name: 'Pink Mochi' },
+        { color: 0xf472b6, xOffset: -3.3, type: 'bunny', name: 'Pink Mochi' },
         { color: 0x2dd4bf, xOffset: 0.0, type: 'dino', name: 'Minty Dino' },
-        { color: 0xfacc15, xOffset: 3.0, type: 'chick', name: 'Star Chick' }
+        { color: 0xfacc15, xOffset: 3.3, type: 'chick', name: 'Star Chick' }
       ];
 
       monsterDefs.forEach((def, idx) => {
@@ -1352,7 +1353,7 @@
           group.add(blush);
         });
 
-        // 4. Character-Specific Appendages
+        // 4. Character Appendages
         if (def.type === 'bunny') {
           const earMat = new THREE.MeshToonMaterial({ color: 0xf472b6 });
           [-0.35, 0.35].forEach((xEar) => {
@@ -1428,16 +1429,15 @@
       const h = arena.clientHeight;
 
       camera.aspect = w / h;
-      // Adjust camera distance on narrow mobile displays
       if (w < 640) {
-        camera.position.z = 11.5;
+        camera.position.z = 12.0;
         monsters3D.forEach((m, idx) => {
-          m.mesh.position.x = (idx - 1) * 2.1;
+          m.mesh.position.x = (idx - 1) * 2.5;
         });
       } else {
-        camera.position.z = 9.0;
+        camera.position.z = 9.5;
         monsters3D.forEach((m, idx) => {
-          m.mesh.position.x = (idx - 1) * 3.0;
+          m.mesh.position.x = (idx - 1) * 3.3;
         });
       }
       camera.updateProjectionMatrix();
@@ -1528,8 +1528,7 @@
       const landmarks = results.multiHandLandmarks[0];
       const wrist = landmarks[0];
 
-      // Gesture Classification: Fist (Genggam), Slice (Karate Chop), or Flick (Finger snap)
-      // Clenched fist: all 4 fingertip distances to wrist are shorter than their corresponding PIP knuckle joints
+      // Gesture Classification: Fist (Genggam) or Slice (Karate Chop)
       const fingerTips = [8, 12, 16, 20];
       const fingerPips = [6, 10, 14, 18];
       let curledFingers = 0;
@@ -1543,7 +1542,7 @@
       }
 
       const isFist = curledFingers >= 3;
-      const isIndexExtended = (Math.hypot(landmarks[8].x - wrist.x, landmarks[8].y - wrist.y) > Math.hypot(landmarks[6].x - wrist.x, landmarks[6].y - wrist.y) * 1.1) && curledFingers >= 2;
+      const isOpenHand = curledFingers <= 1;
 
       // Update menu preview indicator
       if (menuFistPill) {
@@ -1559,22 +1558,31 @@
       if (!arena || arena.classList.contains('hidden')) return;
 
       const rect = arena.getBoundingClientRect();
-      // Mirror x-coordinate so player movements correspond intuitively
       const handScreenX = (1.0 - landmarks[9].x) * rect.width;
       const handScreenY = landmarks[9].y * rect.height;
 
       // Draw active reticle
-      drawHandReticle(handScreenX, handScreenY, isFist ? 'FIST' : (isIndexExtended ? 'FLICK' : 'OPEN'));
+      drawHandReticle(handScreenX, handScreenY, isFist ? 'FIST' : (isOpenHand ? 'SLICE' : 'OPEN'));
 
-      // Check hit collision
+      // Check hit collision (Punch or Slice only)
       const now = performance.now();
-      if (isFist && now - gameState.lastGestureTime > 550) {
+      if (isFist && now - gameState.lastGestureTime > 500) {
         gameState.lastGestureTime = now;
         checkHitCollision(handScreenX, handScreenY, 'PUNCH');
-      } else if (isIndexExtended && now - gameState.lastGestureTime > 500) {
-        gameState.lastGestureTime = now;
-        checkHitCollision(handScreenX, handScreenY, 'FLICK');
+      } else if (isOpenHand && now - gameState.lastGestureTime > 450) {
+        const prevHandX = gameState.mousePos.prevX || handScreenX;
+        const prevHandY = gameState.mousePos.prevY || handScreenY;
+        const speed = Math.hypot(handScreenX - prevHandX, handScreenY - prevHandY);
+        
+        if (speed > 18) {
+          gameState.lastGestureTime = now;
+          addSlashTrail(prevHandX, prevHandY, handScreenX, handScreenY);
+          checkHitCollision(handScreenX, handScreenY, 'SLICE');
+        }
       }
+
+      gameState.mousePos.prevX = handScreenX;
+      gameState.mousePos.prevY = handScreenY;
     }
 
     function checkHitCollision(x, y, gestureType) {
@@ -1587,8 +1595,7 @@
         const relativeLeft = pRect.left - arenaRect.left;
         const relativeTop = pRect.top - arenaRect.top;
 
-        // Expanded hitbox around monster placard for fluid gestures
-        const hitMargin = 35;
+        const hitMargin = 30;
         if (
           x >= relativeLeft - hitMargin &&
           x <= relativeLeft + pRect.width + hitMargin &&
@@ -1628,7 +1635,6 @@
       document.getElementById('hud-score').innerText = gameState.score;
       document.getElementById('hud-level-num').innerText = gameState.levelIdx + 1;
 
-      // Combo streak pill
       const streakEl = document.getElementById('hud-streak');
       if (gameState.streak >= 2) {
         streakEl.innerText = `COMBO x${gameState.streak}`;
@@ -1637,7 +1643,6 @@
         streakEl.classList.add('hidden');
       }
 
-      // Lives Hearts
       const livesWrap = document.getElementById('lives-container');
       livesWrap.innerHTML = '';
       for (let i = 0; i < 3; i++) {
@@ -1655,7 +1660,6 @@
       currentLevelData = level;
       gameState.isLocked = false;
 
-      // Check for Level 10 Titan Boss
       if (level.isBoss) {
         gameState.isBossBattle = true;
         gameState.bossHpMax = level.bossHp || 5;
@@ -1668,7 +1672,6 @@
       gameState.isBossBattle = false;
       document.getElementById('boss-hp-wrap').classList.add('hidden');
 
-      // Make 3 standard monsters visible, hide boss
       monsters3D.forEach(m => {
         m.mesh.visible = true;
         m.knockedOut = false;
@@ -1677,11 +1680,9 @@
       });
       if (bossMonster3D) bossMonster3D.mesh.visible = false;
 
-      // Update Question Header
       document.getElementById('arena-category-badge').innerText = cat.tag;
       document.getElementById('arena-question-text').innerText = level.prompt;
 
-      // Prepare 3 Answers (1 Correct + 2 Distractors)
       const options = [
         { text: level.correct, isCorrect: true },
         { text: level.distractors[0], isCorrect: false },
@@ -1689,7 +1690,7 @@
       ];
       currentOptionsData = shuffleList(options);
 
-      render3DMonsterPlacards(currentOptionsData);
+      render3DMonsterPlacards(currentOptionsData, false);
       startLevelTimer(12);
     }
 
@@ -1702,7 +1703,6 @@
       document.getElementById('boss-hp-bar').style.width = `${pct}%`;
       document.getElementById('boss-hp-text').innerText = `${pct}%`;
 
-      // Show Boss, hide normal 3 monsters
       monsters3D.forEach(m => m.mesh.visible = false);
       if (bossMonster3D) {
         bossMonster3D.mesh.visible = true;
@@ -1724,19 +1724,35 @@
       ];
       currentOptionsData = shuffleList(options);
 
-      render3DMonsterPlacards(currentOptionsData);
+      // Render placards scattered for boss battle
+      render3DMonsterPlacards(currentOptionsData, true);
       startLevelTimer(9);
     }
 
-    function render3DMonsterPlacards(options) {
+    function render3DMonsterPlacards(options, isBossScatter) {
       const container = document.getElementById('monsters-3d-labels');
       container.innerHTML = '';
+
+      // Boss scattered coordinates (top-left, center-right, bottom-center)
+      const bossScatterPositions = [
+        { left: '26%', top: '35%' },
+        { left: '74%', top: '45%' },
+        { left: '50%', top: '75%' }
+      ];
 
       options.forEach((opt, idx) => {
         const placard = document.createElement('div');
         placard.className = 'monster-placard absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-30 select-none';
-        placard.style.left = '50%';
-        placard.style.top = '50%';
+        
+        if (isBossScatter) {
+          placard.style.left = bossScatterPositions[idx % 3].left;
+          placard.style.top = bossScatterPositions[idx % 3].top;
+          placard.setAttribute('data-boss-scatter', 'true');
+        } else {
+          placard.style.left = '50%';
+          placard.style.top = '50%';
+          placard.removeAttribute('data-boss-scatter');
+        }
 
         placard.innerHTML = `
           <div class="px-4 py-2 sm:px-6 sm:py-3 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 border-4 border-slate-950 shadow-2xl flex items-center gap-2 group hover:scale-105 transition-all">
@@ -1768,16 +1784,20 @@
       const h = arena.clientHeight;
 
       placards.forEach((placard, idx) => {
+        // Skip projecting if placard is in Boss scattered layout
+        if (placard.getAttribute('data-boss-scatter') === 'true') {
+          return;
+        }
+
         let worldPos = new THREE.Vector3();
 
         if (!gameState.isBossBattle && monsters3D[idx]) {
           monsters3D[idx].mesh.getWorldPosition(worldPos);
-          worldPos.y -= 0.65; // Position on monster belly
+          worldPos.y -= 0.65;
         } else if (gameState.isBossBattle && bossMonster3D) {
           bossMonster3D.mesh.getWorldPosition(worldPos);
-          // Distribute placards evenly across boss front
-          worldPos.x += (idx - 1) * 2.4;
-          worldPos.y -= 0.75;
+          worldPos.x += (idx - 1) * 2.8;
+          worldPos.y -= 0.85;
         }
 
         worldPos.project(camera);
@@ -1838,9 +1858,9 @@
       const delta = clock.getDelta();
       const elapsedTime = clock.getElapsedTime();
 
-      // Mirror video feed based on current view:
-      // - In Start Menu: strictly inside Cam Standby area canvas (no background spill)
-      // - In Arena Game: across the arena background canvas so player sees themselves in action
+      // Mirror video feed:
+      // Start Screen: strictly inside the Cam Standby area canvas (no background spill)
+      // Arena Game: across the arena background canvas so player sees themselves in action
       if (cameraState.cameraStarted && liveVideo && liveVideo.readyState >= 2) {
         const startScreen = document.getElementById('start-screen');
         const arenaScreen = document.getElementById('arena-screen');
@@ -1864,10 +1884,10 @@
         }
       }
 
-      // 1. Process Persistent WebCam Frames through MediaPipe
+      // Process persistent webcam frames via MediaPipe (~25 FPS)
       const now = performance.now();
       if (cameraState.handsInstance && liveVideo && liveVideo.readyState >= 2 && !cameraState.isProcessing) {
-        if (now - lastMediaPipeCheck > 40) { // ~25 FPS inference guarantees silky 60 FPS Three.js
+        if (now - lastMediaPipeCheck > 40) {
           lastMediaPipeCheck = now;
           cameraState.isProcessing = true;
           cameraState.handsInstance.send({ image: liveVideo }).catch(() => {}).finally(() => {
@@ -1876,21 +1896,19 @@
         }
       }
 
-      // 2. Animate 3D Cute Monsters (Breathing Bounce & Knockout Trajectory)
+      // Animate 3D Cute Monsters
       monsters3D.forEach((m) => {
         if (!m.knockedOut) {
-          // Cute squash and floating bounce
           m.mesh.position.y = Math.sin(elapsedTime * 3 + m.bounceOffset) * 0.22;
           m.mesh.scale.x = 1.0 + Math.sin(elapsedTime * 4 + m.bounceOffset) * 0.04;
           m.mesh.scale.y = 1.0 - Math.sin(elapsedTime * 4 + m.bounceOffset) * 0.04;
           m.mesh.rotation.y = Math.sin(elapsedTime * 2 + m.bounceOffset) * 0.12;
         } else {
-          // Physics trajectory into the distance
           m.mesh.position.addScaledVector(m.knockVelocity, delta);
           m.mesh.rotation.x += m.rotVelocity.x * delta;
           m.mesh.rotation.y += m.rotVelocity.y * delta;
           m.mesh.rotation.z += m.rotVelocity.z * delta;
-          m.knockVelocity.y -= 9.8 * delta; // Gravity
+          m.knockVelocity.y -= 9.8 * delta;
         }
       });
 
@@ -1898,19 +1916,18 @@
       if (bossMonster3D && bossMonster3D.mesh.visible) {
         bossMonster3D.mesh.rotation.y += 0.8 * delta;
         bossMonster3D.mesh.position.y = 0.4 + Math.sin(elapsedTime * bossMonster3D.pulseSpeed) * 0.25;
-        // Recover from hit flinch
         bossMonster3D.mesh.position.z += (0 - bossMonster3D.mesh.position.z) * 0.08;
       }
 
-      // 3. Render 3D Scene
+      // Render 3D Scene
       if (renderer && scene && camera) {
         renderer.render(scene, camera);
       }
 
-      // 4. Synchronize 2D High-Readability Placards with 3D monster chest
+      // Synchronize placards with 3D monster chest
       syncPlacardsTo3D();
 
-      // 5. Render 2D HUD Canvas (Sparks and Slash Trails)
+      // Render 2D HUD Canvas (Sparks and Slash Trails)
       if (hudCtx) {
         hudCtx.clearRect(0, 0, hudCanvas.width, hudCanvas.height);
 
@@ -1975,10 +1992,10 @@
       // Start rendering loop immediately
       requestAnimationFrame(mainAnimationLoop);
 
-      // Inspect permission status first without auto-triggering unauthorized prompts
+      // Check permission status
       checkCameraPermissions();
 
-      // Mouse / Touch Event Listeners for backup
+      // Mouse and Touch Event Listeners for backup play
       const arena = document.getElementById('arena-screen');
       if (arena) {
         const updatePointer = (clientX, clientY, isDown) => {
