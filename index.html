@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Super Saufi - 3D Gesture Punch Arcade</title>
+  <title>Super Saufi - 3D Gesture Clench Arcade</title>
 
-  <!-- Tailwind CSS -->
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- Google Fonts: Lilita One & Nunito -->
@@ -16,12 +16,12 @@
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-  <!-- Three.js (r128) for 3D Toon Monsters -->
+  <!-- Three.js (r128) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
   <!-- MediaPipe Hands & Camera Utils -->
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.4/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin="anonymous"></script>
 
   <style>
     * {
@@ -32,7 +32,7 @@
     }
     body {
       font-family: 'Nunito', sans-serif;
-      background: radial-gradient(circle at 15% 15%, #4338ca 0%, #1e1b4b 35%, #0f172a 70%, #09090b 100%);
+      background: radial-gradient(circle at 50% 15%, #064e3b 0%, #022c22 45%, #051c14 80%, #02120d 100%);
       color: #fff;
       overflow-x: hidden;
       min-height: 100vh;
@@ -46,39 +46,30 @@
       text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
     }
     .stroke-black-lg {
-      text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 0 4px 10px rgba(0,0,0,0.8);
+      text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 0 4px 10px rgba(0,0,0,0.85);
     }
-    .arcade-glow-mesh {
-      background-image: 
-        radial-gradient(at 85% 15%, rgba(236, 72, 153, 0.22) 0px, transparent 50%),
-        radial-gradient(at 15% 85%, rgba(245, 158, 11, 0.22) 0px, transparent 50%),
-        radial-gradient(at 80% 80%, rgba(6, 182, 212, 0.20) 0px, transparent 50%);
+    .arcade-green-glow {
+      background-image:
+        radial-gradient(at 85% 15%, rgba(16, 185, 129, 0.22) 0px, transparent 50%),
+        radial-gradient(at 15% 85%, rgba(234, 179, 8, 0.18) 0px, transparent 50%),
+        radial-gradient(at 80% 80%, rgba(20, 184, 166, 0.20) 0px, transparent 50%);
     }
-    /* Animated Punch Effect */
     @keyframes comicPow {
       0% { transform: translate(-50%, -50%) scale(0.3) rotate(-15deg); opacity: 0; }
       50% { transform: translate(-50%, -50%) scale(1.3) rotate(10deg); opacity: 1; }
       100% { transform: translate(-50%, -50%) scale(1.0) rotate(0deg); opacity: 0; }
     }
     .animate-pow {
-      animation: comicPow 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    }
-    @keyframes pulseGlow {
-      0%, 100% { box-shadow: 0 0 15px rgba(251, 191, 36, 0.4); }
-      50% { box-shadow: 0 0 30px rgba(251, 191, 36, 0.8); }
-    }
-    .pulse-glow {
-      animation: pulseGlow 2s infinite ease-in-out;
+      animation: comicPow 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
   </style>
 </head>
 <body class="flex flex-col justify-between min-h-screen relative overflow-hidden">
 
-  <!-- Direct persistent webcam element (processed off-screen) -->
-  <video id="live-webcam-feed" playsinline muted autoplay class="fixed -top-[9999px] -left-[9999px] w-[640px] h-[480px] pointer-events-none opacity-0"></video>
+  <!-- Active off-screen webcam video element -->
+  <video id="live-webcam-feed" playsinline muted autoplay style="position:fixed;top:0;left:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:-1;"></video>
 
-  <!-- Top Navigation Bar -->
-  <header class="w-full bg-slate-950/80 border-b border-indigo-500/30 px-3 py-2 sm:px-6 sm:py-2.5 flex items-center justify-between z-30 backdrop-blur-md">
+  <header class="w-full bg-slate-950/85 border-b border-emerald-500/30 px-3 py-2 sm:px-6 sm:py-2.5 flex items-center justify-between z-30 backdrop-blur-md">
     <div class="flex items-center gap-2">
       <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-tr from-amber-500 to-yellow-300 rounded-xl flex items-center justify-center text-slate-950 shadow-md">
         <i class="fa-solid fa-hand-back-fist text-lg sm:text-xl"></i>
@@ -87,11 +78,10 @@
         <h1 class="font-arcade text-lg sm:text-2xl stroke-black-sm tracking-wide" style="color: #fde047 !important;">
           SUPER SAUFI
         </h1>
-        <p class="text-[10px] text-cyan-300 font-extrabold uppercase tracking-wider hidden sm:block">3D Gesture Punch Arcade</p>
+        <p class="text-[10px] text-emerald-300 font-extrabold uppercase tracking-wider hidden sm:block">3D Gesture Clench Arcade</p>
       </div>
     </div>
 
-    <!-- Right Controls: Audio Mute & Cam Status -->
     <div class="flex items-center gap-2">
       <button onclick="toggleAudio()" id="btn-audio" class="px-2.5 py-1 sm:px-3 sm:py-1.5 bg-slate-800 hover:bg-slate-700 text-yellow-300 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center gap-1.5 shadow">
         <i class="fa-solid fa-volume-high" id="audio-icon"></i> <span class="hidden sm:inline">SFX</span>
@@ -103,48 +93,44 @@
     </div>
   </header>
 
-  <main class="flex-1 w-full max-w-7xl mx-auto p-2 sm:p-4 flex flex-col items-center justify-center relative z-10 arcade-glow-mesh">
+  <main class="flex-1 w-full max-w-7xl mx-auto p-2 sm:p-4 flex flex-col items-center justify-center relative z-10 arcade-green-glow">
 
     <!-- 1. HOME SCREEN VIEW -->
     <section id="home-screen" class="w-full max-w-5xl flex flex-col items-center gap-2.5 py-1">
-      <!-- Hero Title -->
       <div class="text-center w-full max-w-3xl">
-        <div class="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500/25 via-pink-500/20 to-cyan-500/25 border border-amber-300/60 px-4 py-0.5 rounded-full text-yellow-300 text-xs sm:text-sm font-extrabold mb-1 shadow-lg shadow-amber-500/10">
-          <i class="fa-solid fa-hand-back-fist text-amber-300 animate-bounce"></i> Stand / Sit & Punch with Clench Fist ✊
+        <div class="inline-flex items-center gap-2 bg-emerald-950/80 border border-emerald-400/60 px-4 py-0.5 rounded-full text-yellow-300 text-xs sm:text-sm font-extrabold mb-1 shadow-lg shadow-emerald-900/30">
+          <i class="fa-solid fa-hand-back-fist text-amber-300 animate-bounce"></i> Dual Hand Tracking Active - Clench Fist ✊ to Grab Words
         </div>
         <h2 class="font-arcade text-3xl sm:text-5xl stroke-black-lg leading-tight tracking-wide" style="color: #fde047 !important;">
-          PUNCH THE CORRECT MONSTER!
+          CLENCH THE CORRECT MONSTER!
         </h2>
-        <p class="text-xs sm:text-sm text-slate-200 font-semibold max-w-xl mx-auto">
-          Master 12 English grammar categories! Conquer 99 levels, then crush the 60s Titan Boss at Level 100!
+        <p class="text-xs sm:text-sm text-emerald-100 font-semibold max-w-xl mx-auto">
+          Conquer 12 English grammar categories! Clench words through 99 levels, then defeat the 60s Titan Boss at Level 100!
         </p>
       </div>
 
-      <!-- Registration & Standby Cam Row -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 w-full bg-slate-900/90 border-2 border-indigo-500/40 p-3 rounded-2xl shadow-2xl backdrop-blur-md">
-        <!-- Student Info Fields -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 w-full bg-slate-900/90 border-2 border-emerald-600/40 p-3 rounded-2xl shadow-2xl backdrop-blur-md">
         <div class="md:col-span-2 flex flex-col justify-center space-y-2">
           <div class="flex items-center gap-2 text-yellow-300 text-xs font-black uppercase tracking-wider">
-            <i class="fa-solid fa-address-card text-amber-400"></i> Student Information / Maklumat Murid
+            <i class="fa-solid fa-address-card text-amber-400"></i> Student Information
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div>
-              <label class="block text-[11px] font-extrabold text-cyan-200 mb-0.5">Nama Murid (Name)</label>
-              <input type="text" id="input-student-name" placeholder="e.g. Saufi Aiman" value="Saufi Aiman" class="w-full bg-slate-950/90 border border-indigo-700/60 focus:border-amber-400 rounded-xl px-3 py-1.5 text-xs sm:text-sm text-white font-bold outline-none transition">
+              <label class="block text-[11px] font-extrabold text-emerald-200 mb-0.5">Student Name</label>
+              <input type="text" id="input-student-name" placeholder="e.g. Saufi Aiman" value="Saufi Aiman" class="w-full bg-slate-950/90 border border-emerald-700/60 focus:border-amber-400 rounded-xl px-3 py-1.5 text-xs sm:text-sm text-white font-bold outline-none transition">
             </div>
             <div>
-              <label class="block text-[11px] font-extrabold text-cyan-200 mb-0.5">Kelas (Class)</label>
-              <input type="text" id="input-student-class" placeholder="e.g. 5 Jujur" value="5 Jujur" class="w-full bg-slate-950/90 border border-indigo-700/60 focus:border-amber-400 rounded-xl px-3 py-1.5 text-xs sm:text-sm text-white font-bold outline-none transition">
+              <label class="block text-[11px] font-extrabold text-emerald-200 mb-0.5">Class</label>
+              <input type="text" id="input-student-class" placeholder="e.g. 5 Jujur" value="5 Jujur" class="w-full bg-slate-950/90 border border-emerald-700/60 focus:border-amber-400 rounded-xl px-3 py-1.5 text-xs sm:text-sm text-white font-bold outline-none transition">
             </div>
           </div>
           <div>
-            <label class="block text-[11px] font-extrabold text-cyan-200 mb-0.5">Nama Sekolah (School Name)</label>
-            <input type="text" id="input-student-school" placeholder="e.g. SK Seri Saujana" value="SK Seri Saujana" class="w-full bg-slate-950/90 border border-indigo-700/60 focus:border-amber-400 rounded-xl px-3 py-1.5 text-xs sm:text-sm text-white font-bold outline-none transition">
+            <label class="block text-[11px] font-extrabold text-emerald-200 mb-0.5">School Name</label>
+            <input type="text" id="input-student-school" placeholder="e.g. SK Seri Saujana" value="SK Seri Saujana" class="w-full bg-slate-950/90 border border-emerald-700/60 focus:border-amber-400 rounded-xl px-3 py-1.5 text-xs sm:text-sm text-white font-bold outline-none transition">
           </div>
         </div>
 
-        <!-- Standby Cam Area (Confined preview) -->
-        <div class="flex flex-col items-center justify-center bg-slate-950/90 p-2 rounded-2xl border border-indigo-800/60 relative">
+        <div class="flex flex-col items-center justify-center bg-slate-950/90 p-2 rounded-2xl border border-emerald-800/60 relative">
           <div class="flex items-center justify-between w-full text-[11px] font-black text-slate-300 mb-1 px-1">
             <span class="text-amber-300"><i class="fa-solid fa-video mr-1"></i> Cam Standby</span>
             <span id="standby-fist-pill" class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-md font-mono">WAITING</span>
@@ -158,11 +144,10 @@
               </button>
             </div>
           </div>
-          <p class="text-[10px] text-slate-400 mt-1 text-center font-semibold">Test fist punch ✊ here before playing!</p>
+          <p class="text-[10px] text-emerald-200/70 mt-1 text-center font-semibold">Wave hand or clench ✊ to test tracking!</p>
         </div>
       </div>
 
-      <!-- Category Badges Showcase -->
       <div class="w-full bg-slate-900/80 border border-slate-800 p-2 rounded-2xl backdrop-blur-sm">
         <div class="flex items-center justify-between mb-1">
           <div class="flex items-center gap-1.5 text-xs font-black text-amber-300 uppercase tracking-wider">
@@ -172,47 +157,39 @@
             <i class="fa-solid fa-award"></i> Certificate
           </button>
         </div>
-        <div id="badges-container" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-12 gap-1 text-center">
-          <!-- Populated by JS -->
-        </div>
+        <div id="badges-container" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-12 gap-1 text-center"></div>
       </div>
 
-      <!-- Categories Selection Grid (Compact, Colorful, & Well-Fitted) -->
-      <div class="w-full bg-slate-900/85 border-2 border-slate-800/90 p-2.5 rounded-2xl shadow-xl backdrop-blur-sm">
+      <div class="w-full bg-slate-900/85 border-2 border-emerald-800/80 p-2.5 rounded-2xl shadow-xl backdrop-blur-sm">
         <div class="flex items-center justify-between mb-2">
           <h3 class="font-arcade text-sm sm:text-base text-yellow-300 stroke-black-sm flex items-center gap-1.5">
-            <i class="fa-solid fa-gamepad text-cyan-400"></i> SELECT GRAMMAR MISSION (12 KATEGORI)
+            <i class="fa-solid fa-gamepad text-emerald-400"></i> SELECT GRAMMAR MISSION (12 CATEGORIES)
           </h3>
-          <span class="text-[10px] font-black text-cyan-300 bg-cyan-950/70 border border-cyan-500/40 px-2 py-0.5 rounded-full uppercase">
+          <span class="text-[10px] font-black text-emerald-300 bg-emerald-950/70 border border-emerald-500/40 px-2 py-0.5 rounded-full uppercase">
             100 Levels Each
           </span>
         </div>
-        <div id="category-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 w-full">
-          <!-- Populated dynamically via JS -->
-        </div>
+        <div id="category-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 w-full"></div>
       </div>
 
-      <!-- Start Mission Action Button -->
       <button onclick="startMission()" class="w-full max-w-md py-3 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-arcade text-xl sm:text-2xl rounded-2xl shadow-xl shadow-amber-500/25 transition transform active:scale-95 flex items-center justify-center gap-3 border-2 border-yellow-200">
-        <i class="fa-solid fa-play animate-pulse"></i> START MISSION (MULA)
+        <i class="fa-solid fa-play animate-pulse"></i> START MISSION
       </button>
     </section>
 
     <!-- 2. IN-GAME ARENA VIEW -->
     <section id="arena-screen" class="w-full h-full flex flex-col items-center justify-between relative hidden">
-      <!-- Arena Top HUD -->
-      <div class="w-full max-w-5xl bg-slate-950/85 border border-indigo-500/40 rounded-2xl p-2 sm:p-3 flex items-center justify-between gap-2 shadow-2xl backdrop-blur-md z-20">
+      <div class="w-full max-w-5xl bg-slate-950/85 border border-emerald-500/40 rounded-2xl p-2 sm:p-3 flex items-center justify-between gap-2 shadow-2xl backdrop-blur-md z-20">
         <div class="flex items-center gap-2">
           <button onclick="togglePauseGame()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-yellow-300 flex items-center justify-center border border-slate-600 transition shadow">
             <i class="fa-solid fa-pause"></i>
           </button>
           <div>
             <span id="hud-category-name" class="font-arcade text-xs sm:text-sm text-yellow-300 stroke-black-sm block truncate max-w-[140px] sm:max-w-[220px]">NOUNS</span>
-            <span id="hud-level-text" class="text-[10px] text-cyan-300 font-extrabold uppercase tracking-wider">LEVEL 1 / 100</span>
+            <span id="hud-level-text" class="text-[10px] text-emerald-300 font-extrabold uppercase tracking-wider">LEVEL 1 / 100</span>
           </div>
         </div>
 
-        <!-- Timer / Boss Bar -->
         <div class="flex-1 max-w-xs px-2 flex flex-col items-center">
           <div class="flex items-center justify-between w-full text-[10px] font-black text-slate-300 mb-0.5">
             <span id="timer-label"><i class="fa-solid fa-stopwatch mr-1 text-amber-400"></i> TIME</span>
@@ -223,7 +200,6 @@
           </div>
         </div>
 
-        <!-- Score, Combo & Hearts -->
         <div class="flex items-center gap-3">
           <div class="text-right">
             <div class="text-[10px] font-bold text-slate-400">SCORE</div>
@@ -237,37 +213,46 @@
         </div>
       </div>
 
-      <!-- Question / Mission Banner -->
-      <div id="arena-question-banner" class="w-full max-w-3xl bg-gradient-to-r from-indigo-900/90 via-purple-900/90 to-indigo-900/90 border-2 border-yellow-400/80 rounded-2xl p-2 sm:p-3 text-center shadow-2xl my-1 z-20 backdrop-blur-md">
-        <div class="text-[10px] sm:text-xs font-black text-cyan-300 uppercase tracking-widest mb-0.5">
-          <i class="fa-solid fa-bullseye text-yellow-400 mr-1"></i> TARGET MISSION / MISI SASARAN
+      <div id="arena-question-banner" class="w-full max-w-3xl bg-gradient-to-r from-emerald-950/90 via-slate-900/90 to-emerald-950/90 border-2 border-yellow-400/80 rounded-2xl p-2 sm:p-3 text-center shadow-2xl my-1 z-20 backdrop-blur-md">
+        <div class="text-[10px] sm:text-xs font-black text-emerald-300 uppercase tracking-widest mb-0.5">
+          <i class="fa-solid fa-bullseye text-yellow-400 mr-1"></i> TARGET MISSION
         </div>
         <h3 id="question-text" class="font-arcade text-base sm:text-2xl text-white stroke-black-sm">
-          Punch the monster with the NOUN!
+          Clench the monster with the NOUN!
         </h3>
       </div>
 
-      <!-- 3D Scene + Mirrored Video Arena Area -->
-      <div id="arena-viewport" class="w-full flex-1 min-h-[380px] sm:min-h-[440px] max-h-[68vh] relative rounded-3xl overflow-hidden border-2 border-indigo-600/40 shadow-2xl bg-slate-950 flex items-center justify-center">
-        <!-- Live mirrored camera feed background -->
-        <canvas id="arena-webcam-canvas" class="absolute inset-0 w-full h-full object-cover transform -scale-x-100 opacity-40"></canvas>
+      <!-- Taller arena viewport ensuring 2x monsters and large front placards fit -->
+      <div id="arena-viewport" class="w-full flex-1 min-h-[480px] sm:min-h-[540px] max-h-[74vh] relative rounded-3xl overflow-hidden border-2 border-emerald-600/50 shadow-2xl bg-slate-950 flex items-center justify-center">
+        <!-- Layer 0: Mirrored webcam stream -->
+        <canvas id="arena-webcam-canvas" class="absolute inset-0 w-full h-full object-cover transform -scale-x-100 opacity-40 z-0"></canvas>
 
-        <!-- Three.js 3D Monster Canvas -->
-        <canvas id="three-monster-canvas" class="absolute inset-0 w-full h-full pointer-events-auto"></canvas>
+        <!-- Layer 10: Three.js 3D Monsters -->
+        <canvas id="three-monster-canvas" class="absolute inset-0 w-full h-full pointer-events-auto z-10"></canvas>
 
-        <!-- Gesture Glove Cursor Overlay -->
-        <div id="gesture-glove" class="absolute w-14 h-14 pointer-events-none transform -translate-x-1/2 -translate-y-1/2 z-30 transition-transform duration-75 hidden">
-          <div class="w-full h-full rounded-full bg-amber-400/30 border-2 border-amber-300 flex items-center justify-center shadow-lg shadow-amber-500/50 pulse-glow">
-            <i class="fa-solid fa-hand-back-fist text-2xl text-yellow-300"></i>
+        <!-- Layer 50: Words Placard Overlay (ALWAYS in front of monsters) -->
+        <div id="monster-placards-layer" class="absolute inset-0 pointer-events-none" style="z-index: 50 !important;"></div>
+
+        <!-- Layer 60: Dual Gesture Glove Reticles -->
+        <div id="gesture-glove-0" class="absolute pointer-events-none transform -translate-x-1/2 -translate-y-1/2 transition-transform duration-75 hidden" style="z-index: 60;">
+          <div id="glove-inner-0" class="relative flex flex-col items-center justify-center">
+            <div id="glove-ring-0" class="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500/30 to-yellow-300/20 border-2 border-yellow-300 shadow-[0_0_20px_rgba(250,204,21,0.5)] backdrop-blur-sm flex items-center justify-center transition-all duration-150">
+              <i id="glove-icon-0" class="fa-solid fa-hand text-2xl text-yellow-300"></i>
+            </div>
+            <span id="glove-label-0" class="absolute -bottom-6 px-2 py-0.5 rounded-full bg-slate-950/90 border border-yellow-300/60 text-yellow-300 text-[9px] font-black tracking-wider whitespace-nowrap shadow uppercase">AIMING ✋</span>
           </div>
         </div>
 
-        <!-- 2D Projected Word Placards Container (Mounted over 3D monsters) -->
-        <div id="monster-placards-layer" class="absolute inset-0 pointer-events-none z-20">
-          <!-- Placards generated dynamically -->
+        <div id="gesture-glove-1" class="absolute pointer-events-none transform -translate-x-1/2 -translate-y-1/2 transition-transform duration-75 hidden" style="z-index: 60;">
+          <div id="glove-inner-1" class="relative flex flex-col items-center justify-center">
+            <div id="glove-ring-1" class="w-16 h-16 rounded-full bg-gradient-to-tr from-cyan-500/30 to-blue-400/20 border-2 border-cyan-300 shadow-[0_0_20px_rgba(34,211,238,0.5)] backdrop-blur-sm flex items-center justify-center transition-all duration-150">
+              <i id="glove-icon-1" class="fa-solid fa-hand text-2xl text-cyan-300"></i>
+            </div>
+            <span id="glove-label-1" class="absolute -bottom-6 px-2 py-0.5 rounded-full bg-slate-950/90 border border-cyan-300/60 text-cyan-300 text-[9px] font-black tracking-wider whitespace-nowrap shadow uppercase">AIMING ✋</span>
+          </div>
         </div>
 
-        <!-- Boss Rush HP Bar (Level 100) -->
+        <!-- Layer 20: Titan Boss HUD Overlay -->
         <div id="boss-hud-overlay" class="absolute top-2 inset-x-4 max-w-lg mx-auto bg-slate-950/90 border-2 border-red-500/80 rounded-2xl p-2 z-20 hidden flex-col items-center">
           <div class="flex items-center justify-between w-full text-xs font-black text-red-400 uppercase mb-1">
             <span><i class="fa-solid fa-skull mr-1"></i> TITAN BOSS FRENZY (60s)</span>
@@ -277,30 +262,29 @@
             <div id="boss-hp-bar" class="h-full bg-gradient-to-r from-red-600 via-orange-500 to-yellow-400 transition-all duration-150 w-full"></div>
           </div>
           <div class="text-[10px] text-slate-300 mt-1 font-bold">
-            Punch correct words: <span class="text-green-400">+20 pts</span> | Wrong words: <span class="text-rose-400">-10 pts</span>!
+            Clench correct words: <span class="text-emerald-400 font-black">+20 pts</span> | Wrong words: <span class="text-rose-400 font-black">-10 pts</span>!
           </div>
         </div>
 
-        <!-- Comic "POW!" hit explosion sprite container -->
-        <div id="comic-hit-effects" class="absolute inset-0 pointer-events-none z-30"></div>
+        <!-- Layer 65: Comic Hit Explosions -->
+        <div id="comic-hit-effects" class="absolute inset-0 pointer-events-none" style="z-index: 65;"></div>
       </div>
 
-      <!-- Arena Bottom Status & Fallback Guidance -->
       <div class="w-full max-w-5xl py-1.5 px-3 flex items-center justify-between text-[11px] font-bold text-slate-300 z-20">
         <div class="flex items-center gap-2">
-          <span class="text-yellow-300"><i class="fa-solid fa-hand-back-fist"></i> Clench Fist ✊</span>
+          <span class="text-yellow-300"><i class="fa-solid fa-hand-back-fist"></i> Clench Fist ✊ to Grab Word</span>
           <span class="text-slate-500">|</span>
-          <span class="text-cyan-300"><i class="fa-solid fa-arrow-pointer"></i> Touch / Click Fallback Enabled</span>
+          <span class="text-emerald-300"><i class="fa-solid fa-arrow-pointer"></i> Touch / Click Fallback Active</span>
         </div>
         <div id="arena-fist-indicator" class="bg-slate-900 border border-slate-700 px-2 py-0.5 rounded-lg text-slate-400 font-mono text-[10px]">
-          FIST: WAITING
+          FISTS: WAITING
         </div>
       </div>
     </section>
 
     <!-- 3. PAUSE MODAL -->
     <div id="pause-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center z-50 hidden p-4">
-      <div class="w-full max-w-md bg-slate-900 border-2 border-indigo-500/60 rounded-3xl p-6 text-center shadow-2xl">
+      <div class="w-full max-w-md bg-slate-900 border-2 border-emerald-500/60 rounded-3xl p-6 text-center shadow-2xl">
         <div class="w-14 h-14 mx-auto bg-amber-500/20 rounded-2xl flex items-center justify-center text-amber-300 text-3xl mb-3 border border-amber-400/40">
           <i class="fa-solid fa-pause"></i>
         </div>
@@ -310,46 +294,43 @@
         </p>
         <div class="flex flex-col gap-2">
           <button onclick="togglePauseGame()" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-arcade text-lg rounded-xl shadow-lg transition">
-            RESUME MISSION (SAMBUNG)
+            RESUME MISSION
           </button>
           <button onclick="quitToHome()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition border border-slate-700">
-            QUIT TO MENU (KELUAR)
+            QUIT TO MENU
           </button>
         </div>
       </div>
     </div>
 
-    <!-- 4. HIT / WORD DEFINITION FEEDBACK MODAL -->
+    <!-- 4. HIT FEEDBACK MODAL -->
     <div id="feedback-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4">
-      <div id="feedback-card" class="w-full max-w-md bg-slate-900 border-2 border-amber-400 rounded-3xl p-5 text-center shadow-2xl transform transition-all scale-95 opacity-0">
-        <div id="feedback-icon-box" class="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center text-3xl mb-2">
-          <!-- Icon injected by JS -->
+      <div id="feedback-card" class="w-full max-w-md bg-slate-900 border-2 border-amber-400 rounded-3xl p-5 text-center shadow-2xl transform transition-all scale-95 opacity-0 relative overflow-hidden">
+        <div class="w-full h-1 bg-slate-800 absolute top-0 left-0">
+          <div id="feedback-auto-bar" class="h-full bg-amber-400 transition-all duration-100 w-full"></div>
         </div>
-        <h3 id="feedback-title" class="font-arcade text-2xl stroke-black-sm mb-1 text-yellow-300">SUPER HIT!</h3>
+        <div id="feedback-icon-box" class="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center text-3xl mb-2"></div>
+        <h3 id="feedback-title" class="font-arcade text-2xl stroke-black-sm mb-1 text-yellow-300">SUPER CLENCH!</h3>
         <p id="feedback-subtitle" class="text-xs font-bold text-slate-300 mb-3">Great job identifying the target word!</p>
 
-        <!-- Word Definition Box (BM & EN) -->
-        <div class="w-full bg-slate-950/90 border border-indigo-700/60 rounded-2xl p-3 text-left mb-4">
+        <div class="w-full bg-slate-950/90 border border-emerald-700/60 rounded-2xl p-3 text-left mb-4">
           <div class="flex items-center justify-between text-[11px] font-black uppercase text-amber-300 mb-1">
-            <span><i class="fa-solid fa-book-open mr-1"></i> Maksud Perkataan (Definition)</span>
-            <span id="feedback-word-tag" class="px-2 py-0.5 bg-indigo-900/60 rounded text-[9px] text-cyan-200">NOUN</span>
+            <span><i class="fa-solid fa-book-open mr-1"></i> Word Definition</span>
+            <span id="feedback-word-tag" class="px-2 py-0.5 bg-emerald-900/60 rounded text-[9px] text-emerald-200">NOUN</span>
           </div>
           <div id="feedback-word-name" class="font-arcade text-lg text-white mb-1">"BICYCLE"</div>
-          <div class="text-xs text-slate-200 font-semibold mb-1">
-            <span class="text-amber-400 font-bold">BM:</span> <span id="feedback-def-bm">Sebuah kenderaan dua roda yang dikayuh.</span>
-          </div>
-          <div class="text-xs text-slate-300 font-semibold">
-            <span class="text-cyan-400 font-bold">EN:</span> <span id="feedback-def-en">A two-wheeled vehicle that you pedal.</span>
+          <div class="text-xs text-slate-300 font-semibold" id="feedback-def">
+            A two-wheeled vehicle that you pedal with your feet.
           </div>
         </div>
 
-        <button onclick="dismissFeedbackModal()" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-arcade text-base rounded-xl shadow-lg transition">
-          CONTINUE (TERUSKAN) <i class="fa-solid fa-arrow-right ml-1"></i>
+        <button onclick="dismissFeedbackModal()" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-arcade text-base rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+          <span>CONTINUE</span> <span id="feedback-countdown-pill" class="text-xs font-mono font-bold text-slate-900">(Auto)</span> <i class="fa-solid fa-arrow-right"></i>
         </button>
       </div>
     </div>
 
-    <!-- 5. MISSION COMPLETE / GAME OVER SUMMARY -->
+    <!-- 5. ENDGAME SUMMARY -->
     <div id="endgame-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-50 hidden p-4">
       <div class="w-full max-w-lg bg-slate-900 border-2 border-yellow-400 rounded-3xl p-6 text-center shadow-2xl">
         <div id="endgame-badge-icon" class="w-16 h-16 mx-auto bg-gradient-to-tr from-amber-500 to-yellow-400 text-slate-950 rounded-2xl flex items-center justify-center text-4xl mb-3 shadow-lg">
@@ -360,14 +341,13 @@
           You conquered this grammar mission and defeated the Titan Boss!
         </p>
 
-        <!-- Student Summary & Performance Grid -->
-        <div class="w-full bg-slate-950/90 border border-indigo-700/60 rounded-2xl p-3.5 text-left mb-4 space-y-2">
+        <div class="w-full bg-slate-950/90 border border-emerald-700/60 rounded-2xl p-3.5 text-left mb-4 space-y-2">
           <div class="flex items-center justify-between text-xs text-slate-300 border-b border-slate-800 pb-2">
             <div>
-              <span class="font-bold text-amber-300" id="endgame-student-name">Saufi Aiman</span> 
+              <span class="font-bold text-amber-300" id="endgame-student-name">Saufi Aiman</span>
               <span class="text-slate-400 text-[11px]" id="endgame-student-meta">(5 Jujur - SK Seri Saujana)</span>
             </div>
-            <span class="px-2 py-0.5 bg-cyan-950 text-cyan-300 text-[10px] font-black rounded uppercase" id="endgame-cat-tag">NOUNS</span>
+            <span class="px-2 py-0.5 bg-emerald-950 text-emerald-300 text-[10px] font-black rounded uppercase" id="endgame-cat-tag">NOUNS</span>
           </div>
           <div class="grid grid-cols-3 gap-2 text-center pt-1">
             <div class="bg-slate-900 p-2 rounded-xl border border-slate-800">
@@ -384,13 +364,13 @@
             </div>
           </div>
           <div class="text-[11px] text-slate-300 bg-slate-900/60 p-2 rounded-xl border border-slate-800 text-center font-semibold" id="endgame-praise">
-            🌟 Syabas! Penguasaan tatabahasa anda sangat mantap dan cekap!
+            🌟 Brilliant performance! Your grammar mastery and agility are phenomenal!
           </div>
         </div>
 
         <div class="flex flex-col sm:flex-row gap-2">
           <button onclick="quitToHome()" class="flex-1 py-3 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-arcade text-base rounded-xl shadow-lg transition">
-            RETURN TO MENU (MENU UTAMA)
+            RETURN TO MENU
           </button>
           <button onclick="openCertificateModal()" class="py-3 px-4 bg-slate-800 hover:bg-slate-700 text-yellow-300 font-bold text-xs rounded-xl border border-slate-700 transition">
             <i class="fa-solid fa-award mr-1"></i> CERTIFICATE
@@ -399,7 +379,7 @@
       </div>
     </div>
 
-    <!-- 6. CERTIFICATE OF EXCELLENCE MODAL -->
+    <!-- 6. CERTIFICATE MODAL -->
     <div id="cert-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-50 hidden p-3">
       <div class="w-full max-w-2xl bg-slate-900 border-2 border-yellow-400 rounded-3xl p-4 sm:p-5 flex flex-col items-center shadow-2xl">
         <div class="flex items-center justify-between w-full mb-3">
@@ -410,12 +390,9 @@
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-
-        <!-- Rendered Certificate Canvas Preview -->
         <div class="w-full aspect-[16/10] bg-white rounded-2xl overflow-hidden shadow-2xl border-4 border-amber-400 relative">
           <canvas id="cert-canvas" class="w-full h-full object-contain"></canvas>
         </div>
-
         <div class="flex items-center justify-between w-full mt-3 gap-2">
           <span class="text-[11px] text-slate-400 font-semibold">
             Complete all 12 categories to earn the Grand Grammar Master seal!
@@ -427,7 +404,7 @@
       </div>
     </div>
 
-    <!-- 7. MINIMALIST HIDDEN ADMIN MODAL -->
+    <!-- 7. HIDDEN ADMIN MODAL -->
     <div id="admin-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4">
       <div class="w-full max-w-sm bg-slate-900 border border-slate-700 rounded-3xl p-5 shadow-2xl text-left">
         <div class="flex items-center justify-between mb-3">
@@ -459,46 +436,32 @@
     </div>
   </main>
 
-  <!-- Footer with Almost Invisible Admin Trigger -->
-  <footer class="w-full py-1.5 px-4 text-center text-[10px] text-slate-500 z-10 flex items-center justify-between">
+  <footer class="w-full py-1.5 px-4 text-center text-[10px] text-emerald-200/50 z-10 flex items-center justify-between">
     <span>Super Saufi Arcade © 2026 - Educational Grammar Gesture Platform</span>
-    <!-- Minimalist, almost invisible admin dot -->
-    <button onclick="openAdminModal()" class="w-2 h-2 rounded-full bg-slate-800 hover:bg-slate-600 transition" title="Settings"></button>
+    <button onclick="openAdminModal()" class="w-2.5 h-2.5 rounded-full bg-slate-800/80 hover:bg-emerald-500 transition" title="Admin"></button>
   </footer>
 
   <script>
-    /* ==========================================================================
-       CURRICULUM & VOCABULARY DICTIONARY (12 Official Parts of Speech)
-       English-only curriculum with concise definitions
-       ========================================================================== */
     const CURRICULUM = {
       nouns: {
-        name: "Nouns",
-        tag: "Noun",
-        badge: "Nouns Master",
-        icon: "fa-cubes",
-        color: "from-amber-500 to-yellow-400",
+        name: "Nouns", tag: "Noun", badge: "Nouns Master", icon: "fa-cubes", color: "from-amber-500 to-yellow-400",
         words: [
-          { w: "cat", def: "A small domesticated carnivorous mammal." },
+          { w: "cat", def: "A small domesticated carnivorous mammal with soft fur." },
           { w: "apple", def: "A round fruit with sweet, crisp flesh." },
-          { w: "book", def: "A written work published in printed pages." },
+          { w: "book", def: "A written or printed work published in pages." },
           { w: "school", def: "An institution for educating students." },
-          { w: "bicycle", def: "A two-wheeled vehicle pedaled by foot." },
-          { w: "elephant", def: "A very large mammal with a trunk and tusks." },
-          { w: "doctor", def: "A person qualified to treat illness and injury." },
+          { w: "bicycle", def: "A two-wheeled vehicle pedaled by feet." },
+          { w: "elephant", def: "A very large mammal with a trunk and ivory tusks." },
+          { w: "doctor", def: "A person qualified to treat illness and injuries." },
           { w: "computer", def: "An electronic device for storing and processing data." },
           { w: "dinosaur", def: "An extinct prehistoric reptile." },
           { w: "astronaut", def: "A person trained to travel in a spacecraft." },
           { w: "microscope", def: "An optical instrument used to view tiny objects." },
-          { w: "architecture", def: "The art or practice of designing buildings." }
+          { w: "bridge", def: "A structure built to cross over an obstacle or river." }
         ]
       },
       verbs: {
-        name: "Verbs",
-        tag: "Verb",
-        badge: "Verbs Master",
-        icon: "fa-person-running",
-        color: "from-rose-500 to-red-500",
+        name: "Verbs", tag: "Verb", badge: "Verbs Master", icon: "fa-person-running", color: "from-rose-500 to-red-500",
         words: [
           { w: "run", def: "To move rapidly on foot." },
           { w: "jump", def: "To push oneself off the ground into the air." },
@@ -507,17 +470,13 @@
           { w: "swim", def: "To propel oneself through water." },
           { w: "dance", def: "To move rhythmically to music." },
           { w: "explore", def: "To travel through an unfamiliar area to learn." },
-          { w: "invent", def: "To create or design something new." },
+          { w: "invent", def: "To create or design something brand new." },
           { w: "accelerate", def: "To increase speed rapidly." },
           { w: "investigate", def: "To carry out a systematic examination." }
         ]
       },
       adjectives: {
-        name: "Adjectives",
-        tag: "Adjective",
-        badge: "Adjectives Master",
-        icon: "fa-wand-magic-sparkles",
-        color: "from-pink-500 to-purple-500",
+        name: "Adjectives", tag: "Adjective", badge: "Adjectives Master", icon: "fa-wand-magic-sparkles", color: "from-pink-500 to-purple-500",
         words: [
           { w: "happy", def: "Feeling or showing pleasure and joy." },
           { w: "big", def: "Of considerable size or extent." },
@@ -530,11 +489,7 @@
         ]
       },
       adverbs: {
-        name: "Adverbs",
-        tag: "Adverb",
-        badge: "Adverbs Master",
-        icon: "fa-bolt-lightning",
-        color: "from-cyan-500 to-blue-500",
+        name: "Adverbs", tag: "Adverb", badge: "Adverbs Master", icon: "fa-bolt-lightning", color: "from-cyan-500 to-blue-500",
         words: [
           { w: "quickly", def: "At a fast speed; rapidly." },
           { w: "loudly", def: "With a great deal of volume." },
@@ -546,11 +501,7 @@
         ]
       },
       prepositions: {
-        name: "Prepositions",
-        tag: "Preposition",
-        badge: "Prepositions Master",
-        icon: "fa-location-dot",
-        color: "from-emerald-500 to-teal-500",
+        name: "Prepositions", tag: "Preposition", badge: "Prepositions Master", icon: "fa-location-dot", color: "from-emerald-500 to-teal-500",
         words: [
           { w: "under", def: "Extending or situated directly below something." },
           { w: "between", def: "In the middle of two points or items." },
@@ -561,11 +512,7 @@
         ]
       },
       pronouns: {
-        name: "Pronouns",
-        tag: "Pronoun",
-        badge: "Pronouns Master",
-        icon: "fa-users",
-        color: "from-violet-500 to-indigo-500",
+        name: "Pronouns", tag: "Pronoun", badge: "Pronouns Master", icon: "fa-users", color: "from-violet-500 to-indigo-500",
         words: [
           { w: "he", def: "Used to refer to a male person." },
           { w: "they", def: "Used to refer to two or more people." },
@@ -576,11 +523,7 @@
         ]
       },
       conjunctions: {
-        name: "Conjunctions",
-        tag: "Conjunction",
-        badge: "Conjunctions Master",
-        icon: "fa-link",
-        color: "from-orange-500 to-amber-500",
+        name: "Conjunctions", tag: "Conjunction", badge: "Conjunctions Master", icon: "fa-link", color: "from-orange-500 to-amber-500",
         words: [
           { w: "because", def: "For the reason that; since." },
           { w: "although", def: "In spite of the fact that; even though." },
@@ -591,11 +534,7 @@
         ]
       },
       determiners: {
-        name: "Determiners",
-        tag: "Determiner",
-        badge: "Determiners Master",
-        icon: "fa-tag",
-        color: "from-lime-500 to-emerald-500",
+        name: "Determiners", tag: "Determiner", badge: "Determiners Master", icon: "fa-tag", color: "from-lime-500 to-emerald-500",
         words: [
           { w: "these", def: "Indicating plural objects close at hand." },
           { w: "those", def: "Indicating plural objects further away." },
@@ -605,11 +544,7 @@
         ]
       },
       interrogatives: {
-        name: "Interrogatives",
-        tag: "Interrogative",
-        badge: "Interrogatives Master",
-        icon: "fa-circle-question",
-        color: "from-sky-500 to-cyan-500",
+        name: "Interrogatives", tag: "Interrogative", badge: "Interrogatives Master", icon: "fa-circle-question", color: "from-sky-500 to-cyan-500",
         words: [
           { w: "where", def: "In or to what place or position." },
           { w: "whose", def: "Belonging to or associated with which person." },
@@ -619,11 +554,7 @@
         ]
       },
       numerals: {
-        name: "Numerals",
-        tag: "Numeral",
-        badge: "Numerals Master",
-        icon: "fa-arrow-down-1-9",
-        color: "from-teal-500 to-blue-600",
+        name: "Numerals", tag: "Numeral", badge: "Numerals Master", icon: "fa-arrow-down-1-9", color: "from-teal-500 to-blue-600",
         words: [
           { w: "twelve", def: "The number equal to the sum of 6 and 6 (12)." },
           { w: "fifteen", def: "The cardinal number equal to 15." },
@@ -633,11 +564,7 @@
         ]
       },
       exclamations: {
-        name: "Exclamations",
-        tag: "Exclamation",
-        badge: "Exclamations Master",
-        icon: "fa-comment-dots",
-        color: "from-fuchsia-500 to-pink-600",
+        name: "Exclamations", tag: "Exclamation", badge: "Exclamations Master", icon: "fa-comment-dots", color: "from-fuchsia-500 to-pink-600",
         words: [
           { w: "wow!", def: "Expressing astonishment or admiration." },
           { w: "hooray!", def: "Expressing joy, victory, or celebration." },
@@ -647,11 +574,7 @@
         ]
       },
       discourse: {
-        name: "Discourse Markers",
-        tag: "Discourse Marker",
-        badge: "Discourse Master",
-        icon: "fa-signs-post",
-        color: "from-amber-600 to-orange-600",
+        name: "Discourse Markers", tag: "Discourse Marker", badge: "Discourse Master", icon: "fa-signs-post", color: "from-amber-600 to-orange-600",
         words: [
           { w: "however", def: "Used to introduce a statement that contrasts." },
           { w: "furthermore", def: "In addition; moreover." },
@@ -662,9 +585,42 @@
       }
     };
 
-    /* ==========================================================================
-       GAME STATE MANAGEMENT
-       ========================================================================== */
+    function getUniqueDistractors(targetWord, currentCatKey, count = 2) {
+      const distractors = [];
+      const usedWords = new Set();
+      if (targetWord && targetWord.w) usedWords.add(targetWord.w.toLowerCase());
+
+      const otherKeys = Object.keys(CURRICULUM).filter(k => k !== currentCatKey);
+      const shuffledKeys = [...otherKeys].sort(() => Math.random() - 0.5);
+
+      for (const catKey of shuffledKeys) {
+        if (distractors.length >= count) break;
+        const cat = CURRICULUM[catKey];
+        if (!cat || !cat.words) continue;
+        const candidates = cat.words.filter(wObj => !usedWords.has(wObj.w.toLowerCase()));
+        if (candidates.length > 0) {
+          const picked = candidates[Math.floor(Math.random() * candidates.length)];
+          usedWords.add(picked.w.toLowerCase());
+          distractors.push({ ...picked, isCorrect: false, tag: cat.tag });
+        }
+      }
+
+      const fallbackList = [
+        { w: "jump", def: "To push oneself off the ground.", tag: "Verb" },
+        { w: "happy", def: "Feeling pleasure.", tag: "Adjective" },
+        { w: "quickly", def: "At a fast speed.", tag: "Adverb" },
+        { w: "under", def: "Below something.", tag: "Preposition" }
+      ];
+      for (const fb of fallbackList) {
+        if (distractors.length >= count) break;
+        if (!usedWords.has(fb.w.toLowerCase())) {
+          usedWords.add(fb.w.toLowerCase());
+          distractors.push({ ...fb, isCorrect: false });
+        }
+      }
+      return distractors;
+    }
+
     const gameState = {
       categoryKey: 'nouns',
       currentLevel: 1,
@@ -679,28 +635,22 @@
       isGameOver: false,
       isBossLevel: false,
       bossHP: 100,
-      student: { name: "Saufi Aiman", class: "Grade 5", school: "Seri Saujana Primary School" },
+      student: { name: "Saufi Aiman", class: "5 Jujur", school: "SK Seri Saujana" },
       sheetWebhookUrl: localStorage.getItem('saufi_sheet_webhook') || '',
       completedCategories: JSON.parse(localStorage.getItem('saufi_completed_cats') || '[]'),
-      currentOptions: [], // { word, isCorrect, monsterIndex, def_en, tag }
+      currentOptions: [],
       audioMuted: false,
       cameraActive: false,
       fistDetected: false,
+      isHitCooldown: false,
       totalAnswered: 0,
       totalCorrect: 0
     };
 
-    /* ==========================================================================
-       SYNTHESIZED WEB AUDIO API (SFX)
-       ========================================================================== */
     let audioCtx = null;
     function getAudioContext() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
       return audioCtx;
     }
 
@@ -711,7 +661,7 @@
         icon.className = 'fa-solid fa-volume-xmark text-rose-400';
       } else {
         icon.className = 'fa-solid fa-volume-high text-yellow-300';
-        playSfx('ding');
+        playSfx('correct');
       }
     }
 
@@ -721,11 +671,10 @@
         const ctx = getAudioContext();
         const now = ctx.currentTime;
         if (type === 'punch') {
-          // Punch Thump + Whoosh
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(140, now);
+          osc.frequency.setValueAtTime(160, now);
           osc.frequency.exponentialRampToValueAtTime(35, now + 0.18);
           gain.gain.setValueAtTime(0.9, now);
           gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
@@ -734,13 +683,12 @@
           osc.start(now);
           osc.stop(now + 0.18);
         } else if (type === 'correct') {
-          // Cheerful dual ding
           [523.25, 659.25, 783.99].forEach((freq, idx) => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(freq, now + idx * 0.08);
-            gain.gain.setValueAtTime(0.3, now + idx * 0.08);
+            gain.gain.setValueAtTime(0.35, now + idx * 0.08);
             gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.25);
             osc.connect(gain);
             gain.connect(ctx.destination);
@@ -748,12 +696,11 @@
             osc.stop(now + idx * 0.08 + 0.25);
           });
         } else if (type === 'wrong') {
-          // Buzz thump
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(160, now);
-          osc.frequency.linearRampToValueAtTime(110, now + 0.25);
+          osc.frequency.setValueAtTime(170, now);
+          osc.frequency.linearRampToValueAtTime(100, now + 0.25);
           gain.gain.setValueAtTime(0.5, now);
           gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
           osc.connect(gain);
@@ -761,13 +708,12 @@
           osc.start(now);
           osc.stop(now + 0.25);
         } else if (type === 'boss_hit') {
-          // Deep impact explosion
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.type = 'square';
-          osc.frequency.setValueAtTime(90, now);
+          osc.frequency.setValueAtTime(95, now);
           osc.frequency.exponentialRampToValueAtTime(25, now + 0.3);
-          gain.gain.setValueAtTime(0.6, now);
+          gain.gain.setValueAtTime(0.65, now);
           gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
           osc.connect(gain);
           gain.connect(ctx.destination);
@@ -775,13 +721,32 @@
           osc.stop(now + 0.3);
         }
       } catch (e) {
-        console.warn("Audio sfx error:", e);
+        console.warn("Audio error:", e);
       }
     }
 
     let threeScene, threeCamera, threeRenderer;
     const monsters3D = [];
     let titanBoss3D = null;
+
+    // Calculates camera distance so all three 2x monsters remain widely spaced with clear margins
+    function fitCamera() {
+      const container = document.getElementById('arena-viewport');
+      if (!container || !threeCamera) return;
+      const w = container.clientWidth || 800;
+      const h = container.clientHeight || 450;
+      threeCamera.aspect = w / h;
+      const fovRad = (threeCamera.fov * Math.PI) / 360;
+      const t = Math.tan(fovRad);
+      // Spans from -14.5 to +14.5 in world coordinates
+      const requiredHalfWidth = 14.5;
+      const requiredHalfHeight = 6.0;
+      const zForWidth = requiredHalfWidth / (threeCamera.aspect * t);
+      const zForHeight = requiredHalfHeight / t;
+      const z = Math.max(zForWidth, zForHeight, 16.5);
+      threeCamera.position.set(0, 0, z);
+      threeCamera.updateProjectionMatrix();
+    }
 
     function initThreeJS() {
       const canvas = document.getElementById('three-monster-canvas');
@@ -792,23 +757,32 @@
       const height = container.clientHeight || 450;
 
       threeScene = new THREE.Scene();
-      threeCamera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-      threeCamera.position.set(0, 0, 9);
+      threeCamera = new THREE.PerspectiveCamera(50, width / height, 0.1, 100);
 
       threeRenderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
       threeRenderer.setSize(width, height);
       threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      fitCamera();
 
-      // Lights
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
       threeScene.add(ambientLight);
 
-      const dirLight = new THREE.DirectionalLight(0xfff5ea, 0.9);
+      const dirLight = new THREE.DirectionalLight(0xfff5ea, 0.85);
       dirLight.position.set(5, 10, 7);
       threeScene.add(dirLight);
 
-      // Create Cute 3D Monsters
       buildCuteMonsters();
+
+      // Enable touch/click fallback on the 3D monsters directly
+      canvas.addEventListener('pointerdown', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
+        const targetIdx = getHoveredOptionIndex(clickX, clickY);
+        if (targetIdx !== -1) {
+          executePunchOnOption(targetIdx, clickX, clickY);
+        }
+      });
 
       window.addEventListener('resize', onWindowResize);
       animateThreeLoop();
@@ -817,107 +791,82 @@
     function onWindowResize() {
       const container = document.getElementById('arena-viewport');
       if (!container || !threeRenderer || !threeCamera) return;
-      const width = container.clientWidth;
-      const height = container.clientHeight;
-      threeCamera.aspect = width / height;
-      threeCamera.updateProjectionMatrix();
-      threeRenderer.setSize(width, height);
+      threeRenderer.setSize(container.clientWidth, container.clientHeight);
+      fitCamera();
+      if (gameState.currentOptions.length) renderPlacards();
     }
 
     function buildCuteMonsters() {
-      // Clear previous
       monsters3D.forEach(m => threeScene.remove(m.mesh));
       monsters3D.length = 0;
 
+      // Monsters spaced at x = -9.6, 0.0, 9.6 with 2x scale
       const configs = [
-        { color: 0xff6b8b, hornColor: 0xffd166, name: 'pinky', x: -3.3 },
-        { color: 0x48dbfb, hornColor: 0x1dd1a1, name: 'minty', x: 0.0 },
-        { color: 0xfeca57, hornColor: 0xff9ff3, name: 'starry', x: 3.3 }
+        { color: 0xff6b8b, hornColor: 0xffd166, x: -9.6, y: -0.2 },
+        { color: 0x48dbfb, hornColor: 0x1dd1a1, x: 0.0, y: -0.35 },
+        { color: 0xfeca57, hornColor: 0xff9ff3, x: 9.6, y: -0.2 }
       ];
 
       configs.forEach((cfg, i) => {
         const group = new THREE.Group();
-
-        // Body (Cute sphere)
-        const bodyGeo = new THREE.SphereGeometry(1.0, 32, 32);
-        const bodyMat = new THREE.MeshToonMaterial({ color: cfg.color });
-        const body = new THREE.Mesh(bodyGeo, bodyMat);
+        const body = new THREE.Mesh(new THREE.SphereGeometry(1.85, 32, 32), new THREE.MeshToonMaterial({ color: cfg.color }));
         group.add(body);
 
-        // Blushing cheeks
-        [-0.45, 0.45].forEach(xOff => {
-          const cheekGeo = new THREE.SphereGeometry(0.18, 16, 16);
-          const cheekMat = new THREE.MeshBasicMaterial({ color: 0xff477e });
-          const cheek = new THREE.Mesh(cheekGeo, cheekMat);
-          cheek.position.set(xOff, -0.15, 0.88);
-          cheek.scale.set(1.2, 0.6, 0.4);
+        [-0.8, 0.8].forEach(xOff => {
+          const cheek = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 16), new THREE.MeshBasicMaterial({ color: 0xff477e }));
+          cheek.position.set(xOff, -0.3, 1.62);
+          cheek.scale.set(1.25, 0.65, 0.45);
           group.add(cheek);
         });
 
-        // Eyes
-        [-0.32, 0.32].forEach(xOff => {
-          const eyeGeo = new THREE.SphereGeometry(0.16, 16, 16);
-          const eyeMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
-          const eye = new THREE.Mesh(eyeGeo, eyeMat);
-          eye.position.set(xOff, 0.15, 0.92);
+        [-0.56, 0.56].forEach(xOff => {
+          const eye = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 16), new THREE.MeshBasicMaterial({ color: 0x111111 }));
+          eye.position.set(xOff, 0.35, 1.7);
           group.add(eye);
 
-          // Eye glint
-          const glintGeo = new THREE.SphereGeometry(0.06, 8, 8);
-          const glintMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-          const glint = new THREE.Mesh(glintGeo, glintMat);
-          glint.position.set(xOff + 0.04, 0.2, 1.04);
+          const glint = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+          glint.position.set(xOff + 0.08, 0.44, 1.92);
           group.add(glint);
         });
 
-        // Cute Horn / Ears
-        const hornGeo = new THREE.ConeGeometry(0.25, 0.6, 16);
+        const hornGeo = new THREE.ConeGeometry(0.45, 1.1, 16);
         const hornMat = new THREE.MeshToonMaterial({ color: cfg.hornColor });
-        [-0.4, 0.4].forEach((xOff, idx) => {
+        [-0.7, 0.7].forEach((xOff, idx) => {
           const horn = new THREE.Mesh(hornGeo, hornMat);
-          horn.position.set(xOff, 0.95, 0);
-          horn.rotation.z = (idx === 0 ? 0.3 : -0.3);
+          horn.position.set(xOff, 1.75, 0);
+          horn.rotation.z = (idx === 0 ? 0.32 : -0.32);
           group.add(horn);
         });
 
-        group.position.set(cfg.x, -0.2, 0);
+        group.scale.set(2, 2, 2); // Doubled monster size (radius 3.7)
+        group.position.set(cfg.x, cfg.y, 0);
         threeScene.add(group);
 
         monsters3D.push({
           mesh: group,
           baseX: cfg.x,
-          baseY: -0.2,
+          baseY: cfg.y,
           isKnockedOut: false,
           knockVelocity: new THREE.Vector3(),
           idlePhase: i * 1.5
         });
       });
 
-      // Build Level 100 Titan Boss
       buildTitanBoss();
     }
 
     function buildTitanBoss() {
       titanBoss3D = new THREE.Group();
-
-      const coreGeo = new THREE.DodecahedronGeometry(1.6, 1);
-      const coreMat = new THREE.MeshToonMaterial({ color: 0xff3838, wireframe: false });
-      const core = new THREE.Mesh(coreGeo, coreMat);
+      const core = new THREE.Mesh(new THREE.DodecahedronGeometry(1.6, 1), new THREE.MeshToonMaterial({ color: 0xff3838 }));
       titanBoss3D.add(core);
 
-      // Rotating Spikes / Rings
-      const ringGeo = new THREE.TorusGeometry(2.3, 0.15, 16, 64);
-      const ringMat = new THREE.MeshToonMaterial({ color: 0xf1c40f });
-      const ring = new THREE.Mesh(ringGeo, ringMat);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(2.3, 0.15, 16, 64), new THREE.MeshToonMaterial({ color: 0xf1c40f }));
       ring.rotation.x = Math.PI / 2.5;
       titanBoss3D.add(ring);
       titanBoss3D.ringMesh = ring;
 
-      // Boss Red Glowing Eyes
       [-0.6, 0.6].forEach(xOff => {
-        const eyeGeo = new THREE.SphereGeometry(0.3, 16, 16);
-        const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-        const eye = new THREE.Mesh(eyeGeo, eyeMat);
+        const eye = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffff00 }));
         eye.position.set(xOff, 0.3, 1.4);
         titanBoss3D.add(eye);
       });
@@ -928,39 +877,45 @@
     }
 
     let clock = new THREE.Clock();
+    let currentHoveredIndices = new Set();
+
     function animateThreeLoop() {
       requestAnimationFrame(animateThreeLoop);
       const delta = clock.getDelta();
       const elapsed = clock.getElapsedTime();
 
-      // Animate Standard Monsters
-      monsters3D.forEach((m, idx) => {
+      monsters3D.forEach((m, i) => {
+        // Check if this monster or its attached word is being targeted
+        const isHovered = currentHoveredIndices.has(i);
+
         if (!m.isKnockedOut) {
-          // Floating cute breathing bounce
-          m.mesh.position.y = m.baseY + Math.sin(elapsed * 2.5 + m.idlePhase) * 0.18;
-          m.mesh.rotation.y = Math.sin(elapsed * 1.8 + m.idlePhase) * 0.15;
-          m.mesh.rotation.z = Math.cos(elapsed * 2.0 + m.idlePhase) * 0.05;
+          // Monster bounces eagerly and scales up when targeted
+          const targetScale = isHovered ? 2.25 : 2.0;
+          m.mesh.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.15);
+
+          m.mesh.position.y = m.baseY + Math.sin(elapsed * (isHovered ? 5.2 : 2.5) + m.idlePhase) * (isHovered ? 0.22 : 0.14);
+          m.mesh.rotation.y = Math.sin(elapsed * 1.8 + m.idlePhase) * 0.12;
+
+          if (isHovered) {
+            m.mesh.rotation.z = Math.sin(elapsed * 6.5) * 0.08;
+          } else {
+            m.mesh.rotation.z *= 0.85;
+          }
         } else {
-          // Knockout spinning trajectory
           m.mesh.position.addScaledVector(m.knockVelocity, delta);
           m.mesh.rotation.x += 10 * delta;
           m.mesh.rotation.y += 12 * delta;
-          m.knockVelocity.y -= 12 * delta; // Gravity
+          m.knockVelocity.y -= 12 * delta;
         }
       });
 
-      // Animate Boss if visible
       if (titanBoss3D && titanBoss3D.visible) {
         titanBoss3D.position.y = 0.2 + Math.sin(elapsed * 3) * 0.25;
         titanBoss3D.rotation.y += 0.8 * delta;
-        if (titanBoss3D.ringMesh) {
-          titanBoss3D.ringMesh.rotation.z += 1.8 * delta;
-        }
+        if (titanBoss3D.ringMesh) titanBoss3D.ringMesh.rotation.z += 1.8 * delta;
       }
 
-      // Synchronize 2D Placards with 3D monster screen positions
       syncPlacardsTo3D();
-
       if (threeRenderer && threeScene && threeCamera) {
         threeRenderer.render(threeScene, threeCamera);
       }
@@ -971,21 +926,24 @@
       playSfx('punch');
       const m = monsters3D[index];
       m.isKnockedOut = true;
-      m.knockVelocity.set((index - 1) * 3, 5.5, -4.5);
+      // Expressive grab squeeze effect on the monster when clenched
+      m.mesh.scale.set(1.4, 2.7, 1.4);
+      m.knockVelocity.set((index - 1) * 3.5, 6.0, -5.0);
 
       setTimeout(() => {
-        // Reset monster position
         m.isKnockedOut = false;
+        m.mesh.scale.set(2, 2, 2);
         m.mesh.position.set(m.baseX, m.baseY, 0);
         m.mesh.rotation.set(0, 0, 0);
       }, 700);
     }
 
+    // Projects the words right in front of the monster on its belly/chest directly below its eyes
     function syncPlacardsTo3D() {
       const container = document.getElementById('arena-viewport');
       if (!container || !threeCamera) return;
-      const width = container.clientWidth;
-      const height = container.clientHeight;
+      const width = container.clientWidth || 800;
+      const height = container.clientHeight || 450;
 
       gameState.currentOptions.forEach((opt, idx) => {
         const placard = document.getElementById(`monster-placard-${idx}`);
@@ -993,37 +951,42 @@
 
         let posX = 0, posY = 0;
         if (gameState.isBossLevel) {
-          // In Boss mode, placards are spread in distinct quadrants
           const bossCoords = [
-            { x: width * 0.22, y: height * 0.35 },
-            { x: width * 0.78, y: height * 0.35 },
-            { x: width * 0.50, y: height * 0.75 }
+            { x: width * 0.20, y: height * 0.36 },
+            { x: width * 0.80, y: height * 0.36 },
+            { x: width * 0.50, y: height * 0.72 }
           ];
           const pos = bossCoords[idx % 3];
           posX = pos.x;
           posY = pos.y;
         } else {
-          // Standard Level: follow 3D monster chest
-          const m = monsters3D[opt.monsterIndex];
+          const m = monsters3D[opt.monsterIndex !== undefined ? opt.monsterIndex : idx];
           if (m && !m.isKnockedOut) {
             const v = new THREE.Vector3();
             m.mesh.getWorldPosition(v);
-            v.y -= 0.1; // Place over belly
+            // Anchor point: belly front surface, directly below the eyes
+            v.y -= 0.6;
+            v.z += 4.0;
             v.project(threeCamera);
-
             posX = (v.x * 0.5 + 0.5) * width;
             posY = (-(v.y * 0.5) + 0.5) * height;
+          } else {
+            const defaultXs = [0.16, 0.50, 0.84];
+            posX = width * (defaultXs[idx] || 0.5);
+            posY = height * 0.48;
           }
         }
+
+        const halfW = 110;
+        const halfH = 50;
+        posX = Math.max(halfW, Math.min(width - halfW, posX));
+        posY = Math.max(halfH, Math.min(height - halfH, posY));
 
         placard.style.left = `${posX}px`;
         placard.style.top = `${posY}px`;
       });
     }
 
-    /* ==========================================================================
-       CAMERA & MEDIAPIPE GESTURE DETECTION (DUAL HANDS ✊ MULTI-TRACKING)
-       ========================================================================== */
     let handsInstance = null;
     let isProcessingFrame = false;
     let cameraAnimId = null;
@@ -1031,35 +994,50 @@
     let lastVideoH = 0;
     let feedbackAutoTimer = null;
     let feedbackAutoInterval = null;
+    let latestLandmarks = [];
+
+    const handStates = [
+      { wasFist: false, activeTargetIndex: -1 },
+      { wasFist: false, activeTargetIndex: -1 }
+    ];
+
+    function setupHandsInstance() {
+      if (handsInstance || typeof window.Hands === 'undefined') return;
+      try {
+        handsInstance = new Hands({
+          locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${file}`
+        });
+        handsInstance.setOptions({
+          maxNumHands: 2,
+          modelComplexity: 0,
+          minDetectionConfidence: 0.40,
+          minTrackingConfidence: 0.40
+        });
+        handsInstance.onResults(onHandResults);
+      } catch (err) {
+        console.warn("Hands init error:", err);
+      }
+    }
 
     function initCameraAndHands() {
-      try {
-        if (window.Hands) {
-          handsInstance = new Hands({
-            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-          });
-          handsInstance.setOptions({
-            maxNumHands: 2,
-            modelComplexity: 0,
-            minDetectionConfidence: 0.5,
-            minTrackingConfidence: 0.5
-          });
-          handsInstance.onResults(onHandResults);
+      const tryInitHands = () => {
+        setupHandsInstance();
+        if (!handsInstance && typeof window.Hands === 'undefined') {
+          setTimeout(tryInitHands, 150);
         }
-      } catch (err) {
-        console.warn("MediaPipe Hands initialization error:", err);
-      }
+      };
+      tryInitHands();
       startCameraDirect(false);
     }
 
     async function startCameraDirect(userInitiated = false) {
+      setupHandsInstance();
       const video = document.getElementById('live-webcam-feed');
       if (!video) return;
 
       try {
         if (video.srcObject) {
-          const tracks = video.srcObject.getTracks();
-          tracks.forEach(t => t.stop());
+          video.srcObject.getTracks().forEach(t => t.stop());
         }
 
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -1075,13 +1053,62 @@
         const placeholder = document.getElementById('standby-placeholder');
         if (placeholder) placeholder.classList.add('hidden');
 
-        // Start unified camera & gesture processing
         startVideoProcessingLoop();
       } catch (err) {
-        console.warn("Camera access denied or unavailable:", err);
+        console.warn("Camera access fallback:", err);
         document.getElementById('cam-status-text').textContent = 'Touch / Mouse Mode';
         document.getElementById('cam-led').className = 'w-2 h-2 rounded-full bg-cyan-400';
       }
+    }
+
+    // Anatomical fist detection: requires curled fingers and rejects open palms
+    function isFistClenched(landmarks) {
+      const wrist = landmarks[0];
+      const mcpMiddle = landmarks[9];
+      const handScale = Math.hypot(mcpMiddle.x - wrist.x, mcpMiddle.y - wrist.y) || 0.15;
+
+      const fingers = [
+        { tip: 8, pip: 6, mcp: 5 },
+        { tip: 12, pip: 10, mcp: 9 },
+        { tip: 16, pip: 14, mcp: 13 },
+        { tip: 20, pip: 18, mcp: 17 }
+      ];
+
+      let curledCount = 0;
+      let extendedCount = 0;
+
+      fingers.forEach(f => {
+        const tip = landmarks[f.tip];
+        const pip = landmarks[f.pip];
+        const mcp = landmarks[f.mcp];
+
+        const dTipWrist = Math.hypot(tip.x - wrist.x, tip.y - wrist.y);
+        const dPipWrist = Math.hypot(pip.x - wrist.x, pip.y - wrist.y);
+        const dTipMcp = Math.hypot(tip.x - mcp.x, tip.y - mcp.y);
+
+        // Strict curling metric: tip must be closer to wrist than PIP knuckle
+        const isCurled = (dTipWrist <= dPipWrist * 1.02) && (dTipMcp < handScale * 0.70);
+        if (isCurled) {
+          curledCount++;
+        } else {
+          // If tip is clearly beyond the PIP knuckle, finger is extended
+          const isExtended = (dTipWrist > dPipWrist * 1.08) && (dTipMcp > handScale * 0.72);
+          if (isExtended) extendedCount++;
+        }
+      });
+
+      // If 2 or more fingers are extended, it is STRICTLY an open palm -> NO ACTION
+      if (extendedCount >= 2) return false;
+
+      // Must have at least 3 fingers tightly curled
+      if (curledCount < 3) return false;
+
+      // Thumb curl check: thumb tip must be close to the palm core (landmark 9 or 13)
+      const thumbTip = landmarks[4];
+      const dThumbToPalm = Math.hypot(thumbTip.x - mcpMiddle.x, thumbTip.y - mcpMiddle.y);
+      const isThumbTucked = dThumbToPalm < handScale * 0.85;
+
+      return isThumbTucked || curledCount === 4;
     }
 
     function startVideoProcessingLoop() {
@@ -1095,38 +1122,62 @@
       const arenaCanvas = document.getElementById('arena-webcam-canvas');
 
       function drawFrame() {
+        if (!handsInstance && typeof window.Hands !== 'undefined') {
+          setupHandsInstance();
+        }
+
         if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
-          // Adjust canvas dimensions once when video size changes
           if (video.videoWidth !== lastVideoW || video.videoHeight !== lastVideoH) {
             lastVideoW = video.videoWidth;
             lastVideoH = video.videoHeight;
-            if (menuCanvas) {
-              menuCanvas.width = lastVideoW;
-              menuCanvas.height = lastVideoH;
-            }
-            if (arenaCanvas) {
-              arenaCanvas.width = lastVideoW;
-              arenaCanvas.height = lastVideoH;
-            }
+            if (menuCanvas) { menuCanvas.width = lastVideoW; menuCanvas.height = lastVideoH; }
+            if (arenaCanvas) { arenaCanvas.width = lastVideoW; arenaCanvas.height = lastVideoH; }
           }
 
           const isHomeVisible = !document.getElementById('home-screen').classList.contains('hidden');
           const isArenaVisible = !document.getElementById('arena-screen').classList.contains('hidden');
 
-          // Render only onto the active view
           if (isHomeVisible && menuCanvas) {
             const ctx = menuCanvas.getContext('2d');
             ctx.drawImage(video, 0, 0, menuCanvas.width, menuCanvas.height);
+
+            if (latestLandmarks && latestLandmarks.length > 0) {
+              latestLandmarks.forEach((landmarks, hIdx) => {
+                const palm = landmarks[9];
+                const px = palm.x * menuCanvas.width;
+                const py = palm.y * menuCanvas.height;
+                const isFist = isFistClenched(landmarks);
+
+                ctx.save();
+                ctx.shadowColor = isFist ? '#f59e0b' : (hIdx === 0 ? '#38bdf8' : '#34d399');
+                ctx.shadowBlur = 18;
+                ctx.strokeStyle = isFist ? '#fbbf24' : (hIdx === 0 ? '#0284c7' : '#059669');
+                ctx.lineWidth = isFist ? 5 : 3;
+                ctx.beginPath();
+                ctx.arc(px, py, isFist ? 30 : 22, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.fillStyle = isFist ? 'rgba(251, 191, 36, 0.65)' : (hIdx === 0 ? 'rgba(56, 189, 248, 0.45)' : 'rgba(52, 211, 153, 0.45)');
+                ctx.beginPath();
+                ctx.arc(px, py, isFist ? 18 : 12, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.font = 'bold 12px "Lilita One", sans-serif';
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'center';
+                ctx.fillText(isFist ? '✊ FIST!' : '✋ HAND', px, py - 34);
+                ctx.restore();
+              });
+            }
           } else if (isArenaVisible && arenaCanvas) {
             const ctx = arenaCanvas.getContext('2d');
             ctx.drawImage(video, 0, 0, arenaCanvas.width, arenaCanvas.height);
           }
 
-          // Process hand landmarks if ready and not busy
           if (handsInstance && !isProcessingFrame) {
             isProcessingFrame = true;
             handsInstance.send({ image: video })
-              .catch((e) => console.warn("Hands send error:", e))
+              .catch((e) => console.warn("Hands error:", e))
               .finally(() => { isProcessingFrame = false; });
           }
         }
@@ -1136,31 +1187,32 @@
     }
 
     function onHandResults(results) {
+      latestLandmarks = results.multiHandLandmarks || [];
+
       const fistPill = document.getElementById('standby-fist-pill');
       const arenaFistPill = document.getElementById('arena-fist-indicator');
       const glove0 = document.getElementById('gesture-glove-0');
       const glove1 = document.getElementById('gesture-glove-1');
       const gloveEls = [glove0, glove1];
-      const gloveInners = [document.getElementById('glove-inner-0'), document.getElementById('glove-inner-1')];
       const gloveIcons = [document.getElementById('glove-icon-0'), document.getElementById('glove-icon-1')];
+      const gloveRings = [document.getElementById('glove-ring-0'), document.getElementById('glove-ring-1')];
+      const gloveLabels = [document.getElementById('glove-label-0'), document.getElementById('glove-label-1')];
 
-      // Reset arena glove visibility
       gloveEls.forEach(g => { if (g) g.classList.add('hidden'); });
-
-      const isHomeVisible = !document.getElementById('home-screen').classList.contains('hidden');
       const isArenaVisible = !document.getElementById('arena-screen').classList.contains('hidden');
-      const menuCanvas = document.getElementById('menu-webcam-canvas');
 
-      if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
+      if (!latestLandmarks || latestLandmarks.length === 0) {
         if (fistPill) {
           fistPill.textContent = 'NO HAND';
           fistPill.className = 'text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-md font-mono';
         }
         if (arenaFistPill) {
-          arenaFistPill.textContent = 'FISTS: WAITING';
+          arenaFistPill.textContent = 'HANDS: NOT DETECTED';
           arenaFistPill.className = 'bg-slate-900 border border-slate-700 px-2 py-0.5 rounded-lg text-slate-400 font-mono text-[10px]';
         }
         gameState.fistDetected = false;
+        handStates.forEach(s => { s.wasFist = false; s.activeTargetIndex = -1; });
+        clearPlacardHoverHighlights();
         return;
       }
 
@@ -1169,154 +1221,239 @@
       const height = container ? container.clientHeight : 450;
 
       let fistCount = 0;
-      const totalHands = Math.min(2, results.multiHandLandmarks.length);
-
-      // If on Home Standby Screen, draw tracking dots on the standby canvas
-      if (isHomeVisible && menuCanvas) {
-        const ctx = menuCanvas.getContext('2d');
-        results.multiHandLandmarks.forEach((landmarks) => {
-          ctx.fillStyle = '#fde047';
-          landmarks.forEach((pt, pIdx) => {
-            if ([0, 4, 8, 12, 16, 20].includes(pIdx)) {
-              ctx.beginPath();
-              ctx.arc(pt.x * menuCanvas.width, pt.y * menuCanvas.height, 6, 0, Math.PI * 2);
-              ctx.fill();
-            }
-          });
-        });
-      }
+      const totalHands = Math.min(2, latestLandmarks.length);
+      const hoveredIndices = new Set();
 
       for (let hIdx = 0; hIdx < totalHands; hIdx++) {
-        const landmarks = results.multiHandLandmarks[hIdx];
-        const wrist = landmarks[0];
-
-        // Fist Detection: Check if fingertips are curled toward wrist
-        const isCurled = (tipIdx, pipIdx) => {
-          const dWrist = Math.hypot(landmarks[tipIdx].x - wrist.x, landmarks[tipIdx].y - wrist.y);
-          const dPip = Math.hypot(landmarks[pipIdx].x - wrist.x, landmarks[pipIdx].y - wrist.y);
-          return dWrist < dPip * 1.15;
-        };
-
-        const curledFingers = [
-          isCurled(8, 6),   // Index
-          isCurled(12, 10), // Middle
-          isCurled(16, 14), // Ring
-          isCurled(20, 18)  // Pinky
-        ].filter(Boolean).length;
-
-        const isFist = curledFingers >= 3;
+        const landmarks = latestLandmarks[hIdx];
+        const isFist = isFistClenched(landmarks);
         if (isFist) fistCount++;
 
-        // Mirrored coordinate calculation
         const screenX = (1 - landmarks[9].x);
         const screenY = landmarks[9].y;
         const gloveX = screenX * width;
         const gloveY = screenY * height;
 
-        // Render matching glove in arena
         const glove = gloveEls[hIdx];
-        const inner = gloveInners[hIdx];
         const icon = gloveIcons[hIdx];
+        const ring = gloveRings[hIdx];
+        const label = gloveLabels[hIdx];
+        const prevState = handStates[hIdx];
 
         if (isArenaVisible && glove) {
           glove.classList.remove('hidden');
           glove.style.left = `${gloveX}px`;
           glove.style.top = `${gloveY}px`;
 
-          // Visual feedback for Open Hand vs. Clenched Fist
-          if (isFist) {
-            if (inner) {
-              inner.className = hIdx === 0
-                ? 'w-full h-full rounded-full bg-amber-400/80 border-2 border-yellow-200 flex items-center justify-center shadow-lg shadow-amber-500 scale-125 transition-transform'
-                : 'w-full h-full rounded-full bg-cyan-400/80 border-2 border-cyan-200 flex items-center justify-center shadow-lg shadow-cyan-500 scale-125 transition-transform';
-            }
-            if (icon) icon.className = 'fa-solid fa-hand-back-fist text-2xl text-slate-950 animate-bounce';
+          const targetIdx = getHoveredOptionIndex(gloveX, gloveY);
+          if (targetIdx !== -1) {
+            hoveredIndices.add(targetIdx);
+          }
 
-            // Execute punch collision
-            if (!gameState.isPaused && !gameState.isGameOver && document.getElementById('feedback-modal').classList.contains('hidden')) {
-              checkHitCollision(gloveX, gloveY);
+          // Trigger ONLY at the exact moment of transition: from Open Palm -> Clenched Fist
+          const justClenched = isFist && !prevState.wasFist;
+
+          if (isFist) {
+            glove.classList.add('scale-125');
+            if (ring) {
+              ring.className = `w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 border-4 border-white flex items-center justify-center shadow-[0_0_35px_rgba(250,204,21,1)] animate-pulse`;
+            }
+            if (icon) {
+              icon.className = 'fa-solid fa-hand-back-fist text-2xl text-slate-950 animate-bounce';
+            }
+            if (label) {
+              label.textContent = 'CLENCHED! ✊';
+              label.className = 'absolute -bottom-6 px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black tracking-wider text-[10px] whitespace-nowrap shadow-lg uppercase';
+            }
+
+            // Execute hit ONLY when clenching transition occurs on a valid target
+            if (justClenched && targetIdx !== -1 && !gameState.isPaused && !gameState.isGameOver && document.getElementById('feedback-modal').classList.contains('hidden')) {
+              prevState.activeTargetIndex = targetIdx;
+              checkHitCollision(gloveX, gloveY, hIdx, true);
             }
           } else {
-            if (inner) {
-              inner.className = hIdx === 0
-                ? 'w-full h-full rounded-full bg-amber-400/20 border-2 border-amber-300 flex items-center justify-center shadow-md'
-                : 'w-full h-full rounded-full bg-cyan-400/20 border-2 border-cyan-300 flex items-center justify-center shadow-md';
+            // Palm Open: Safe Aiming only, reset active target index
+            prevState.activeTargetIndex = -1;
+            glove.classList.remove('scale-125');
+            if (ring) {
+              ring.className = `w-16 h-16 rounded-full bg-gradient-to-tr ${hIdx === 0 ? 'from-amber-500/30 to-yellow-300/20 border-2 border-yellow-300 shadow-[0_0_20px_rgba(250,204,21,0.5)]' : 'from-cyan-500/30 to-blue-400/20 border-2 border-cyan-300 shadow-[0_0_20px_rgba(34,211,238,0.5)]'} backdrop-blur-sm flex items-center justify-center transition-all duration-150`;
             }
-            if (icon) icon.className = `fa-solid fa-hand text-2xl ${hIdx === 0 ? 'text-yellow-300' : 'text-cyan-300'}`;
+            if (icon) {
+              icon.className = `fa-solid fa-hand text-2xl ${hIdx === 0 ? 'text-yellow-300' : 'text-cyan-300'}`;
+            }
+            if (label) {
+              label.textContent = 'AIMING ✋';
+              label.className = `absolute -bottom-6 px-2 py-0.5 rounded-full bg-slate-950/90 border ${hIdx === 0 ? 'border-yellow-300/60 text-yellow-300' : 'border-cyan-300/60 text-cyan-300'} text-[9px] font-black tracking-wider whitespace-nowrap shadow uppercase`;
+            }
           }
+
+          prevState.wasFist = isFist;
         }
       }
 
+      updatePlacardHoverVisuals(hoveredIndices);
       gameState.fistDetected = fistCount > 0;
 
-      // Update Standby pill on home screen
       if (fistPill) {
         if (fistCount >= 2) {
-          fistPill.textContent = '✊✊ 2 FISTS DETECTED!';
+          fistPill.textContent = '✊✊ DUAL CLENCH READY!';
           fistPill.className = 'text-[10px] bg-emerald-400 text-slate-950 font-black px-2 py-0.5 rounded-md font-mono';
         } else if (fistCount === 1) {
-          fistPill.textContent = '✊ 1 FIST READY!';
+          fistPill.textContent = '✊ 1 CLENCH READY!';
           fistPill.className = 'text-[10px] bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded-md font-mono';
         } else {
-          fistPill.textContent = `✋ ${totalHands} HAND(S) OPEN`;
-          fistPill.className = 'text-[10px] bg-cyan-900 text-cyan-200 px-2 py-0.5 rounded-md font-mono';
+          fistPill.textContent = `✋ PALM OPEN (AIMING)`;
+          fistPill.className = 'text-[10px] bg-slate-800 text-emerald-300 border border-emerald-600/40 px-2 py-0.5 rounded-md font-mono';
         }
       }
 
-      // Update Arena HUD indicator
       if (arenaFistPill) {
         if (fistCount >= 2) {
-          arenaFistPill.textContent = '✊✊ DUAL PUNCH READY!';
-          arenaFistPill.className = 'bg-emerald-500 text-slate-950 px-2 py-0.5 rounded-lg font-black font-mono text-[10px] animate-pulse';
+          arenaFistPill.textContent = '✊✊ DUAL CLENCH!';
+          arenaFistPill.className = 'bg-emerald-500 text-slate-950 px-2.5 py-0.5 rounded-lg font-black font-mono text-[10px] animate-pulse';
         } else if (fistCount === 1) {
-          arenaFistPill.textContent = '✊ 1 PUNCH READY!';
-          arenaFistPill.className = 'bg-amber-400 text-slate-950 px-2 py-0.5 rounded-lg font-bold font-mono text-[10px]';
+          arenaFistPill.textContent = '✊ CLENCH READY!';
+          arenaFistPill.className = 'bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-lg font-black font-mono text-[10px]';
         } else {
-          arenaFistPill.textContent = `✋ ${totalHands} HAND(S) TRACKED`;
-          arenaFistPill.className = 'bg-slate-900 border border-slate-700 px-2 py-0.5 rounded-lg text-slate-400 font-mono text-[10px]';
+          arenaFistPill.textContent = '✋ PALM OPEN (CLENCH TO GRAB)';
+          arenaFistPill.className = 'bg-slate-900 border border-slate-700 px-2.5 py-0.5 rounded-lg text-yellow-300 font-bold font-mono text-[10px]';
         }
       }
     }
 
-    function checkHitCollision(x, y) {
-      if (gameState.isHitCooldown) return;
+    // Identifies nearest target checking BOTH the 3D Monster body AND the Word Placard
+    function getHoveredOptionIndex(x, y) {
+      const container = document.getElementById('arena-viewport');
+      if (!container || !threeCamera) return -1;
+      const cr = container.getBoundingClientRect();
+      const width = container.clientWidth || 800;
+      const height = container.clientHeight || 450;
+      let best = -1, bestDist = Infinity;
+
+      for (let idx = 0; idx < gameState.currentOptions.length; idx++) {
+        const opt = gameState.currentOptions[idx];
+        if (!opt) continue;
+
+        // 1. Check distance to 3D Monster projected screen coordinates (entire monster body, head, and horns)
+        if (!gameState.isBossLevel && opt.monsterIndex !== undefined) {
+          const m = monsters3D[opt.monsterIndex];
+          if (m && !m.isKnockedOut) {
+            const v = new THREE.Vector3();
+            m.mesh.getWorldPosition(v);
+            v.project(threeCamera);
+            const mScrX = (v.x * 0.5 + 0.5) * width;
+            const mScrY = (-(v.y * 0.5) + 0.5) * height;
+
+            const distToMonster = Math.hypot(x - mScrX, y - mScrY);
+            // 2x Monster radius on screen is ~175px
+            if (distToMonster < 175 && distToMonster < bestDist) {
+              best = idx;
+              bestDist = distToMonster;
+            }
+          }
+        }
+
+        // 2. Check distance and bounding box of the Word Placard
+        const p = document.getElementById(`monster-placard-${idx}`);
+        if (p) {
+          const r = p.getBoundingClientRect();
+          const L = r.left - cr.left, R = r.right - cr.left;
+          const T = r.top - cr.top, B = r.bottom - cr.top;
+          const centerPlacardX = (L + R) / 2;
+          const centerPlacardY = (T + B) / 2;
+          const distToPlacard = Math.hypot(x - centerPlacardX, y - centerPlacardY);
+          const pad = 45;
+          const inside = x >= L - pad && x <= R + pad && y >= T - pad && y <= B + pad;
+
+          if ((inside || distToPlacard < 145) && distToPlacard < bestDist) {
+            best = idx;
+            bestDist = distToPlacard;
+          }
+        }
+      }
+      return best;
+    }
+
+    function updatePlacardHoverVisuals(hoveredSet) {
+      // Synchronize hovered monster indices with 3D animation loop
+      currentHoveredIndices.clear();
+      hoveredSet.forEach(optIdx => {
+        const opt = gameState.currentOptions[optIdx];
+        if (opt && opt.monsterIndex !== undefined) {
+          currentHoveredIndices.add(opt.monsterIndex);
+        }
+      });
 
       gameState.currentOptions.forEach((opt, idx) => {
         const placard = document.getElementById(`monster-placard-${idx}`);
         if (!placard) return;
+        const box = placard.querySelector('.placard-box');
+        const hint = placard.querySelector('.placard-hint');
 
-        const rect = placard.getBoundingClientRect();
-        const containerRect = document.getElementById('arena-viewport').getBoundingClientRect();
-        const plX = rect.left - containerRect.left + rect.width / 2;
-        const plY = rect.top - containerRect.top + rect.height / 2;
-
-        const dist = Math.hypot(x - plX, y - plY);
-        if (dist < 80) {
-          executePunchOnOption(idx, plX, plY);
+        if (hoveredSet.has(idx)) {
+          if (box) {
+            box.classList.add('scale-105', 'border-amber-300', 'shadow-[0_0_35px_rgba(250,204,21,0.9)]');
+          }
+          if (hint) {
+            hint.textContent = '✊ CLENCH TO GRAB!';
+            hint.className = 'placard-hint text-[10px] font-black text-amber-300 bg-slate-950/90 px-2 py-0.5 rounded-full border border-amber-400 mt-1 animate-pulse';
+          }
+        } else {
+          if (box) {
+            box.classList.remove('scale-105', 'border-amber-300', 'shadow-[0_0_35px_rgba(250,204,21,0.9)]');
+          }
+          if (hint) {
+            hint.textContent = '';
+            hint.className = 'placard-hint hidden';
+          }
         }
       });
     }
 
+    function clearPlacardHoverHighlights() {
+      updatePlacardHoverVisuals(new Set());
+    }
+
+    function checkHitCollision(x, y, handIndex = 0, isFist = false) {
+      if (!isFist || gameState.isHitCooldown) return;
+      const container = document.getElementById('arena-viewport');
+      if (!container) return;
+      const idx = getHoveredOptionIndex(x, y);
+      if (idx === -1) return;
+      const cr = container.getBoundingClientRect();
+      const r = document.getElementById(`monster-placard-${idx}`).getBoundingClientRect();
+      executePunchOnOption(idx, r.left - cr.left + r.width / 2, r.top - cr.top + r.height / 2);
+    }
+
     function executePunchOnOption(optIndex, hitX, hitY) {
+      if (gameState.isHitCooldown) return;
+      if (gameState.isGameOver || gameState.isPaused) return;
+      if (!document.getElementById('feedback-modal').classList.contains('hidden')) return;
+
+      const opt = gameState.currentOptions[optIndex];
+      if (!opt) return;
+
       gameState.isHitCooldown = true;
-      setTimeout(() => { gameState.isHitCooldown = false; }, 400);
+      setTimeout(() => { gameState.isHitCooldown = false; }, 380);
 
-      const option = gameState.currentOptions[optIndex];
-      if (!option) return;
+      createComicHitEffect(hitX, hitY, opt.isCorrect ? '#22c55e' : '#ef4444');
 
-      // Spawn Comic "POW!" Effect
-      spawnComicPow(hitX, hitY);
+      if (!gameState.isBossLevel && opt.monsterIndex !== undefined) {
+        triggerMonsterKnockout(opt.monsterIndex);
+      }
 
-      // Trigger 3D Knockout tumble
-      triggerMonsterKnockout(option.monsterIndex);
+      gameState.totalAnswered++;
 
       if (gameState.isBossLevel) {
-        // Level 100 Boss Logic (+20 pts for correct, -10 pts for wrong)
-        if (option.isCorrect) {
+        if (opt.isCorrect) {
+          playSfx('correct');
           playSfx('boss_hit');
+          gameState.totalCorrect++;
           gameState.score += 20;
-          gameState.bossHP = Math.max(0, gameState.bossHP - 15);
+          gameState.bossHP = Math.max(0, gameState.bossHP - 8);
           updateBossHUD();
+          updateHUD();
+
           if (gameState.bossHP <= 0) {
             handleVictory();
             return;
@@ -1324,46 +1461,51 @@
         } else {
           playSfx('wrong');
           gameState.score = Math.max(0, gameState.score - 10);
+          updateHUD();
         }
-        updateHUD();
-        loadBossWave();
+        setTimeout(() => {
+          if (!gameState.isGameOver && !gameState.isPaused) {
+            loadBossWave();
+          }
+        }, 220);
       } else {
-        // Standard Levels 1-99
-        gameState.totalAnswered++;
-        clearInterval(gameState.timerInterval);
-
-        if (option.isCorrect) {
+        if (opt.isCorrect) {
+          playSfx('correct');
           gameState.totalCorrect++;
           gameState.streak++;
-          gameState.score += 100 + (gameState.streak * 15);
-          playSfx('correct');
-          showFeedbackModal(true, option);
+          const bonus = gameState.streak > 3 ? 50 : 0;
+          gameState.score += (100 + bonus);
+          updateHUD();
+          showFeedbackModal(true, opt);
         } else {
+          playSfx('wrong');
           gameState.streak = 0;
           gameState.lives--;
-          playSfx('wrong');
           updateHUD();
-          showFeedbackModal(false, option);
+          showFeedbackModal(false, opt);
         }
       }
     }
 
-    function spawnComicPow(x, y) {
+    function createComicHitEffect(x, y, color) {
       const container = document.getElementById('comic-hit-effects');
       if (!container) return;
-
       const pow = document.createElement('div');
-      pow.className = 'absolute z-40 font-arcade text-3xl sm:text-5xl text-yellow-300 stroke-black-lg pointer-events-none animate-pow font-black tracking-widest';
-      pow.textContent = 'POW!';
+      pow.className = 'absolute pointer-events-none transform -translate-x-1/2 -translate-y-1/2 animate-pow font-arcade text-3xl sm:text-5xl stroke-black-lg font-black tracking-wider z-40';
       pow.style.left = `${x}px`;
       pow.style.top = `${y}px`;
+      pow.style.color = color || '#fde047';
+      const texts = ['CLENCH!', 'GOTCHA!', 'GRAB!', 'CAUGHT!', 'SUPER!'];
+      pow.textContent = texts[Math.floor(Math.random() * texts.length)];
       container.appendChild(pow);
-
-      setTimeout(() => pow.remove(), 600);
+      setTimeout(() => pow.remove(), 550);
     }
 
     function startMission() {
-      // Validate Student Info
+      if (!gameState.cameraActive) {
+        startCameraDirect(true);
+      }
+
       const nameInput = document.getElementById('input-student-name').value.trim();
       const classInput = document.getElementById('input-student-class').value.trim();
       const schoolInput = document.getElementById('input-student-school').value.trim();
@@ -1386,6 +1528,8 @@
 
       if (!threeScene) {
         initThreeJS();
+      } else {
+        fitCamera();
       }
 
       loadLevel(gameState.currentLevel);
@@ -1396,7 +1540,6 @@
       updateHUD();
 
       if (levelNum === 100) {
-        // Start 60-Second Boss Frenzy
         startBossFrenzy();
       } else {
         startStandardLevel();
@@ -1412,30 +1555,23 @@
       const cat = CURRICULUM[gameState.categoryKey];
       document.getElementById('hud-category-name').textContent = cat.name.toUpperCase();
       document.getElementById('hud-level-text').textContent = `LEVEL ${gameState.currentLevel} / 100`;
-      document.getElementById('question-text').textContent = `PUNCH THE MONSTER WITH THE ${cat.tag.toUpperCase()}!`;
+      document.getElementById('question-text').textContent = `CLENCH THE MONSTER WITH THE ${cat.tag.toUpperCase()}!`;
 
-      // Select target correct word from category
       const targetWord = cat.words[(gameState.currentLevel - 1) % cat.words.length];
-
-      // Select 2 distractors from other categories
-      const otherKeys = Object.keys(CURRICULUM).filter(k => k !== gameState.categoryKey);
-      const distractor1 = getRandomWordFrom(otherKeys[Math.floor(Math.random() * otherKeys.length)]);
-      const distractor2 = getRandomWordFrom(otherKeys[Math.floor(Math.random() * otherKeys.length)]);
+      const distractors = getUniqueDistractors(targetWord, gameState.categoryKey, 2);
 
       const options = [
         { ...targetWord, isCorrect: true, tag: cat.tag },
-        { ...distractor1.word, isCorrect: false, tag: distractor1.catTag },
-        { ...distractor2.word, isCorrect: false, tag: distractor2.catTag }
+        distractors[0],
+        distractors[1]
       ];
 
-      // Shuffle options across the 3 cute monsters
       options.sort(() => Math.random() - 0.5);
       options.forEach((opt, idx) => opt.monsterIndex = idx);
       gameState.currentOptions = options;
 
       renderPlacards();
 
-      // Reset and start countdown timer (15 seconds)
       gameState.timerSec = 15;
       gameState.timerMax = 15;
       clearInterval(gameState.timerInterval);
@@ -1453,12 +1589,6 @@
       }, 1000);
     }
 
-    function getRandomWordFrom(catKey) {
-      const cat = CURRICULUM[catKey];
-      const wordObj = cat.words[Math.floor(Math.random() * cat.words.length)];
-      return { word: wordObj, catTag: cat.tag };
-    }
-
     function startBossFrenzy() {
       gameState.isBossLevel = true;
       gameState.bossHP = 100;
@@ -1469,12 +1599,11 @@
       const cat = CURRICULUM[gameState.categoryKey];
       document.getElementById('hud-category-name').textContent = "TITAN BOSS FRENZY";
       document.getElementById('hud-level-text').textContent = "LEVEL 100 - FINAL BOSS";
-      document.getElementById('question-text').textContent = `PUNCH AS MANY ${cat.tag.toUpperCase()} AS YOU CAN!`;
+      document.getElementById('question-text').textContent = `CLENCH AS MANY ${cat.tag.toUpperCase()} AS YOU CAN!`;
 
       updateBossHUD();
       loadBossWave();
 
-      // 60-Second Boss Countdown
       gameState.timerSec = 60;
       gameState.timerMax = 60;
       clearInterval(gameState.timerInterval);
@@ -1490,7 +1619,7 @@
           if (gameState.bossHP <= 0) {
             handleVictory();
           } else {
-            handleGameOver("Time expired in Boss Battle!");
+            handleGameOver("Time expired in Boss Frenzy!");
           }
         }
       }, 1000);
@@ -1499,15 +1628,12 @@
     function loadBossWave() {
       const cat = CURRICULUM[gameState.categoryKey];
       const targetWord = cat.words[Math.floor(Math.random() * cat.words.length)];
-
-      const otherKeys = Object.keys(CURRICULUM).filter(k => k !== gameState.categoryKey);
-      const d1 = getRandomWordFrom(otherKeys[Math.floor(Math.random() * otherKeys.length)]);
-      const d2 = getRandomWordFrom(otherKeys[Math.floor(Math.random() * otherKeys.length)]);
+      const distractors = getUniqueDistractors(targetWord, gameState.categoryKey, 2);
 
       const options = [
         { ...targetWord, isCorrect: true, tag: cat.tag },
-        { ...d1.word, isCorrect: false, tag: d1.catTag },
-        { ...d2.word, isCorrect: false, tag: d2.catTag }
+        distractors[0],
+        distractors[1]
       ];
       options.sort(() => Math.random() - 0.5);
       options.forEach((opt, idx) => opt.monsterIndex = idx);
@@ -1516,23 +1642,44 @@
       renderPlacards();
     }
 
+    // Renders placards with doubled text size and ensures they float in front of monsters
     function renderPlacards() {
       const layer = document.getElementById('monster-placards-layer');
+      if (!layer) return;
       layer.innerHTML = '';
+
+      const container = document.getElementById('arena-viewport');
+      const width = container ? container.clientWidth : 800;
+      const height = container ? container.clientHeight : 450;
+      const defaultXs = [width * 0.16, width * 0.50, width * 0.84];
+
+      const isBoss = gameState.isBossLevel;
+      const slotW = width * 0.31;
+      const maxFont = width < 640 ? 46 : 68;
 
       gameState.currentOptions.forEach((opt, idx) => {
         const placard = document.createElement('div');
         placard.id = `monster-placard-${idx}`;
         placard.className = 'absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-auto cursor-pointer transition-all duration-150';
+        placard.style.zIndex = '55';
+
+        placard.style.left = `${defaultXs[idx] || width * 0.5}px`;
+        placard.style.top = `${height * 0.48}px`;
+
+        const fontPx = isBoss
+          ? (width < 640 ? 24 : 36)
+          : Math.max(18, Math.min(maxFont, Math.floor(slotW / (0.8 + 0.65 * opt.w.length))));
+        const padX = Math.round(fontPx * 0.45);
+        const padY = Math.round(fontPx * 0.22);
 
         placard.innerHTML = `
-          <div class="px-5 py-2.5 sm:px-7 sm:py-3 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-2 border-yellow-400/90 shadow-2xl text-center active:scale-95 hover:border-white flex flex-col items-center">
-            <span class="font-arcade text-xl sm:text-2xl text-yellow-300 stroke-black-sm uppercase tracking-wider">${opt.w}</span>
+          <div class="placard-box rounded-3xl bg-slate-950/95 border-4 border-yellow-400 shadow-[0_0_35px_rgba(0,0,0,0.95)] text-center transition-all duration-150 active:scale-95 flex flex-col items-center backdrop-blur-md" style="padding:${padY}px ${padX}px;">
+            <span class="font-arcade stroke-black-lg uppercase tracking-wide font-black text-yellow-300 whitespace-nowrap" style="font-size:${fontPx}px;line-height:1.1;">${opt.w}</span>
+            <div class="placard-hint hidden"></div>
           </div>
         `;
 
-        // Direct Click / Touch Fallback
-        placard.onclick = (e) => {
+        placard.onclick = () => {
           const rect = placard.getBoundingClientRect();
           const containerRect = document.getElementById('arena-viewport').getBoundingClientRect();
           executePunchOnOption(idx, rect.left - containerRect.left + rect.width / 2, rect.top - containerRect.top + rect.height / 2);
@@ -1540,6 +1687,8 @@
 
         layer.appendChild(placard);
       });
+
+      syncPlacardsTo3D();
     }
 
     function updateBossHUD() {
@@ -1556,11 +1705,7 @@
       if (bar) {
         const pct = (gameState.timerSec / gameState.timerMax) * 100;
         bar.style.width = `${pct}%`;
-        if (pct < 30) {
-          bar.className = 'h-full bg-rose-500 transition-all duration-200';
-        } else {
-          bar.className = 'h-full bg-gradient-to-r from-amber-400 to-yellow-300 transition-all duration-200';
-        }
+        bar.className = pct < 30 ? 'h-full bg-rose-500 transition-all duration-200' : 'h-full bg-gradient-to-r from-amber-400 to-yellow-300 transition-all duration-200';
       }
     }
 
@@ -1582,7 +1727,7 @@
       updateHUD();
       playSfx('wrong');
       if (gameState.lives <= 0) {
-        handleGameOver("Time run out!");
+        handleGameOver("Time ran out!");
       } else {
         loadLevel(gameState.currentLevel + 1);
       }
@@ -1601,40 +1746,30 @@
       const nameEl = document.getElementById('feedback-word-name');
       if (nameEl) nameEl.textContent = `"${(option.w || '').toUpperCase()}"`;
 
-      // Set accurate Malay (BM) and English (EN) definitions
-      const defBmEl = document.getElementById('feedback-def-bm');
-      if (defBmEl) {
-        defBmEl.textContent = option.bm || "Maksud perkataan dalam Bahasa Melayu.";
-      }
-
-      const defEnEl = document.getElementById('feedback-def-en');
-      if (defEnEl) {
-        defEnEl.textContent = option.def || "English definition of the word.";
-      }
+      const defEl = document.getElementById('feedback-def');
+      if (defEl) defEl.textContent = option.def || "English definition of the target word.";
 
       if (isSuccess) {
         card.className = 'w-full max-w-md bg-slate-900 border-2 border-emerald-400 rounded-3xl p-5 text-center shadow-2xl transition-all scale-100 opacity-100 relative overflow-hidden';
         iconBox.className = 'w-14 h-14 mx-auto rounded-2xl flex items-center justify-center text-3xl mb-2 bg-emerald-500/20 text-emerald-400 border border-emerald-400/40';
         iconBox.innerHTML = '<i class="fa-solid fa-check"></i>';
-        title.textContent = `SUPER HIT, ${gameState.student.name.toUpperCase()}!`;
+        title.textContent = `SUPER CLENCH, ${gameState.student.name.toUpperCase()}!`;
         title.className = 'font-arcade text-2xl stroke-black-sm mb-1 text-emerald-400';
-        subtitle.textContent = 'Great punch! You accurately identified the target word.';
+        subtitle.textContent = 'Great grab! You accurately identified the target word.';
       } else {
         card.className = 'w-full max-w-md bg-slate-900 border-2 border-rose-500 rounded-3xl p-5 text-center shadow-2xl transition-all scale-100 opacity-100 relative overflow-hidden';
         iconBox.className = 'w-14 h-14 mx-auto rounded-2xl flex items-center justify-center text-3xl mb-2 bg-rose-500/20 text-rose-400 border border-rose-400/40';
         iconBox.innerHTML = '<i class="fa-solid fa-xmark"></i>';
         title.textContent = 'MISSED TARGET!';
         title.className = 'font-arcade text-2xl stroke-black-sm mb-1 text-rose-400';
-        subtitle.textContent = `That word belongs to ${option.tag}! Review the meaning below:`;
+        subtitle.textContent = `That word is a ${option.tag}! Review the meaning below:`;
       }
 
       modal.classList.remove('hidden');
 
-      // Clear any prior auto-dismiss timers
       if (feedbackAutoTimer) clearTimeout(feedbackAutoTimer);
       if (feedbackAutoInterval) clearInterval(feedbackAutoInterval);
 
-      // Duration: 1.8s for correct hits, 2.8s for incorrect hits to read the explanation
       const durationMs = isSuccess ? 1800 : 2800;
       let remainingMs = durationMs;
 
@@ -1650,13 +1785,8 @@
         if (remainingMs <= 0) {
           clearInterval(feedbackAutoInterval);
         } else {
-          if (countdownPill) {
-            countdownPill.textContent = `(Auto in ${Math.ceil(remainingMs / 1000)}s)`;
-          }
-          if (progressBar) {
-            const pct = Math.max(0, (remainingMs / durationMs) * 100);
-            progressBar.style.width = `${pct}%`;
-          }
+          if (countdownPill) countdownPill.textContent = `(Auto in ${Math.ceil(remainingMs / 1000)}s)`;
+          if (progressBar) progressBar.style.width = `${Math.max(0, (remainingMs / durationMs) * 100)}%`;
         }
       }, tickInterval);
 
@@ -1666,7 +1796,6 @@
     }
 
     function dismissFeedbackModal() {
-      // Clear auto-dismiss timer and interval
       if (feedbackAutoTimer) {
         clearTimeout(feedbackAutoTimer);
         feedbackAutoTimer = null;
@@ -1714,7 +1843,6 @@
       clearInterval(gameState.timerInterval);
       gameState.isGameOver = true;
 
-      // Award completion badge
       if (!gameState.completedCategories.includes(gameState.categoryKey)) {
         gameState.completedCategories.push(gameState.categoryKey);
         localStorage.setItem('saufi_completed_cats', JSON.stringify(gameState.completedCategories));
@@ -1752,7 +1880,7 @@
         subtitle.textContent = 'Congratulations! You mastered all 100 levels and defeated the Titan Boss!';
         icon.className = 'w-16 h-16 mx-auto bg-gradient-to-tr from-amber-500 to-yellow-400 text-slate-950 rounded-2xl flex items-center justify-center text-4xl mb-3 shadow-lg';
         icon.innerHTML = '<i class="fa-solid fa-crown"></i>';
-        document.getElementById('endgame-praise').textContent = '🌟 Congratulations! You have earned the official Category Master Badge!';
+        document.getElementById('endgame-praise').textContent = '🌟 Congratulations! You have officially earned the Category Master Badge!';
       } else {
         title.textContent = 'GAME OVER';
         title.className = 'font-arcade text-3xl sm:text-4xl text-rose-500 stroke-black-sm mb-1';
@@ -1800,9 +1928,9 @@
 
         const card = document.createElement('div');
         card.className = `p-2 rounded-xl cursor-pointer border-2 transition-all duration-150 flex flex-col justify-between ${
-          isSelected 
-            ? 'bg-gradient-to-br ' + cat.color + ' border-white text-slate-950 shadow-lg shadow-amber-500/30 scale-[1.03] ring-2 ring-yellow-300' 
-            : 'bg-slate-950/80 border-slate-800 hover:border-slate-600 hover:bg-slate-900/90 text-white'
+          isSelected
+            ? 'bg-gradient-to-br ' + cat.color + ' border-white text-slate-950 shadow-lg shadow-amber-500/30 scale-[1.03] ring-2 ring-yellow-300'
+            : 'bg-slate-950/80 border-slate-800 hover:border-emerald-500 hover:bg-slate-900/90 text-white'
         }`;
         card.onclick = () => selectCategory(key);
 
@@ -1811,8 +1939,8 @@
             <div class="w-6 h-6 rounded-lg ${isSelected ? 'bg-slate-950/20 text-slate-950' : 'bg-gradient-to-tr ' + cat.color + ' text-slate-950'} flex items-center justify-center text-xs shadow-sm font-black">
               <i class="fa-solid ${cat.icon}"></i>
             </div>
-            ${isCompleted 
-              ? `<span class="text-xs ${isSelected ? 'text-slate-950' : 'text-yellow-400'}"><i class="fa-solid fa-medal"></i></span>` 
+            ${isCompleted
+              ? `<span class="text-xs ${isSelected ? 'text-slate-950' : 'text-yellow-400'}"><i class="fa-solid fa-medal"></i></span>`
               : `<span class="text-[9px] font-black uppercase px-1.5 py-0.2 rounded ${isSelected ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-slate-400'}">${cat.tag}</span>`}
           </div>
           <div>
@@ -1870,14 +1998,12 @@
       canvas.width = 1200;
       canvas.height = 750;
 
-      // Background Gradient
       const grad = ctx.createLinearGradient(0, 0, 1200, 750);
-      grad.addColorStop(0, '#0f172a');
-      grad.addColorStop(1, '#1e1b4b');
+      grad.addColorStop(0, '#064e3b');
+      grad.addColorStop(1, '#022c22');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 1200, 750);
 
-      // Gold Borders
       ctx.lineWidth = 14;
       ctx.strokeStyle = '#f59e0b';
       ctx.strokeRect(25, 25, 1150, 700);
@@ -1886,7 +2012,6 @@
       ctx.strokeStyle = '#fef08a';
       ctx.strokeRect(38, 38, 1124, 674);
 
-      // Certificate Title
       ctx.textAlign = 'center';
       ctx.fillStyle = '#fbbf24';
       ctx.font = 'bold 36px "Lilita One", sans-serif';
@@ -1896,28 +2021,24 @@
       ctx.font = '22px "Nunito", sans-serif';
       ctx.fillText('SUPER SAUFI 3D GESTURE GRAMMAR ARCADE', 600, 160);
 
-      ctx.fillStyle = '#cbd5e1';
+      ctx.fillStyle = '#a7f3d0';
       ctx.font = 'italic 18px "Nunito", sans-serif';
       ctx.fillText('This certificate is proudly presented to:', 600, 240);
 
-      // Student Name
       ctx.fillStyle = '#fde047';
       ctx.font = 'bold 50px "Lilita One", sans-serif';
       ctx.fillText((gameState.student.name || 'Saufi Aiman').toUpperCase(), 600, 310);
 
-      // Class and School
-      ctx.fillStyle = '#38bdf8';
+      ctx.fillStyle = '#6ee7b7';
       ctx.font = 'bold 24px "Nunito", sans-serif';
-      ctx.fillText(`CLASS: ${gameState.student.class || 'Grade 5'}  |  SCHOOL: ${gameState.student.school || 'Saujana Academy'}`, 600, 360);
+      ctx.fillText(`CLASS: ${gameState.student.class || '5 Jujur'}  |  SCHOOL: ${gameState.student.school || 'SK Seri Saujana'}`, 600, 360);
 
-      // Accomplishment Paragraph
       ctx.fillStyle = '#f8fafc';
       ctx.font = '20px "Nunito", sans-serif';
       const earnedCount = gameState.completedCategories.length;
       ctx.fillText(`Successfully conquered ${earnedCount} of 12 English Grammar Missions and defeated the Titan Boss!`, 600, 440);
       ctx.fillText(`Demonstrated exceptional agility, vocabulary mastery, and swift reflex coordination.`, 600, 475);
 
-      // Date & Signature line
       const today = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
       ctx.textAlign = 'left';
       ctx.fillStyle = '#94a3b8';
@@ -1978,9 +2099,6 @@
       });
     }
 
-    /* ==========================================================================
-       INITIALIZATION ON LOAD
-       ========================================================================== */
     window.addEventListener('DOMContentLoaded', () => {
       renderCategoryMenu();
       renderBadgesContainer();
