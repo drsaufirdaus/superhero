@@ -977,8 +977,8 @@
           }
         }
 
-        const halfW = 110;
-        const halfH = 50;
+        const halfW = width < 640 ? 45 : 95;
+        const halfH = width < 640 ? 25 : 45;
         posX = Math.max(halfW, Math.min(width - halfW, posX));
         posY = Math.max(halfH, Math.min(height - halfH, posY));
 
@@ -997,8 +997,8 @@
     let latestLandmarks = [];
 
     const handStates = [
-      { wasFist: false, activeTargetIndex: -1 },
-      { wasFist: false, activeTargetIndex: -1 }
+      { fistFrames: 0, wasFist: false, hasTriggered: false, activeTargetIndex: -1 },
+      { fistFrames: 0, wasFist: false, hasTriggered: false, activeTargetIndex: -1 }
     ];
 
     function setupHandsInstance() {
@@ -1061,54 +1061,65 @@
       }
     }
 
-    // Anatomical fist detection: requires curled fingers and rejects open palms
+    // Calculates true 3D Euclidean distance incorporating depth (z)
+    function getDistance3D(p1, p2) {
+      if (!p1 || !p2) return 0;
+      const dx = p1.x - p2.x;
+      const dy = p1.y - p2.y;
+      const dz = ((p1.z || 0) - (p2.z || 0)) * 1.1;
+      return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    // Accurate and natural clench detection:
+    // - Open palm: fingers are straight out (extendedCount >= 2) -> ZERO ACTION
+    // - Clenched fist: all fingers curled inwards towards palm (extendedCount === 0 && curledCount >= 3) -> CLENCH
     function isFistClenched(landmarks) {
+      if (!landmarks || landmarks.length < 21) return false;
+
       const wrist = landmarks[0];
       const mcpMiddle = landmarks[9];
-      const handScale = Math.hypot(mcpMiddle.x - wrist.x, mcpMiddle.y - wrist.y) || 0.15;
+      const palmScale = getDistance3D(mcpMiddle, wrist) || 0.15;
 
       const fingers = [
-        { tip: 8, pip: 6, mcp: 5 },
-        { tip: 12, pip: 10, mcp: 9 },
-        { tip: 16, pip: 14, mcp: 13 },
-        { tip: 20, pip: 18, mcp: 17 }
+        { mcp: 5, pip: 6, dip: 7, tip: 8 },    // Index
+        { mcp: 9, pip: 10, dip: 11, tip: 12 }, // Middle
+        { mcp: 13, pip: 14, dip: 15, tip: 16 },// Ring
+        { mcp: 17, pip: 18, dip: 19, tip: 20 } // Pinky
       ];
 
       let curledCount = 0;
       let extendedCount = 0;
 
-      fingers.forEach(f => {
-        const tip = landmarks[f.tip];
-        const pip = landmarks[f.pip];
+      for (let i = 0; i < fingers.length; i++) {
+        const f = fingers[i];
         const mcp = landmarks[f.mcp];
+        const pip = landmarks[f.pip];
+        const tip = landmarks[f.tip];
 
-        const dTipWrist = Math.hypot(tip.x - wrist.x, tip.y - wrist.y);
-        const dPipWrist = Math.hypot(pip.x - wrist.x, pip.y - wrist.y);
-        const dTipMcp = Math.hypot(tip.x - mcp.x, tip.y - mcp.y);
+        const dTipMcp = getDistance3D(tip, mcp);
+        const dTipWrist = getDistance3D(tip, wrist);
+        const dPipWrist = getDistance3D(pip, wrist);
 
-        // Strict curling metric: tip must be closer to wrist than PIP knuckle
-        const isCurled = (dTipWrist <= dPipWrist * 1.02) && (dTipMcp < handScale * 0.70);
+        // Extended finger: tip is clearly further from wrist than the PIP knuckle
+        const isExtended = (dTipWrist > dPipWrist * 1.15) && (dTipMcp > palmScale * 0.65);
+        // Curled finger: tip folds down close to the MCP knuckle / palm base
+        const isCurled = (dTipWrist < dPipWrist * 1.05) || (dTipMcp < palmScale * 0.68);
+
+        if (isExtended) {
+          extendedCount++;
+        }
         if (isCurled) {
           curledCount++;
-        } else {
-          // If tip is clearly beyond the PIP knuckle, finger is extended
-          const isExtended = (dTipWrist > dPipWrist * 1.08) && (dTipMcp > handScale * 0.72);
-          if (isExtended) extendedCount++;
         }
-      });
+      }
 
-      // If 2 or more fingers are extended, it is STRICTLY an open palm -> NO ACTION
-      if (extendedCount >= 2) return false;
+      // If any finger is clearly extended, it's an open aiming hand (or pointing) -> ZERO ACTION
+      if (extendedCount >= 1) {
+        return false;
+      }
 
-      // Must have at least 3 fingers tightly curled
-      if (curledCount < 3) return false;
-
-      // Thumb curl check: thumb tip must be close to the palm core (landmark 9 or 13)
-      const thumbTip = landmarks[4];
-      const dThumbToPalm = Math.hypot(thumbTip.x - mcpMiddle.x, thumbTip.y - mcpMiddle.y);
-      const isThumbTucked = dThumbToPalm < handScale * 0.85;
-
-      return isThumbTucked || curledCount === 4;
+      // Natural fist: at least 3-4 fingers are tightly curled and no fingers are extended
+      return (curledCount >= 3);
     }
 
     function startVideoProcessingLoop() {
@@ -1211,7 +1222,7 @@
           arenaFistPill.className = 'bg-slate-900 border border-slate-700 px-2 py-0.5 rounded-lg text-slate-400 font-mono text-[10px]';
         }
         gameState.fistDetected = false;
-        handStates.forEach(s => { s.wasFist = false; s.activeTargetIndex = -1; });
+        handStates.forEach(s => { s.fistFrames = 0; s.wasFist = false; s.activeTargetIndex = -1; });
         clearPlacardHoverHighlights();
         return;
       }
@@ -1227,7 +1238,20 @@
       for (let hIdx = 0; hIdx < totalHands; hIdx++) {
         const landmarks = latestLandmarks[hIdx];
         const isFist = isFistClenched(landmarks);
-        if (isFist) fistCount++;
+        const prevState = handStates[hIdx];
+
+        // Frame-level debounce to prevent single-frame tracking noise
+        if (isFist) {
+          prevState.fistFrames++;
+        } else {
+          prevState.fistFrames = 0;
+        }
+
+        const isFistConfirmed = prevState.fistFrames >= 2;
+        // Trigger precisely on frame 2 of entering a clenched fist
+        const justClenched = (prevState.fistFrames === 2);
+
+        if (isFistConfirmed) fistCount++;
 
         const screenX = (1 - landmarks[9].x);
         const screenY = landmarks[9].y;
@@ -1238,7 +1262,6 @@
         const icon = gloveIcons[hIdx];
         const ring = gloveRings[hIdx];
         const label = gloveLabels[hIdx];
-        const prevState = handStates[hIdx];
 
         if (isArenaVisible && glove) {
           glove.classList.remove('hidden');
@@ -1250,10 +1273,7 @@
             hoveredIndices.add(targetIdx);
           }
 
-          // Trigger ONLY at the exact moment of transition: from Open Palm -> Clenched Fist
-          const justClenched = isFist && !prevState.wasFist;
-
-          if (isFist) {
+          if (isFistConfirmed) {
             glove.classList.add('scale-125');
             if (ring) {
               ring.className = `w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 border-4 border-white flex items-center justify-center shadow-[0_0_35px_rgba(250,204,21,1)] animate-pulse`;
@@ -1266,13 +1286,15 @@
               label.className = 'absolute -bottom-6 px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black tracking-wider text-[10px] whitespace-nowrap shadow-lg uppercase';
             }
 
-            // Execute hit ONLY when clenching transition occurs on a valid target
-            if (justClenched && targetIdx !== -1 && !gameState.isPaused && !gameState.isGameOver && document.getElementById('feedback-modal').classList.contains('hidden')) {
+            // Action triggers when confirmed clench is on a target, latching until hand is opened again
+            if (!prevState.hasTriggered && targetIdx !== -1 && !gameState.isPaused && !gameState.isGameOver && document.getElementById('feedback-modal').classList.contains('hidden')) {
+              prevState.hasTriggered = true;
               prevState.activeTargetIndex = targetIdx;
               checkHitCollision(gloveX, gloveY, hIdx, true);
             }
           } else {
-            // Palm Open: Safe Aiming only, reset active target index
+            // Open Palm: Safe Aiming only, reset clench latch
+            prevState.hasTriggered = false;
             prevState.activeTargetIndex = -1;
             glove.classList.remove('scale-125');
             if (ring) {
@@ -1287,7 +1309,7 @@
             }
           }
 
-          prevState.wasFist = isFist;
+          prevState.wasFist = isFistConfirmed;
         }
       }
 
@@ -1321,13 +1343,18 @@
       }
     }
 
-    // Identifies nearest target checking BOTH the 3D Monster body AND the Word Placard
+    // Identifies nearest target checking BOTH the 3D Monster body AND the Word Placard (Mobile-Adaptive)
     function getHoveredOptionIndex(x, y) {
       const container = document.getElementById('arena-viewport');
       if (!container || !threeCamera) return -1;
       const cr = container.getBoundingClientRect();
       const width = container.clientWidth || 800;
       const height = container.clientHeight || 450;
+      const isMobile = width < 640;
+      const monsterHitRadius = isMobile ? 110 : 175;
+      const placardHitRadius = isMobile ? 95 : 145;
+      const pad = isMobile ? 24 : 45;
+
       let best = -1, bestDist = Infinity;
 
       for (let idx = 0; idx < gameState.currentOptions.length; idx++) {
@@ -1345,8 +1372,7 @@
             const mScrY = (-(v.y * 0.5) + 0.5) * height;
 
             const distToMonster = Math.hypot(x - mScrX, y - mScrY);
-            // 2x Monster radius on screen is ~175px
-            if (distToMonster < 175 && distToMonster < bestDist) {
+            if (distToMonster < monsterHitRadius && distToMonster < bestDist) {
               best = idx;
               bestDist = distToMonster;
             }
@@ -1362,10 +1388,9 @@
           const centerPlacardX = (L + R) / 2;
           const centerPlacardY = (T + B) / 2;
           const distToPlacard = Math.hypot(x - centerPlacardX, y - centerPlacardY);
-          const pad = 45;
           const inside = x >= L - pad && x <= R + pad && y >= T - pad && y <= B + pad;
 
-          if ((inside || distToPlacard < 145) && distToPlacard < bestDist) {
+          if ((inside || distToPlacard < placardHitRadius) && distToPlacard < bestDist) {
             best = idx;
             bestDist = distToPlacard;
           }
@@ -1420,9 +1445,7 @@
       if (!container) return;
       const idx = getHoveredOptionIndex(x, y);
       if (idx === -1) return;
-      const cr = container.getBoundingClientRect();
-      const r = document.getElementById(`monster-placard-${idx}`).getBoundingClientRect();
-      executePunchOnOption(idx, r.left - cr.left + r.width / 2, r.top - cr.top + r.height / 2);
+      executePunchOnOption(idx, x, y);
     }
 
     function executePunchOnOption(optIndex, hitX, hitY) {
@@ -1642,7 +1665,7 @@
       renderPlacards();
     }
 
-    // Renders placards with doubled text size and ensures they float in front of monsters
+    // Renders placards with auto-scaling font size for mobile and desktop screens
     function renderPlacards() {
       const layer = document.getElementById('monster-placards-layer');
       if (!layer) return;
@@ -1654,8 +1677,9 @@
       const defaultXs = [width * 0.16, width * 0.50, width * 0.84];
 
       const isBoss = gameState.isBossLevel;
-      const slotW = width * 0.31;
-      const maxFont = width < 640 ? 46 : 68;
+      const isMobile = width < 640;
+      const slotW = width * (isMobile ? 0.29 : 0.31);
+      const maxFont = isMobile ? 32 : 66;
 
       gameState.currentOptions.forEach((opt, idx) => {
         const placard = document.createElement('div');
@@ -1666,14 +1690,15 @@
         placard.style.left = `${defaultXs[idx] || width * 0.5}px`;
         placard.style.top = `${height * 0.48}px`;
 
+        const calculatedFont = Math.floor(slotW / (0.75 + 0.60 * opt.w.length));
         const fontPx = isBoss
-          ? (width < 640 ? 24 : 36)
-          : Math.max(18, Math.min(maxFont, Math.floor(slotW / (0.8 + 0.65 * opt.w.length))));
-        const padX = Math.round(fontPx * 0.45);
-        const padY = Math.round(fontPx * 0.22);
+          ? (isMobile ? 18 : 34)
+          : Math.max(14, Math.min(maxFont, calculatedFont));
+        const padX = Math.max(8, Math.round(fontPx * (isMobile ? 0.35 : 0.45)));
+        const padY = Math.max(4, Math.round(fontPx * (isMobile ? 0.18 : 0.22)));
 
         placard.innerHTML = `
-          <div class="placard-box rounded-3xl bg-slate-950/95 border-4 border-yellow-400 shadow-[0_0_35px_rgba(0,0,0,0.95)] text-center transition-all duration-150 active:scale-95 flex flex-col items-center backdrop-blur-md" style="padding:${padY}px ${padX}px;">
+          <div class="placard-box rounded-xl sm:rounded-3xl bg-slate-950/95 border-2 sm:border-4 border-yellow-400 shadow-[0_0_25px_rgba(0,0,0,0.95)] text-center transition-all duration-150 active:scale-95 flex flex-col items-center backdrop-blur-md" style="padding:${padY}px ${padX}px;">
             <span class="font-arcade stroke-black-lg uppercase tracking-wide font-black text-yellow-300 whitespace-nowrap" style="font-size:${fontPx}px;line-height:1.1;">${opt.w}</span>
             <div class="placard-hint hidden"></div>
           </div>
@@ -1689,13 +1714,6 @@
       });
 
       syncPlacardsTo3D();
-    }
-
-    function updateBossHUD() {
-      const bar = document.getElementById('boss-hp-bar');
-      const text = document.getElementById('boss-hp-text');
-      if (bar) bar.style.width = `${gameState.bossHP}%`;
-      if (text) text.textContent = `${gameState.bossHP}%`;
     }
 
     function updateTimerDisplay() {
