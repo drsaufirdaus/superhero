@@ -28,15 +28,19 @@
       user-select: none;
       -webkit-user-select: none;
       box-sizing: border-box;
-      touch-action: manipulation;
     }
     body {
       font-family: 'Nunito', sans-serif;
       background: radial-gradient(circle at 50% 15%, #064e3b 0%, #022c22 45%, #051c14 80%, #02120d 100%);
       color: #fff;
       overflow-x: hidden;
+      overflow-y: auto;
       min-height: 100vh;
       min-height: 100dvh;
+      -webkit-overflow-scrolling: touch;
+    }
+    #arena-viewport, #three-monster-canvas {
+      touch-action: manipulation;
     }
     .font-arcade {
       font-family: 'Lilita One', cursive;
@@ -64,7 +68,7 @@
     }
   </style>
 </head>
-<body class="flex flex-col justify-between min-h-screen relative overflow-hidden">
+<body class="flex flex-col justify-between min-h-screen relative overflow-x-hidden overflow-y-auto">
 
   <!-- Active off-screen webcam video element -->
   <video id="live-webcam-feed" playsinline muted autoplay style="position:fixed;top:0;left:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:-1;"></video>
@@ -93,7 +97,7 @@
     </div>
   </header>
 
-  <main class="flex-1 w-full max-w-7xl mx-auto p-2 sm:p-4 flex flex-col items-center justify-center relative z-10 arcade-green-glow">
+  <main class="flex-1 w-full max-w-7xl mx-auto p-2 sm:p-4 flex flex-col items-center relative z-10 arcade-green-glow">
 
     <!-- 1. HOME SCREEN VIEW -->
     <section id="home-screen" class="w-full max-w-5xl flex flex-col items-center gap-2.5 py-1">
@@ -1529,6 +1533,8 @@
         startCameraDirect(true);
       }
 
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
       const nameInput = document.getElementById('input-student-name').value.trim();
       const classInput = document.getElementById('input-student-class').value.trim();
       const schoolInput = document.getElementById('input-student-school').value.trim();
@@ -1854,6 +1860,7 @@
       document.getElementById('arena-screen').classList.add('hidden');
       document.getElementById('endgame-modal').classList.add('hidden');
       document.getElementById('home-screen').classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       renderBadgesContainer();
     }
 
