@@ -1,0 +1,2309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Super Saufi - 3D Gesture Clench Arcade</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+  <style>
+    * {
+      user-select: none;
+      -webkit-user-select: none;
+      box-sizing: border-box;
+      touch-action: manipulation;
+    }
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: radial-gradient(circle at 50% 15%, #064e3b 0%, #022c22 45%, #051c14 80%, #02120d 100%);
+      color: #fff;
+      overflow-x: hidden;
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+    .font-arcade {
+      font-family: 'Lilita One', cursive;
+      letter-spacing: 0.05em;
+    }
+    .stroke-black-sm {
+      text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+    }
+    .stroke-black-lg {
+      text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 0 4px 10px rgba(0,0,0,0.8);
+    }
+    .arcade-green-glow {
+      background-image:
+        radial-gradient(at 85% 15%, rgba(16, 185, 129, 0.22) 0px, transparent 50%),
+        radial-gradient(at 15% 85%, rgba(234, 179, 8, 0.18) 0px, transparent 50%),
+        radial-gradient(at 80% 80%, rgba(20, 184, 166, 0.20) 0px, transparent 50%);
+    }
+    @keyframes comicPow {
+      0% { transform: translate(-50%, -50%) scale(0.3) rotate(-15deg); opacity: 0; }
+      50% { transform: translate(-50%, -50%) scale(1.3) rotate(10deg); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(1.0) rotate(0deg); opacity: 0; }
+    }
+    html { -webkit-text-size-adjust: 100%; }
+    body { padding-bottom: env(safe-area-inset-bottom, 0px); }
+    #arena-viewport { height: clamp(360px, calc(100dvh - 235px), 780px); flex: none; }
+    .fixed.inset-0 > div { max-height: 94dvh; overflow-y: auto; }
+    @media (max-width: 640px) {
+      #arena-screen { gap: 4px; }
+      #arena-question-banner { margin: 0; padding: 4px 8px; }
+      #arena-viewport { height: clamp(340px, calc(100dvh - 215px), 780px); border-radius: 18px; }
+    }
+    @media (max-height: 480px) and (orientation: landscape) {
+      #arena-viewport { height: calc(100dvh - 150px); min-height: 220px; }
+      #arena-question-banner { display: none; }
+    }
+    .animate-pow {
+      animation: comicPow 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+  </style>
+</head>
+<body class="flex flex-col justify-between min-h-screen relative overflow-x-hidden overflow-y-auto">
+
+  <video id="live-webcam-feed" playsinline muted autoplay class="fixed -top-[9999px] -left-[9999px] w-[640px] h-[480px] pointer-events-none opacity-0"></video>
+
+  <header class="w-full bg-slate-950/85 border-b border-emerald-500/30 px-3 py-2 sm:px-6 sm:py-2.5 flex items-center justify-between z-30 backdrop-blur-md">
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-tr from-amber-500 to-yellow-300 rounded-xl flex items-center justify-center text-slate-950 shadow-md">
+        <i class="fa-solid fa-hand-back-fist text-lg sm:text-xl"></i>
+      </div>
+      <div>
+        <h1 class="font-arcade text-lg sm:text-2xl stroke-black-sm tracking-wide" style="color: #fde047 !important;">
+          SUPER SAUFI
+        </h1>
+        <p class="text-[10px] text-emerald-300 font-extrabold uppercase tracking-wider hidden sm:block">3D Gesture Clench Arcade</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button onclick="toggleAudio()" id="btn-audio" class="px-2.5 py-1 sm:px-3 sm:py-1.5 bg-slate-800 hover:bg-slate-700 text-yellow-300 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center gap-1.5 shadow">
+        <i class="fa-solid fa-volume-high" id="audio-icon"></i> <span class="hidden sm:inline">SFX</span>
+      </button>
+      <div id="nav-cam-indicator" class="flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 border border-slate-700 rounded-xl text-[11px] font-bold text-slate-400">
+        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse" id="cam-led"></span>
+        <span id="cam-status-text">Cam Standby</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 w-full max-w-7xl mx-auto p-2 sm:p-4 flex flex-col items-center justify-center relative z-10 arcade-green-glow">
+
+    <!-- 1. HOME SCREEN VIEW -->
+    <section id="home-screen" class="w-full max-w-5xl flex flex-col items-center gap-2.5 py-1">
+      <div class="text-center w-full max-w-3xl">
+        <div class="inline-flex items-center gap-2 bg-emerald-950/80 border border-emerald-400/60 px-4 py-0.5 rounded-full text-yellow-300 text-xs sm:text-sm font-extrabold mb-1 shadow-lg shadow-emerald-900/30">
+          <i class="fa-solid fa-hand-back-fist text-amber-300 animate-bounce"></i> Dual Hand Tracking Active - Clench Fist ✊ to Grab Words
+        </div>
+        <h2 class="font-arcade text-3xl sm:text-5xl stroke-black-lg leading-tight tracking-wide" style="color: #fde047 !important;">
+          CLENCH THE CORRECT MONSTER!
+        </h2>
+        <p class="text-xs sm:text-sm text-emerald-100 font-semibold max-w-xl mx-auto">
+          Conquer 12 English grammar categories! Clench words through 99 levels, then defeat the 60s Titan Boss at Level 100!
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 w-full bg-slate-900/90 border-2 border-emerald-600/40 p-3 rounded-2xl shadow-2xl backdrop-blur-md">
+        <div class="md:col-span-2 flex flex-col justify-center space-y-2">
+          <div class="flex items-center gap-2 text-yellow-300 text-xs font-black uppercase tracking-wider">
+            <i class="fa-solid fa-address-card text-amber-400"></i> Student Information
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-extrabold text-emerald-200 mb-0.5">Student Name</label>
+              <input type="text" id="input-student-name" placeholder="e.g. Saufi Aiman" value="Saufi Aiman" class="w-full bg-slate-950/90 border border-emerald-700/60 focus:border-amber-400 rounded-xl px-3 py-1.5 text-xs sm:text-sm text-white font-bold outline-none transition">
+            </div>
+            <div>
+              <label class="block text-[11px] font-extrabold text-emerald-200 mb-0.5">Class</label>
+              <input type="text" id="input-student-class" placeholder="e.g. 5 Jujur" value="5 Jujur" class="w-full bg-slate-950/90 border border-emerald-700/60 focus:border-amber-400 rounded-xl px-3 py-1.5 text-xs sm:text-sm text-white font-bold outline-none transition">
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-extrabold text-emerald-200 mb-0.5">School Name</label>
+            <input type="text" id="input-student-school" placeholder="e.g. SK Seri Saujana" value="SK Seri Saujana" class="w-full bg-slate-950/90 border border-emerald-700/60 focus:border-amber-400 rounded-xl px-3 py-1.5 text-xs sm:text-sm text-white font-bold outline-none transition">
+          </div>
+        </div>
+
+        <div class="flex flex-col items-center justify-center bg-slate-950/90 p-2 rounded-2xl border border-emerald-800/60 relative">
+          <div class="flex items-center justify-between w-full text-[11px] font-black text-slate-300 mb-1 px-1">
+            <span class="text-amber-300"><i class="fa-solid fa-video mr-1"></i> Cam Standby</span>
+            <span id="standby-fist-pill" class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-md font-mono">WAITING</span>
+          </div>
+          <div class="w-full h-24 sm:h-28 bg-slate-900 rounded-xl overflow-hidden relative border border-slate-700 flex items-center justify-center">
+            <canvas id="menu-webcam-canvas" class="w-full h-full object-cover transform -scale-x-100"></canvas>
+            <div id="standby-placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-center p-2 bg-slate-950/80">
+              <i class="fa-solid fa-camera text-xl text-slate-500 mb-1"></i>
+              <button onclick="startCameraDirect(true)" class="text-[11px] bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-3 py-1 rounded-lg transition shadow">
+                Turn On Camera
+              </button>
+            </div>
+          </div>
+          <p class="text-[10px] text-emerald-200/70 mt-1 text-center font-semibold">Wave hand or clench ✊ to test tracking!</p>
+        </div>
+      </div>
+
+      <div class="w-full bg-slate-900/80 border border-slate-800 p-2 rounded-2xl backdrop-blur-sm">
+        <div class="flex items-center justify-between mb-1">
+          <div class="flex items-center gap-1.5 text-xs font-black text-amber-300 uppercase tracking-wider">
+            <i class="fa-solid fa-medal text-yellow-400"></i> Master Badges Earned (<span id="badges-count-text">0</span>/12)
+          </div>
+          <button onclick="openCertificateModal()" id="btn-show-cert" class="text-[10px] sm:text-[11px] bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black px-2.5 py-0.5 rounded-lg transition shadow flex items-center gap-1">
+            <i class="fa-solid fa-award"></i> Certificate
+          </button>
+        </div>
+        <div id="badges-container" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-12 gap-1 text-center"></div>
+      </div>
+
+      <div class="w-full bg-slate-900/85 border-2 border-emerald-800/80 p-2.5 rounded-2xl shadow-xl backdrop-blur-sm">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="font-arcade text-sm sm:text-base text-yellow-300 stroke-black-sm flex items-center gap-1.5">
+            <i class="fa-solid fa-gamepad text-emerald-400"></i> SELECT GRAMMAR MISSION (12 CATEGORIES)
+          </h3>
+          <span class="text-[10px] font-black text-emerald-300 bg-emerald-950/70 border border-emerald-500/40 px-2 py-0.5 rounded-full uppercase">
+            100 Levels Each
+          </span>
+        </div>
+        <div id="category-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 w-full"></div>
+      </div>
+
+      <button onclick="startMission()" class="w-full max-w-md py-3 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-arcade text-xl sm:text-2xl rounded-2xl shadow-xl shadow-amber-500/25 transition transform active:scale-95 flex items-center justify-center gap-3 border-2 border-yellow-200">
+        <i class="fa-solid fa-play animate-pulse"></i> START MISSION
+      </button>
+    </section>
+
+    <!-- 2. IN-GAME ARENA VIEW -->
+    <section id="arena-screen" class="w-full h-full flex flex-col items-center justify-between relative hidden">
+      <div class="w-full max-w-5xl bg-slate-950/85 border border-emerald-500/40 rounded-2xl p-2 sm:p-3 flex items-center justify-between gap-2 shadow-2xl backdrop-blur-md z-20">
+        <div class="flex items-center gap-2">
+          <button onclick="togglePauseGame()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-yellow-300 flex items-center justify-center border border-slate-600 transition shadow">
+            <i class="fa-solid fa-pause"></i>
+          </button>
+          <div>
+            <span id="hud-category-name" class="font-arcade text-xs sm:text-sm text-yellow-300 stroke-black-sm block truncate max-w-[140px] sm:max-w-[220px]">NOUNS</span>
+            <span id="hud-level-text" class="text-[10px] text-emerald-300 font-extrabold uppercase tracking-wider">LEVEL 1 / 100</span>
+          </div>
+        </div>
+
+        <div class="flex-1 max-w-xs px-2 flex flex-col items-center">
+          <div class="flex items-center justify-between w-full text-[10px] font-black text-slate-300 mb-0.5">
+            <span id="timer-label"><i class="fa-solid fa-stopwatch mr-1 text-amber-400"></i> TIME</span>
+            <span id="timer-val" class="font-mono text-yellow-300">15s</span>
+          </div>
+          <div class="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-700">
+            <div id="timer-bar" class="h-full bg-gradient-to-r from-amber-400 to-yellow-300 transition-all duration-200 w-full"></div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="text-right">
+            <div class="text-[10px] font-bold text-slate-400">SCORE</div>
+            <div id="hud-score" class="font-arcade text-base sm:text-xl text-yellow-300 stroke-black-sm">0</div>
+          </div>
+          <div id="hud-hearts" class="flex items-center gap-1 text-rose-500 text-sm sm:text-base">
+            <i class="fa-solid fa-heart"></i>
+            <i class="fa-solid fa-heart"></i>
+            <i class="fa-solid fa-heart"></i>
+          </div>
+        </div>
+      </div>
+
+      <div id="arena-question-banner" class="w-full max-w-3xl bg-gradient-to-r from-emerald-950/90 via-slate-900/90 to-emerald-950/90 border-2 border-yellow-400/80 rounded-2xl p-2 sm:p-3 text-center shadow-2xl my-1 z-20 backdrop-blur-md">
+        <div class="text-[10px] sm:text-xs font-black text-emerald-300 uppercase tracking-widest mb-0.5">
+          <i class="fa-solid fa-bullseye text-yellow-400 mr-1"></i> TARGET MISSION
+        </div>
+        <h3 id="question-text" class="font-arcade text-base sm:text-2xl text-white stroke-black-sm">
+          Clench the monster with the NOUN!
+        </h3>
+      </div>
+
+      <!-- Taller arena so the 2x monsters fit -->
+      <div id="arena-viewport" class="w-full relative rounded-3xl overflow-hidden border-2 border-emerald-600/50 shadow-2xl bg-slate-950 flex items-center justify-center">
+        <canvas id="arena-webcam-canvas" class="absolute inset-0 w-full h-full object-cover transform -scale-x-100 opacity-40 z-0"></canvas>
+
+        <canvas id="three-monster-canvas" class="absolute inset-0 w-full h-full pointer-events-auto z-10"></canvas>
+
+        <!-- FIX: real z-index so words are ALWAYS in front of the 3D monsters (z-25 is not a Tailwind class) -->
+        <div id="monster-placards-layer" class="absolute inset-0 pointer-events-none" style="z-index:25;"></div>
+
+        <div id="gesture-glove-0" class="absolute pointer-events-none transform -translate-x-1/2 -translate-y-1/2 z-30 transition-transform duration-75 hidden">
+          <div id="glove-inner-0" class="relative flex flex-col items-center justify-center">
+            <div id="glove-ring-0" class="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500/30 to-yellow-300/20 border-2 border-yellow-300 shadow-[0_0_20px_rgba(250,204,21,0.5)] backdrop-blur-sm flex items-center justify-center transition-all duration-150">
+              <i id="glove-icon-0" class="fa-solid fa-hand text-2xl text-yellow-300"></i>
+            </div>
+            <span id="glove-label-0" class="absolute -bottom-6 px-2 py-0.5 rounded-full bg-slate-950/90 border border-yellow-300/60 text-yellow-300 text-[9px] font-black tracking-wider whitespace-nowrap shadow uppercase">AIMING ✋</span>
+          </div>
+        </div>
+
+        <div id="gesture-glove-1" class="absolute pointer-events-none transform -translate-x-1/2 -translate-y-1/2 z-30 transition-transform duration-75 hidden">
+          <div id="glove-inner-1" class="relative flex flex-col items-center justify-center">
+            <div id="glove-ring-1" class="w-16 h-16 rounded-full bg-gradient-to-tr from-cyan-500/30 to-blue-400/20 border-2 border-cyan-300 shadow-[0_0_20px_rgba(34,211,238,0.5)] backdrop-blur-sm flex items-center justify-center transition-all duration-150">
+              <i id="glove-icon-1" class="fa-solid fa-hand text-2xl text-cyan-300"></i>
+            </div>
+            <span id="glove-label-1" class="absolute -bottom-6 px-2 py-0.5 rounded-full bg-slate-950/90 border border-cyan-300/60 text-cyan-300 text-[9px] font-black tracking-wider whitespace-nowrap shadow uppercase">AIMING ✋</span>
+          </div>
+        </div>
+
+        <div id="boss-hud-overlay" class="absolute top-2 inset-x-4 max-w-lg mx-auto bg-slate-950/90 border-2 border-red-500/80 rounded-2xl p-2 z-20 hidden flex-col items-center">
+          <div class="flex items-center justify-between w-full text-xs font-black text-red-400 uppercase mb-1">
+            <span><i class="fa-solid fa-skull mr-1"></i> TITAN BOSS FRENZY (60s)</span>
+            <span id="boss-hp-text" class="text-yellow-300 font-mono">100%</span>
+          </div>
+          <div class="w-full h-3 bg-slate-900 rounded-full overflow-hidden border border-red-800">
+            <div id="boss-hp-bar" class="h-full bg-gradient-to-r from-red-600 via-orange-500 to-yellow-400 transition-all duration-150 w-full"></div>
+          </div>
+          <div class="text-[10px] text-slate-300 mt-1 font-bold">
+            <span id="boss-info">PHASE 1 | COMBO x1 | Catch the moving words!</span>
+          </div>
+        </div>
+
+        <div id="comic-hit-effects" class="absolute inset-0 pointer-events-none z-30"></div>
+      </div>
+
+      <div class="w-full max-w-5xl py-1.5 px-3 flex flex-wrap items-center justify-between gap-1 text-[10px] sm:text-[11px] font-bold text-slate-300 z-20">
+        <div class="flex items-center gap-2">
+          <span class="text-yellow-300"><i class="fa-solid fa-hand-back-fist"></i> Clench Fist ✊ to Grab Word</span>
+          <span class="text-slate-500">|</span>
+          <span class="text-emerald-300"><i class="fa-solid fa-arrow-pointer"></i> Touch / Click Fallback Active</span>
+        </div>
+        <div id="arena-fist-indicator" class="bg-slate-900 border border-slate-700 px-2 py-0.5 rounded-lg text-slate-400 font-mono text-[10px]">
+          FISTS: WAITING
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. PAUSE MODAL -->
+    <div id="pause-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center z-50 hidden p-4">
+      <div class="w-full max-w-md bg-slate-900 border-2 border-emerald-500/60 rounded-3xl p-6 text-center shadow-2xl">
+        <div class="w-14 h-14 mx-auto bg-amber-500/20 rounded-2xl flex items-center justify-center text-amber-300 text-3xl mb-3 border border-amber-400/40">
+          <i class="fa-solid fa-pause"></i>
+        </div>
+        <h3 class="font-arcade text-3xl text-yellow-300 stroke-black-sm mb-1">GAME PAUSED</h3>
+        <p class="text-slate-300 text-xs sm:text-sm font-semibold mb-5">
+          Take a deep breath and rest your arms! Your progress is safe.
+        </p>
+        <div class="flex flex-col gap-2">
+          <button onclick="togglePauseGame()" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-arcade text-lg rounded-xl shadow-lg transition">
+            RESUME MISSION
+          </button>
+          <button onclick="quitToHome()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition border border-slate-700">
+            QUIT TO MENU
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. HIT FEEDBACK MODAL -->
+    <div id="feedback-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4">
+      <div id="feedback-card" class="w-full max-w-md bg-slate-900 border-2 border-amber-400 rounded-3xl p-5 text-center shadow-2xl transform transition-all scale-95 opacity-0 relative overflow-hidden">
+        <div class="w-full h-1 bg-slate-800 absolute top-0 left-0">
+          <div id="feedback-auto-bar" class="h-full bg-amber-400 transition-all duration-100 w-full"></div>
+        </div>
+        <div id="feedback-icon-box" class="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center text-3xl mb-2"></div>
+        <h3 id="feedback-title" class="font-arcade text-2xl stroke-black-sm mb-1 text-yellow-300">SUPER CLENCH!</h3>
+        <p id="feedback-subtitle" class="text-xs font-bold text-slate-300 mb-3">Great job identifying the target word!</p>
+
+        <div class="w-full bg-slate-950/90 border border-emerald-700/60 rounded-2xl p-3 text-left mb-4">
+          <div class="flex items-center justify-between text-[11px] font-black uppercase text-amber-300 mb-1">
+            <span><i class="fa-solid fa-book-open mr-1"></i> Word Definition</span>
+            <span id="feedback-word-tag" class="px-2 py-0.5 bg-emerald-900/60 rounded text-[9px] text-emerald-200">NOUN</span>
+          </div>
+          <div id="feedback-word-name" class="font-arcade text-lg text-white mb-1">"BICYCLE"</div>
+          <div class="text-xs text-slate-300 font-semibold" id="feedback-def">
+            A two-wheeled vehicle that you pedal with your feet.
+          </div>
+          <div class="mt-2 pt-2 border-t border-slate-800">
+            <div class="text-[10px] font-black uppercase text-emerald-300 mb-0.5">🇲🇾 Bahasa Melayu</div>
+            <div id="feedback-word-ms" class="text-sm font-black text-yellow-200"></div>
+            <div id="feedback-def-ms" class="text-xs text-slate-300 font-semibold"></div>
+          </div>
+        </div>
+
+        <button onclick="dismissFeedbackModal()" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-arcade text-base rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+          <span>CONTINUE</span> <span id="feedback-countdown-pill" class="text-xs font-mono font-bold text-slate-900">(Auto)</span> <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- 5. ENDGAME SUMMARY -->
+    <div id="endgame-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-50 hidden p-4">
+      <div class="w-full max-w-lg bg-slate-900 border-2 border-yellow-400 rounded-3xl p-6 text-center shadow-2xl">
+        <div id="endgame-badge-icon" class="w-16 h-16 mx-auto bg-gradient-to-tr from-amber-500 to-yellow-400 text-slate-950 rounded-2xl flex items-center justify-center text-4xl mb-3 shadow-lg">
+          <i class="fa-solid fa-trophy"></i>
+        </div>
+        <h3 id="endgame-title" class="font-arcade text-3xl sm:text-4xl text-yellow-300 stroke-black-sm mb-1">STAGE CLEARED!</h3>
+        <p id="endgame-subtitle" class="text-xs sm:text-sm text-slate-300 font-semibold mb-4">
+          You conquered this grammar mission and defeated the Titan Boss!
+        </p>
+
+        <div class="w-full bg-slate-950/90 border border-emerald-700/60 rounded-2xl p-3.5 text-left mb-4 space-y-2">
+          <div class="flex items-center justify-between text-xs text-slate-300 border-b border-slate-800 pb-2">
+            <div>
+              <span class="font-bold text-amber-300" id="endgame-student-name">Saufi Aiman</span>
+              <span class="text-slate-400 text-[11px]" id="endgame-student-meta">(5 Jujur - SK Seri Saujana)</span>
+            </div>
+            <span class="px-2 py-0.5 bg-emerald-950 text-emerald-300 text-[10px] font-black rounded uppercase" id="endgame-cat-tag">NOUNS</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center pt-1">
+            <div class="bg-slate-900 p-2 rounded-xl border border-slate-800">
+              <span class="text-[10px] font-extrabold text-slate-400 uppercase block">FINAL SCORE</span>
+              <span id="endgame-score" class="font-arcade text-lg text-yellow-300">1,240</span>
+            </div>
+            <div class="bg-slate-900 p-2 rounded-xl border border-slate-800">
+              <span class="text-[10px] font-extrabold text-slate-400 uppercase block">ACCURACY</span>
+              <span id="endgame-accuracy" class="font-arcade text-lg text-emerald-400">92%</span>
+            </div>
+            <div class="bg-slate-900 p-2 rounded-xl border border-slate-800">
+              <span class="text-[10px] font-extrabold text-slate-400 uppercase block">LIVES LEFT</span>
+              <span id="endgame-lives" class="font-arcade text-lg text-rose-400">3/3</span>
+            </div>
+          </div>
+          <div class="text-[11px] text-slate-300 bg-slate-900/60 p-2 rounded-xl border border-slate-800 text-center font-semibold" id="endgame-praise">
+            🌟 Brilliant performance! Your grammar mastery and agility are phenomenal!
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-2">
+          <button onclick="quitToHome()" class="flex-1 py-3 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-arcade text-base rounded-xl shadow-lg transition">
+            RETURN TO MENU
+          </button>
+          <button onclick="openCertificateModal()" class="py-3 px-4 bg-slate-800 hover:bg-slate-700 text-yellow-300 font-bold text-xs rounded-xl border border-slate-700 transition">
+            <i class="fa-solid fa-award mr-1"></i> CERTIFICATE
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. CERTIFICATE MODAL -->
+    <div id="cert-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-50 hidden p-3">
+      <div class="w-full max-w-2xl bg-slate-900 border-2 border-yellow-400 rounded-3xl p-4 sm:p-5 flex flex-col items-center shadow-2xl">
+        <div class="flex items-center justify-between w-full mb-3">
+          <div class="flex items-center gap-2 text-yellow-300 font-arcade text-lg">
+            <i class="fa-solid fa-award text-amber-400"></i> OFFICIAL CERTIFICATE OF EXCELLENCE
+          </div>
+          <button onclick="closeCertificateModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="w-full aspect-[16/10] bg-white rounded-2xl overflow-hidden shadow-2xl border-4 border-amber-400 relative">
+          <canvas id="cert-canvas" class="w-full h-full object-contain"></canvas>
+        </div>
+        <div class="flex items-center justify-between w-full mt-3 gap-2">
+          <span class="text-[11px] text-slate-400 font-semibold">
+            Complete all 12 categories to earn the Grand Grammar Master seal!
+          </span>
+          <button onclick="downloadCertificate()" class="py-2 px-4 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs rounded-xl transition shadow flex items-center gap-1.5">
+            <i class="fa-solid fa-download"></i> Download PNG
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. HIDDEN ADMIN MODAL -->
+    <div id="admin-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4">
+      <div class="w-full max-w-sm bg-slate-900 border border-slate-700 rounded-3xl p-5 shadow-2xl text-left">
+        <div class="flex items-center justify-between mb-3">
+          <h4 class="text-xs font-black text-slate-300 uppercase tracking-wider"><i class="fa-solid fa-lock mr-1.5 text-amber-400"></i> Admin Panel</h4>
+          <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="admin-login-view" class="space-y-2">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 mb-0.5">Username</label>
+            <input type="text" id="admin-user-input" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1 text-xs text-white outline-none">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 mb-0.5">Password</label>
+            <input type="password" id="admin-pass-input" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1 text-xs text-white outline-none">
+          </div>
+          <button onclick="authenticateAdmin()" class="w-full py-1.5 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl transition mt-2">Login</button>
+        </div>
+        <div id="admin-config-view" class="space-y-3 hidden">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-300 mb-1">Google Sheets Webhook URL</label>
+            <input type="text" id="admin-sheet-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-white outline-none font-mono">
+          </div>
+          <div class="flex gap-2">
+            <button onclick="saveAdminConfig()" class="flex-1 py-1.5 bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl">Save</button>
+            <button onclick="testAdminSheet()" class="py-1.5 px-3 bg-slate-800 text-cyan-300 border border-slate-700 font-bold text-xs rounded-xl">Test</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="w-full py-1.5 px-4 text-center text-[10px] text-emerald-200/50 z-10 flex items-center justify-between">
+    <span>Super Saufi Arcade © 2026 - Educational Grammar Gesture Platform</span>
+    <button onclick="openAdminModal()" class="w-2.5 h-2.5 rounded-full bg-slate-800/80 hover:bg-emerald-500 transition" title="Admin"></button>
+  </footer>
+
+  <script>
+    const CURRICULUM = {
+      nouns: {
+        name: "Nouns", tag: "Noun", badge: "Nouns Master", icon: "fa-cubes", color: "from-amber-500 to-yellow-400",
+        words: [
+          { w: "cat", def: "A small domesticated carnivorous mammal with soft fur." },
+          { w: "apple", def: "A round fruit with sweet, crisp flesh." },
+          { w: "book", def: "A written or printed work published in pages." },
+          { w: "school", def: "An institution for educating students." },
+          { w: "bicycle", def: "A two-wheeled vehicle pedaled by feet." },
+          { w: "elephant", def: "A very large mammal with a trunk and ivory tusks." },
+          { w: "doctor", def: "A person qualified to treat illness and injuries." },
+          { w: "computer", def: "An electronic device for storing and processing data." },
+          { w: "dinosaur", def: "An extinct prehistoric reptile." },
+          { w: "astronaut", def: "A person trained to travel in a spacecraft." },
+          { w: "microscope", def: "An optical instrument used to view tiny objects." },
+          { w: "bridge", def: "A structure built to cross over an obstacle or river." }
+        ]
+      },
+      verbs: {
+        name: "Verbs", tag: "Verb", badge: "Verbs Master", icon: "fa-person-running", color: "from-rose-500 to-red-500",
+        words: [
+          { w: "run", def: "To move rapidly on foot." },
+          { w: "jump", def: "To push oneself off the ground into the air." },
+          { w: "eat", def: "To consume food into the body." },
+          { w: "sleep", def: "To rest with suspended consciousness." },
+          { w: "swim", def: "To propel oneself through water." },
+          { w: "dance", def: "To move rhythmically to music." },
+          { w: "explore", def: "To travel through an unfamiliar area to learn." },
+          { w: "invent", def: "To create or design something brand new." },
+          { w: "accelerate", def: "To increase speed rapidly." },
+          { w: "investigate", def: "To carry out a systematic examination." }
+        ]
+      },
+      adjectives: {
+        name: "Adjectives", tag: "Adjective", badge: "Adjectives Master", icon: "fa-wand-magic-sparkles", color: "from-pink-500 to-purple-500",
+        words: [
+          { w: "happy", def: "Feeling or showing pleasure and joy." },
+          { w: "big", def: "Of considerable size or extent." },
+          { w: "bright", def: "Giving out or reflecting much light." },
+          { w: "clever", def: "Quick to understand and intelligent." },
+          { w: "brave", def: "Ready to face danger or pain without fear." },
+          { w: "delicious", def: "Highly pleasant to the taste." },
+          { w: "enormous", def: "Extremely large; gigantic." },
+          { w: "mysterious", def: "Difficult or impossible to understand." }
+        ]
+      },
+      adverbs: {
+        name: "Adverbs", tag: "Adverb", badge: "Adverbs Master", icon: "fa-bolt-lightning", color: "from-cyan-500 to-blue-500",
+        words: [
+          { w: "quickly", def: "At a fast speed; rapidly." },
+          { w: "loudly", def: "With a great deal of volume." },
+          { w: "carefully", def: "In a way that avoids harm or mistakes." },
+          { w: "happily", def: "In a cheerful and joyous manner." },
+          { w: "suddenly", def: "Quickly and unexpectedly." },
+          { w: "eagerly", def: "With keen excitement or desire." },
+          { w: "frequently", def: "Happening often or repeatedly." }
+        ]
+      },
+      prepositions: {
+        name: "Prepositions", tag: "Preposition", badge: "Prepositions Master", icon: "fa-location-dot", color: "from-emerald-500 to-teal-500",
+        words: [
+          { w: "under", def: "Extending or situated directly below something." },
+          { w: "between", def: "In the middle of two points or items." },
+          { w: "behind", def: "At or towards the back of something." },
+          { w: "across", def: "From one side to the other." },
+          { w: "through", def: "Moving in one side and out of the other." },
+          { w: "against", def: "In contact with or opposed to." }
+        ]
+      },
+      pronouns: {
+        name: "Pronouns", tag: "Pronoun", badge: "Pronouns Master", icon: "fa-users", color: "from-violet-500 to-indigo-500",
+        words: [
+          { w: "he", def: "Used to refer to a male person." },
+          { w: "they", def: "Used to refer to two or more people." },
+          { w: "we", def: "Used by a speaker to include themselves and others." },
+          { w: "mine", def: "Belonging to or associated with oneself." },
+          { w: "someone", def: "An unspecified individual." },
+          { w: "ourselves", def: "We or us personally as reflexive subject." }
+        ]
+      },
+      conjunctions: {
+        name: "Conjunctions", tag: "Conjunction", badge: "Conjunctions Master", icon: "fa-link", color: "from-orange-500 to-amber-500",
+        words: [
+          { w: "because", def: "For the reason that; since." },
+          { w: "although", def: "In spite of the fact that; even though." },
+          { w: "unless", def: "Except if; on the condition that." },
+          { w: "while", def: "During the time that." },
+          { w: "therefore", def: "For that reason; consequently." },
+          { w: "whereas", def: "In contrast with the fact that." }
+        ]
+      },
+      determiners: {
+        name: "Determiners", tag: "Determiner", badge: "Determiners Master", icon: "fa-tag", color: "from-lime-500 to-emerald-500",
+        words: [
+          { w: "these", def: "Indicating plural objects close at hand." },
+          { w: "those", def: "Indicating plural objects further away." },
+          { w: "every", def: "Used to refer to all individual members of a set." },
+          { w: "several", def: "More than two but not many." },
+          { w: "another", def: "An additional person or item." }
+        ]
+      },
+      interrogatives: {
+        name: "Interrogatives", tag: "Interrogative", badge: "Interrogatives Master", icon: "fa-circle-question", color: "from-sky-500 to-cyan-500",
+        words: [
+          { w: "where", def: "In or to what place or position." },
+          { w: "whose", def: "Belonging to or associated with which person." },
+          { w: "which", def: "Specifying one or more items out of a group." },
+          { w: "why", def: "For what reason or purpose." },
+          { w: "how often", def: "Asking about the frequency of an occurrence." }
+        ]
+      },
+      numerals: {
+        name: "Numerals", tag: "Numeral", badge: "Numerals Master", icon: "fa-arrow-down-1-9", color: "from-teal-500 to-blue-600",
+        words: [
+          { w: "twelve", def: "The number equal to the sum of 6 and 6 (12)." },
+          { w: "fifteen", def: "The cardinal number equal to 15." },
+          { w: "thousand", def: "The number equivalent to ten hundreds (1,000)." },
+          { w: "million", def: "The number equivalent to one thousand thousands." },
+          { w: "quarter", def: "Each of four equal or corresponding parts (1/4)." }
+        ]
+      },
+      exclamations: {
+        name: "Exclamations", tag: "Exclamation", badge: "Exclamations Master", icon: "fa-comment-dots", color: "from-fuchsia-500 to-pink-600",
+        words: [
+          { w: "wow!", def: "Expressing astonishment or admiration." },
+          { w: "hooray!", def: "Expressing joy, victory, or celebration." },
+          { w: "brilliant!", def: "Expressing praise for exceptional excellence." },
+          { w: "ouch!", def: "Expressing sudden physical pain." },
+          { w: "pardon!", def: "Used to politely ask someone to repeat." }
+        ]
+      },
+      discourse: {
+        name: "Discourse Markers", tag: "Discourse Marker", badge: "Discourse Master", icon: "fa-signs-post", color: "from-amber-600 to-orange-600",
+        words: [
+          { w: "however", def: "Used to introduce a statement that contrasts." },
+          { w: "furthermore", def: "In addition; moreover." },
+          { w: "therefore", def: "A logical conclusion of what precedes." },
+          { w: "meanwhile", def: "In the intervening period of time." },
+          { w: "in addition", def: "As an extra detail or circumstance." }
+        ]
+      }
+    };
+
+    // Malay translation + definition for every word (shown in the popup)
+    const MALAY_DEF = {
+      "cat": ["kucing", "Mamalia kecil yang dijinakkan, berbulu lembut dan pemakan daging."],
+      "apple": ["epal", "Buah bulat yang isinya manis dan rangup."],
+      "book": ["buku", "Hasil tulisan atau cetakan yang disusun dalam bentuk halaman."],
+      "school": ["sekolah", "Institusi untuk mendidik murid."],
+      "bicycle": ["basikal", "Kenderaan dua roda yang dikayuh dengan kaki."],
+      "elephant": ["gajah", "Mamalia yang sangat besar dengan belalai dan gading."],
+      "doctor": ["doktor", "Orang yang berkelayakan untuk merawat penyakit dan kecederaan."],
+      "computer": ["komputer", "Alat elektronik untuk menyimpan dan memproses data."],
+      "dinosaur": ["dinosaur", "Reptilia prasejarah yang telah pupus."],
+      "astronaut": ["angkasawan", "Orang yang dilatih untuk mengembara dalam kapal angkasa."],
+      "microscope": ["mikroskop", "Alat optik untuk melihat objek yang sangat kecil."],
+      "bridge": ["jambatan", "Binaan untuk melintasi halangan atau sungai."],
+      "run": ["berlari", "Bergerak dengan pantas menggunakan kaki."],
+      "jump": ["melompat", "Menolak badan dari tanah ke udara."],
+      "eat": ["makan", "Memasukkan makanan ke dalam badan."],
+      "sleep": ["tidur", "Berehat dengan kesedaran yang terhenti seketika."],
+      "swim": ["berenang", "Bergerak di dalam air dengan menggerakkan badan."],
+      "dance": ["menari", "Bergerak mengikut rentak muzik."],
+      "explore": ["meneroka", "Mengembara di kawasan yang belum dikenali untuk belajar."],
+      "invent": ["mencipta", "Menghasilkan atau mereka sesuatu yang baharu."],
+      "accelerate": ["memecut", "Menambah kelajuan dengan cepat."],
+      "investigate": ["menyiasat", "Menjalankan pemeriksaan secara teratur."],
+      "happy": ["gembira", "Berasa atau menunjukkan kegembiraan."],
+      "big": ["besar", "Bersaiz agak besar atau luas."],
+      "bright": ["terang", "Memancarkan atau memantulkan banyak cahaya."],
+      "clever": ["bijak", "Cepat faham dan pintar."],
+      "brave": ["berani", "Sanggup menghadapi bahaya atau kesakitan tanpa rasa takut."],
+      "delicious": ["sedap", "Sangat enak rasanya."],
+      "enormous": ["amat besar", "Sangat besar; raksasa."],
+      "mysterious": ["misteri", "Sukar atau mustahil untuk difahami."],
+      "quickly": ["dengan pantas", "Pada kelajuan yang tinggi; laju."],
+      "loudly": ["dengan kuat", "Dengan bunyi yang sangat kuat."],
+      "carefully": ["dengan berhati-hati", "Dengan cara yang mengelakkan bahaya atau kesilapan."],
+      "happily": ["dengan gembira", "Dengan cara yang ceria dan riang."],
+      "suddenly": ["tiba-tiba", "Dengan cepat dan tidak disangka-sangka."],
+      "eagerly": ["dengan penuh semangat", "Dengan keghairahan atau keinginan yang tinggi."],
+      "frequently": ["kerap", "Berlaku selalu atau berulang kali."],
+      "under": ["di bawah", "Terletak tepat di bawah sesuatu."],
+      "between": ["di antara", "Di tengah-tengah dua titik atau benda."],
+      "behind": ["di belakang", "Di bahagian belakang sesuatu."],
+      "across": ["merentasi", "Dari satu sisi ke sisi yang lain."],
+      "through": ["menerusi", "Masuk dari satu sisi dan keluar dari sisi yang lain."],
+      "against": ["menentang / bersandar pada", "Bersentuhan dengan atau berlawanan dengan sesuatu."],
+      "he": ["dia (lelaki)", "Digunakan untuk merujuk kepada seorang lelaki."],
+      "they": ["mereka", "Digunakan untuk merujuk kepada dua orang atau lebih."],
+      "we": ["kami / kita", "Digunakan oleh penutur untuk memasukkan dirinya dan orang lain."],
+      "mine": ["kepunyaan saya", "Dimiliki oleh atau berkaitan dengan diri sendiri."],
+      "someone": ["seseorang", "Individu yang tidak ditentukan."],
+      "ourselves": ["diri kita sendiri", "Kata ganti diri pantulan bagi kita atau kami."],
+      "because": ["kerana", "Atas sebab bahawa; oleh sebab."],
+      "although": ["walaupun", "Meskipun hakikatnya; sungguhpun."],
+      "unless": ["kecuali jika", "Kecuali jika; dengan syarat."],
+      "while": ["semasa", "Sepanjang masa ketika sesuatu berlaku."],
+      "therefore": ["oleh itu", "Atas sebab itu; kesimpulan logik daripada perkara sebelumnya."],
+      "whereas": ["manakala", "Berbeza dengan hakikat bahawa."],
+      "these": ["ini (jamak)", "Menunjukkan benda-benda jamak yang dekat."],
+      "those": ["itu (jamak)", "Menunjukkan benda-benda jamak yang jauh."],
+      "every": ["setiap", "Merujuk kepada semua ahli dalam satu kumpulan."],
+      "several": ["beberapa", "Lebih daripada dua tetapi tidak banyak."],
+      "another": ["satu lagi", "Seorang atau satu benda tambahan."],
+      "where": ["di mana", "Di atau ke tempat atau kedudukan yang mana."],
+      "whose": ["kepunyaan siapa", "Dimiliki atau berkaitan dengan orang yang mana."],
+      "which": ["yang mana", "Menentukan satu atau lebih daripada sesuatu kumpulan."],
+      "why": ["mengapa", "Atas sebab atau tujuan apa."],
+      "how often": ["berapa kerap", "Bertanya tentang kekerapan sesuatu berlaku."],
+      "twelve": ["dua belas", "Nombor yang sama dengan jumlah 6 dan 6 (12)."],
+      "fifteen": ["lima belas", "Nombor kardinal yang sama dengan 15."],
+      "thousand": ["seribu", "Nombor yang bersamaan sepuluh ratus (1,000)."],
+      "million": ["sejuta", "Nombor yang bersamaan seribu ribu."],
+      "quarter": ["suku", "Satu daripada empat bahagian yang sama (1/4)."],
+      "wow!": ["wah!", "Menyatakan rasa hairan atau kagum."],
+      "hooray!": ["hore!", "Menyatakan kegembiraan, kemenangan atau perayaan."],
+      "brilliant!": ["hebat!", "Menyatakan pujian atas kecemerlangan yang luar biasa."],
+      "ouch!": ["aduh!", "Menyatakan kesakitan fizikal secara tiba-tiba."],
+      "pardon!": ["maaf?", "Digunakan untuk meminta seseorang mengulangi kata-katanya dengan sopan."],
+      "however": ["walau bagaimanapun", "Digunakan untuk memulakan kenyataan yang bercanggah."],
+      "furthermore": ["tambahan pula", "Di samping itu; selain itu."],
+      "meanwhile": ["sementara itu", "Dalam tempoh masa yang berlaku serentak."],
+      "in addition": ["di samping itu", "Sebagai perincian atau keadaan tambahan."]
+    };
+
+    function getUniqueDistractors(targetWord, currentCatKey, count = 2) {
+      const distractors = [];
+      const usedWords = new Set();
+      if (targetWord && targetWord.w) usedWords.add(targetWord.w.toLowerCase());
+
+      const otherKeys = Object.keys(CURRICULUM).filter(k => k !== currentCatKey);
+      const shuffledKeys = [...otherKeys].sort(() => Math.random() - 0.5);
+
+      for (const catKey of shuffledKeys) {
+        if (distractors.length >= count) break;
+        const cat = CURRICULUM[catKey];
+        if (!cat || !cat.words) continue;
+        const candidates = cat.words.filter(wObj => !usedWords.has(wObj.w.toLowerCase()));
+        if (candidates.length > 0) {
+          const picked = candidates[Math.floor(Math.random() * candidates.length)];
+          usedWords.add(picked.w.toLowerCase());
+          distractors.push({ ...picked, isCorrect: false, tag: cat.tag });
+        }
+      }
+
+      const fallbackList = [
+        { w: "jump", def: "To push oneself off the ground.", tag: "Verb" },
+        { w: "happy", def: "Feeling pleasure.", tag: "Adjective" },
+        { w: "quickly", def: "At a fast speed.", tag: "Adverb" },
+        { w: "under", def: "Below something.", tag: "Preposition" }
+      ];
+      for (const fb of fallbackList) {
+        if (distractors.length >= count) break;
+        if (!usedWords.has(fb.w.toLowerCase())) {
+          usedWords.add(fb.w.toLowerCase());
+          distractors.push({ ...fb, isCorrect: false });
+        }
+      }
+      return distractors;
+    }
+
+    const gameState = {
+      categoryKey: 'nouns',
+      currentLevel: 1,
+      maxLevel: 100,
+      score: 0,
+      lives: 3,
+      streak: 0,
+      timerSec: 15,
+      timerMax: 15,
+      timerInterval: null,
+      isPaused: false,
+      isGameOver: false,
+      isBossLevel: false,
+      bossHP: 100,
+      student: { name: "Saufi Aiman", class: "5 Jujur", school: "SK Seri Saujana" },
+      sheetWebhookUrl: localStorage.getItem('saufi_sheet_webhook') || '',
+      completedCategories: JSON.parse(localStorage.getItem('saufi_completed_cats') || '[]'),
+      currentOptions: [],
+      audioMuted: false,
+      cameraActive: false,
+      fistDetected: false,
+      isHitCooldown: false,
+      totalAnswered: 0,
+      totalCorrect: 0
+    };
+
+    let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
+    function toggleAudio() {
+      gameState.audioMuted = !gameState.audioMuted;
+      const icon = document.getElementById('audio-icon');
+      if (gameState.audioMuted) {
+        icon.className = 'fa-solid fa-volume-xmark text-rose-400';
+      } else {
+        icon.className = 'fa-solid fa-volume-high text-yellow-300';
+        playSfx('correct');
+      }
+    }
+
+    function playSfx(type) {
+      if (gameState.audioMuted) return;
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        if (type === 'punch') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(160, now);
+          osc.frequency.exponentialRampToValueAtTime(35, now + 0.18);
+          gain.gain.setValueAtTime(0.9, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.18);
+        } else if (type === 'correct') {
+          [523.25, 659.25, 783.99].forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+            gain.gain.setValueAtTime(0.35, now + idx * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.25);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.08);
+            osc.stop(now + idx * 0.08 + 0.25);
+          });
+        } else if (type === 'wrong') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(170, now);
+          osc.frequency.linearRampToValueAtTime(100, now + 0.25);
+          gain.gain.setValueAtTime(0.5, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.25);
+        } else if (type === 'boss_hit') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(95, now);
+          osc.frequency.exponentialRampToValueAtTime(25, now + 0.3);
+          gain.gain.setValueAtTime(0.65, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        }
+      } catch (e) {
+        console.warn("Audio error:", e);
+      }
+    }
+
+    // ---------- Three.js Setup ----------
+    let threeScene, threeCamera, threeRenderer;
+    const monsters3D = [];
+    let titanBoss3D = null;
+
+    // Portrait phones: stack the monsters vertically. Landscape/desktop: 3 across at 2x.
+    function isPortraitArena() {
+      const c = document.getElementById('arena-viewport');
+      if (!c) return false;
+      return (c.clientWidth || 800) < (c.clientHeight || 450) * 1.15;
+    }
+
+    function layoutMonsters() {
+      if (!monsters3D.length) return;
+      const portrait = isPortraitArena();
+      const xs = portrait ? [0, 0, 0] : [-9.2, 0, 9.2];
+      const ys = portrait ? [5.0, 0, -5.0] : [-0.2, -0.35, -0.2];
+      const sc = portrait ? 1.15 : 2;
+      monsters3D.forEach((m, i) => {
+        m.baseX = xs[i];
+        m.baseY = ys[i];
+        m.mesh.scale.set(sc, sc, sc);
+        m.bodyR = 1.85 * sc;
+        if (!m.isKnockedOut) m.mesh.position.set(m.baseX, m.baseY, 0);
+      });
+    }
+
+    // Keeps every monster inside the arena on any screen shape
+    function fitCamera() {
+      const container = document.getElementById('arena-viewport');
+      if (!container || !threeCamera) return;
+      const w = container.clientWidth || 800;
+      const h = container.clientHeight || 450;
+      threeCamera.aspect = w / h;
+      layoutMonsters();
+      const t = Math.tan(THREE.MathUtils.degToRad(threeCamera.fov / 2));
+      let z;
+      if (isPortraitArena()) {
+        z = Math.max(8.4 / t, 2.9 / (threeCamera.aspect * t));
+      } else {
+        z = Math.max(13.4 / (threeCamera.aspect * t), 5.0 / t);
+      }
+      threeCamera.position.set(0, 0, z);
+      threeCamera.updateProjectionMatrix();
+    }
+
+    function initThreeJS() {
+      const canvas = document.getElementById('three-monster-canvas');
+      const container = document.getElementById('arena-viewport');
+      if (!canvas || !container) return;
+
+      const width = container.clientWidth || 800;
+      const height = container.clientHeight || 450;
+
+      threeScene = new THREE.Scene();
+      threeCamera = new THREE.PerspectiveCamera(50, width / height, 0.1, 100);
+      threeCamera.position.set(0, 0, 11.2);
+
+      threeRenderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      threeRenderer.setSize(width, height);
+      threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      fitCamera();
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
+      threeScene.add(ambientLight);
+
+      const dirLight = new THREE.DirectionalLight(0xfff5ea, 0.85);
+      dirLight.position.set(5, 10, 7);
+      threeScene.add(dirLight);
+
+      buildCuteMonsters();
+      canvas.addEventListener('pointerdown', (ev) => {
+        const rect = container.getBoundingClientRect();
+        const px = ev.clientX - rect.left;
+        const py = ev.clientY - rect.top;
+        const idx = getMonsterOptionIndex(px, py);
+        if (idx === -1) return;
+        const placard = document.getElementById(`monster-placard-${idx}`);
+        if (placard) {
+          const r = placard.getBoundingClientRect();
+          executePunchOnOption(idx, r.left - rect.left + r.width / 2, r.top - rect.top + r.height / 2);
+        } else {
+          executePunchOnOption(idx, px, py);
+        }
+      });
+      window.addEventListener('resize', onWindowResize);
+      window.addEventListener('orientationchange', () => setTimeout(onWindowResize, 250));
+      if (window.ResizeObserver) new ResizeObserver(() => onWindowResize()).observe(container);
+      animateThreeLoop();
+    }
+
+    function onWindowResize() {
+      const container = document.getElementById('arena-viewport');
+      if (!container || !threeRenderer || !threeCamera) return;
+      threeRenderer.setSize(container.clientWidth, container.clientHeight);
+      fitCamera();
+      if (gameState.currentOptions.length) renderPlacards();
+    }
+
+    function buildCuteMonsters() {
+      monsters3D.forEach(m => threeScene.remove(m.mesh));
+      monsters3D.length = 0;
+
+      // Wide spacing (9.2) for 2x monsters so they never overlap
+      const configs = [
+        { color: 0xff6b8b, hornColor: 0xffd166, x: -9.2, y: -0.2 },
+        { color: 0x48dbfb, hornColor: 0x1dd1a1, x: 0.0, y: -0.35 },
+        { color: 0xfeca57, hornColor: 0xff9ff3, x: 9.2, y: -0.2 }
+      ];
+
+      configs.forEach((cfg, i) => {
+        const group = new THREE.Group();
+        const body = new THREE.Mesh(new THREE.SphereGeometry(1.85, 32, 32), new THREE.MeshToonMaterial({ color: cfg.color }));
+        group.add(body);
+
+        [-0.8, 0.8].forEach(xOff => {
+          const cheek = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 16), new THREE.MeshBasicMaterial({ color: 0xff477e }));
+          cheek.position.set(xOff, -0.3, 1.62);
+          cheek.scale.set(1.25, 0.65, 0.45);
+          group.add(cheek);
+        });
+
+        [-0.56, 0.56].forEach(xOff => {
+          const eye = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 16), new THREE.MeshBasicMaterial({ color: 0x111111 }));
+          eye.position.set(xOff, 0.35, 1.7);
+          group.add(eye);
+
+          const glint = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+          glint.position.set(xOff + 0.08, 0.44, 1.92);
+          group.add(glint);
+        });
+
+        const hornGeo = new THREE.ConeGeometry(0.45, 1.1, 16);
+        const hornMat = new THREE.MeshToonMaterial({ color: cfg.hornColor });
+        [-0.7, 0.7].forEach((xOff, idx) => {
+          const horn = new THREE.Mesh(hornGeo, hornMat);
+          horn.position.set(xOff, 1.75, 0);
+          horn.rotation.z = (idx === 0 ? 0.32 : -0.32);
+          group.add(horn);
+        });
+
+        group.scale.set(2, 2, 2); // monsters are now 2x bigger
+        group.position.set(cfg.x, cfg.y, 0);
+        threeScene.add(group);
+
+        monsters3D.push({
+          mesh: group,
+          baseX: cfg.x,
+          baseY: cfg.y,
+          isKnockedOut: false,
+          knockVelocity: new THREE.Vector3(),
+          idlePhase: i * 1.5
+        });
+      });
+
+      buildTitanBoss();
+      fitCamera();
+    }
+
+    function buildTitanBoss() {
+      titanBoss3D = new THREE.Group();
+      const core = new THREE.Mesh(new THREE.DodecahedronGeometry(1.6, 1), new THREE.MeshToonMaterial({ color: 0xff3838 }));
+      titanBoss3D.add(core);
+      titanBoss3D.coreMesh = core;
+
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(2.3, 0.15, 16, 64), new THREE.MeshToonMaterial({ color: 0xf1c40f }));
+      ring.rotation.x = Math.PI / 2.5;
+      titanBoss3D.add(ring);
+      titanBoss3D.ringMesh = ring;
+
+      [-0.6, 0.6].forEach(xOff => {
+        const eye = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffff00 }));
+        eye.position.set(xOff, 0.3, 1.4);
+        titanBoss3D.add(eye);
+      });
+
+      titanBoss3D.position.set(0, 0.2, -1.0);
+      titanBoss3D.visible = false;
+      threeScene.add(titanBoss3D);
+    }
+
+    let clock = new THREE.Clock();
+    function animateThreeLoop() {
+      requestAnimationFrame(animateThreeLoop);
+      const delta = clock.getDelta();
+      const elapsed = clock.getElapsedTime();
+
+      monsters3D.forEach(m => {
+        if (!m.isKnockedOut) {
+          m.mesh.position.y = m.baseY + Math.sin(elapsed * 2.5 + m.idlePhase) * 0.14;
+          m.mesh.rotation.y = Math.sin(elapsed * 1.8 + m.idlePhase) * 0.12;
+        } else {
+          m.mesh.position.addScaledVector(m.knockVelocity, delta);
+          m.mesh.rotation.x += 10 * delta;
+          m.mesh.rotation.y += 12 * delta;
+          m.knockVelocity.y -= 12 * delta;
+        }
+      });
+
+      if (titanBoss3D && titanBoss3D.visible) {
+        const ph = bossPhase();
+        titanBoss3D.position.y = 0.2 + Math.sin(elapsed * (2 + ph)) * 0.3;
+        titanBoss3D.position.x = Math.sin(elapsed * (0.8 + ph * 0.4)) * 1.8;
+        titanBoss3D.rotation.y += (0.8 + ph * 0.6) * delta;
+        if (titanBoss3D.ringMesh) titanBoss3D.ringMesh.rotation.z += (1.8 + ph) * delta;
+        titanBoss3D.hitPulse = Math.max(0, (titanBoss3D.hitPulse || 0) - delta * 4);
+        const bsc = 1.25 + Math.sin(elapsed * 6) * 0.04 * ph + titanBoss3D.hitPulse * 0.25;
+        titanBoss3D.scale.set(bsc, bsc, bsc);
+        if (titanBoss3D.coreMesh) titanBoss3D.coreMesh.material.color.setHex(titanBoss3D.hitPulse > 0.5 ? 0xffffff : [0xff3838, 0xff7a00, 0xb30000][ph - 1]);
+      }
+      if (gameState.isBossLevel && !gameState.isGameOver && !gameState.isPaused) {
+        if (performance.now() >= (gameState.freezeUntil || 0)) gameState.bossClock = (gameState.bossClock || 0) + delta;
+        updatePowerStatus();
+      }
+      if (threeCamera) {
+        gameState.shake = Math.max(0, (gameState.shake || 0) - delta);
+        threeCamera.position.x = gameState.shake > 0 ? (Math.random() - 0.5) * 0.5 : 0;
+      }
+
+      syncPlacardsTo3D();
+      if (threeRenderer && threeScene && threeCamera) {
+        threeRenderer.render(threeScene, threeCamera);
+      }
+    }
+
+    function triggerMonsterKnockout(index) {
+      if (!monsters3D[index]) return;
+      playSfx('punch');
+      const m = monsters3D[index];
+      m.isKnockedOut = true;
+      m.knockVelocity.set((index - 1) * 3, 5.5, -4.5);
+
+      setTimeout(() => {
+        m.isKnockedOut = false;
+        m.mesh.position.set(m.baseX, m.baseY, 0);
+        m.mesh.rotation.set(0, 0, 0);
+      }, 700);
+    }
+
+    function syncPlacardsTo3D() {
+      const container = document.getElementById('arena-viewport');
+      if (!container || !threeCamera) return;
+      const width = container.clientWidth || 800;
+      const height = container.clientHeight || 450;
+
+      gameState.currentOptions.forEach((opt, idx) => {
+        const placard = document.getElementById(`monster-placard-${idx}`);
+        if (!placard) return;
+
+        let posX = 0, posY = 0;
+        if (gameState.isBossLevel) {
+          const tt = gameState.bossClock || 0;
+          const n = gameState.currentOptions.length;
+          const ang = tt * (0.5 + bossPhase() * 0.35) + (opt.orbit || 0) + idx * (Math.PI * 2 / n);
+          posX = width * 0.5 + Math.cos(ang) * width * 0.30;
+          posY = height * 0.5 + Math.sin(ang * 1.3) * height * 0.26;
+          placard.style.transition = 'none';
+        } else {
+          const m = monsters3D[opt.monsterIndex !== undefined ? opt.monsterIndex : idx];
+          if (m && !m.isKnockedOut) {
+            const v = new THREE.Vector3();
+            m.mesh.getWorldPosition(v);
+            // Anchor word on the 2x monster's belly (front of body = 1.85 * 2)
+            const r = m.bodyR || 3.7;
+            v.y -= r * 0.24;
+            v.z += r * 1.05;
+            v.project(threeCamera);
+            posX = (v.x * 0.5 + 0.5) * width;
+            posY = (-(v.y * 0.5) + 0.5) * height;
+          } else {
+            const portraitNow = width < height * 1.15;
+            const defaultXs = portraitNow ? [0.5, 0.5, 0.5] : [0.16, 0.50, 0.84];
+            const defaultYs = portraitNow ? [0.2, 0.5, 0.8] : [0.48, 0.48, 0.48];
+            const mi = opt.monsterIndex !== undefined ? opt.monsterIndex : idx;
+            posX = width * (defaultXs[mi] || 0.5);
+            posY = height * (defaultYs[mi] || 0.48);
+          }
+        }
+
+        const halfW = (placard.offsetWidth || 220) / 2 + 8;
+        const halfH = (placard.offsetHeight || 100) / 2 + 8;
+        posX = Math.max(halfW, Math.min(width - halfW, posX));
+        posY = Math.max(halfH, Math.min(height - halfH, posY));
+
+        placard.style.left = `${posX}px`;
+        placard.style.top = `${posY}px`;
+      });
+    }
+
+    // ---------- Camera + Hands ----------
+    let handsInstance = null;
+    let isProcessingFrame = false;
+    let cameraAnimId = null;
+    let lastVideoW = 0;
+    let lastVideoH = 0;
+    let feedbackAutoTimer = null;
+    let feedbackAutoInterval = null;
+    let latestLandmarks = [];
+
+    const handStates = [
+      { wasFist: false, activeTargetIndex: -1 },
+      { wasFist: false, activeTargetIndex: -1 }
+    ];
+
+    function initCameraAndHands() {
+      try {
+        if (window.Hands) {
+          handsInstance = new Hands({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+          });
+          handsInstance.setOptions({
+            maxNumHands: 2,
+            modelComplexity: 0,
+            minDetectionConfidence: 0.40,
+            minTrackingConfidence: 0.40
+          });
+          handsInstance.onResults(onHandResults);
+        }
+      } catch (err) {
+        console.warn("Hands init error:", err);
+      }
+      startCameraDirect(false);
+    }
+
+    async function startCameraDirect(userInitiated = false) {
+      const video = document.getElementById('live-webcam-feed');
+      if (!video) return;
+
+      try {
+        if (video.srcObject) {
+          video.srcObject.getTracks().forEach(t => t.stop());
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
+          audio: false
+        });
+        video.srcObject = stream;
+        await video.play();
+        gameState.cameraActive = true;
+
+        document.getElementById('cam-status-text').textContent = 'Cam Active';
+        document.getElementById('cam-led').className = 'w-2 h-2 rounded-full bg-emerald-400';
+        const placeholder = document.getElementById('standby-placeholder');
+        if (placeholder) placeholder.classList.add('hidden');
+
+        startVideoProcessingLoop();
+      } catch (err) {
+        console.warn("Camera access fallback:", err);
+        document.getElementById('cam-status-text').textContent = 'Touch / Mouse Mode';
+        document.getElementById('cam-led').className = 'w-2 h-2 rounded-full bg-cyan-400';
+      }
+    }
+
+    function isFistClenched(landmarks) {
+      const wrist = landmarks[0];
+      const mcpMiddle = landmarks[9];
+      const handScale = Math.hypot(mcpMiddle.x - wrist.x, mcpMiddle.y - wrist.y) || 0.15;
+
+      const fingers = [
+        { tip: 8, pip: 6, mcp: 5 },
+        { tip: 12, pip: 10, mcp: 9 },
+        { tip: 16, pip: 14, mcp: 13 },
+        { tip: 20, pip: 18, mcp: 17 }
+      ];
+
+      let curledCount = 0;
+      let extendedCount = 0;
+
+      fingers.forEach(f => {
+        const tip = landmarks[f.tip];
+        const pip = landmarks[f.pip];
+        const mcp = landmarks[f.mcp];
+
+        const dTipWrist = Math.hypot(tip.x - wrist.x, tip.y - wrist.y);
+        const dPipWrist = Math.hypot(pip.x - wrist.x, pip.y - wrist.y);
+        const dTipMcp = Math.hypot(tip.x - mcp.x, tip.y - mcp.y);
+
+        const isCurled = (dTipWrist < dPipWrist * 1.02) && (dTipMcp < handScale * 0.72);
+        if (isCurled) {
+          curledCount++;
+        } else {
+          const isExtended = (dTipWrist > dPipWrist * 1.15) && (dTipMcp > handScale * 0.85);
+          if (isExtended) extendedCount++;
+        }
+      });
+
+      const thumbTip = landmarks[4];
+      const dThumbToCenter = Math.hypot(thumbTip.x - landmarks[9].x, thumbTip.y - landmarks[9].y);
+      const thumbCurled = dThumbToCenter < handScale * 0.75;
+
+      if (extendedCount >= 2) return false;
+      return (curledCount >= 3 && thumbCurled) || (curledCount === 4);
+    }
+
+    function startVideoProcessingLoop() {
+      if (cameraAnimId) {
+        cancelAnimationFrame(cameraAnimId);
+        cameraAnimId = null;
+      }
+
+      const video = document.getElementById('live-webcam-feed');
+      const menuCanvas = document.getElementById('menu-webcam-canvas');
+      const arenaCanvas = document.getElementById('arena-webcam-canvas');
+
+      function drawFrame() {
+        if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
+          if (video.videoWidth !== lastVideoW || video.videoHeight !== lastVideoH) {
+            lastVideoW = video.videoWidth;
+            lastVideoH = video.videoHeight;
+            if (menuCanvas) { menuCanvas.width = lastVideoW; menuCanvas.height = lastVideoH; }
+            if (arenaCanvas) { arenaCanvas.width = lastVideoW; arenaCanvas.height = lastVideoH; }
+          }
+
+          const isHomeVisible = !document.getElementById('home-screen').classList.contains('hidden');
+          const isArenaVisible = !document.getElementById('arena-screen').classList.contains('hidden');
+
+          if (isHomeVisible && menuCanvas) {
+            const ctx = menuCanvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, menuCanvas.width, menuCanvas.height);
+
+            if (latestLandmarks && latestLandmarks.length > 0) {
+              latestLandmarks.forEach((landmarks, hIdx) => {
+                const palm = landmarks[9];
+                const px = palm.x * menuCanvas.width;
+                const py = palm.y * menuCanvas.height;
+                const isFist = isFistClenched(landmarks);
+
+                ctx.save();
+                ctx.shadowColor = isFist ? '#f59e0b' : (hIdx === 0 ? '#38bdf8' : '#34d399');
+                ctx.shadowBlur = 18;
+                ctx.strokeStyle = isFist ? '#fbbf24' : (hIdx === 0 ? '#0284c7' : '#059669');
+                ctx.lineWidth = isFist ? 5 : 3;
+                ctx.beginPath();
+                ctx.arc(px, py, isFist ? 30 : 22, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.fillStyle = isFist ? 'rgba(251, 191, 36, 0.65)' : (hIdx === 0 ? 'rgba(56, 189, 248, 0.45)' : 'rgba(52, 211, 153, 0.45)');
+                ctx.beginPath();
+                ctx.arc(px, py, isFist ? 18 : 12, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.font = 'bold 12px "Lilita One", sans-serif';
+                ctx.fillStyle = '#ffffff';
+                ctx.textAlign = 'center';
+                ctx.fillText(isFist ? '✊ FIST!' : '✋ HAND', px, py - 34);
+                ctx.restore();
+              });
+            }
+          } else if (isArenaVisible && arenaCanvas) {
+            const ctx = arenaCanvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, arenaCanvas.width, arenaCanvas.height);
+          }
+
+          if (handsInstance && !isProcessingFrame) {
+            isProcessingFrame = true;
+            handsInstance.send({ image: video })
+              .catch((e) => console.warn("Hands error:", e))
+              .finally(() => { isProcessingFrame = false; });
+          }
+        }
+        cameraAnimId = requestAnimationFrame(drawFrame);
+      }
+      cameraAnimId = requestAnimationFrame(drawFrame);
+    }
+
+    function onHandResults(results) {
+      latestLandmarks = results.multiHandLandmarks || [];
+
+      const fistPill = document.getElementById('standby-fist-pill');
+      const arenaFistPill = document.getElementById('arena-fist-indicator');
+      const glove0 = document.getElementById('gesture-glove-0');
+      const glove1 = document.getElementById('gesture-glove-1');
+      const gloveEls = [glove0, glove1];
+      const gloveIcons = [document.getElementById('glove-icon-0'), document.getElementById('glove-icon-1')];
+      const gloveRings = [document.getElementById('glove-ring-0'), document.getElementById('glove-ring-1')];
+      const gloveLabels = [document.getElementById('glove-label-0'), document.getElementById('glove-label-1')];
+
+      gloveEls.forEach(g => { if (g) g.classList.add('hidden'); });
+      const isArenaVisible = !document.getElementById('arena-screen').classList.contains('hidden');
+
+      if (!latestLandmarks || latestLandmarks.length === 0) {
+        if (fistPill) {
+          fistPill.textContent = 'NO HAND';
+          fistPill.className = 'text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-md font-mono';
+        }
+        if (arenaFistPill) {
+          arenaFistPill.textContent = 'HANDS: NOT DETECTED';
+          arenaFistPill.className = 'bg-slate-900 border border-slate-700 px-2 py-0.5 rounded-lg text-slate-400 font-mono text-[10px]';
+        }
+        gameState.fistDetected = false;
+        handStates.forEach(s => { s.wasFist = false; s.activeTargetIndex = -1; });
+        clearPlacardHoverHighlights();
+        return;
+      }
+
+      const container = document.getElementById('arena-viewport');
+      const width = container ? container.clientWidth : 800;
+      const height = container ? container.clientHeight : 450;
+
+      let fistCount = 0;
+      const totalHands = Math.min(2, latestLandmarks.length);
+      const hoveredIndices = new Set();
+
+      for (let hIdx = 0; hIdx < totalHands; hIdx++) {
+        const landmarks = latestLandmarks[hIdx];
+        const isFist = isFistClenched(landmarks);
+        if (isFist) fistCount++;
+
+        const screenX = (1 - landmarks[9].x);
+        const screenY = landmarks[9].y;
+        const gloveX = screenX * width;
+        const gloveY = screenY * height;
+
+        const glove = gloveEls[hIdx];
+        const icon = gloveIcons[hIdx];
+        const ring = gloveRings[hIdx];
+        const label = gloveLabels[hIdx];
+        const prevState = handStates[hIdx];
+
+        if (isArenaVisible && glove) {
+          glove.classList.remove('hidden');
+          glove.style.left = `${gloveX}px`;
+          glove.style.top = `${gloveY}px`;
+
+          const justClenched = isFist && !prevState.wasFist;
+
+          if (isFist) {
+            glove.classList.add('scale-125');
+            if (ring) {
+              ring.className = `w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 border-4 border-white flex items-center justify-center shadow-[0_0_35px_rgba(250,204,21,1)] animate-pulse`;
+            }
+            if (icon) {
+              icon.className = 'fa-solid fa-hand-back-fist text-2xl text-slate-950 animate-bounce';
+            }
+            if (label) {
+              label.textContent = 'CLENCHED! ✊';
+              label.className = 'absolute -bottom-6 px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black tracking-wider text-[10px] whitespace-nowrap shadow-lg uppercase';
+            }
+
+            if (justClenched && !gameState.isPaused && !gameState.isGameOver && document.getElementById('feedback-modal').classList.contains('hidden')) {
+              checkHitCollision(gloveX, gloveY, hIdx, true);
+            }
+          } else {
+            glove.classList.remove('scale-125');
+            if (ring) {
+              ring.className = `w-16 h-16 rounded-full bg-gradient-to-tr ${hIdx === 0 ? 'from-amber-500/30 to-yellow-300/20 border-2 border-yellow-300 shadow-[0_0_20px_rgba(250,204,21,0.5)]' : 'from-cyan-500/30 to-blue-400/20 border-2 border-cyan-300 shadow-[0_0_20px_rgba(34,211,238,0.5)]'} backdrop-blur-sm flex items-center justify-center transition-all duration-150`;
+            }
+            if (icon) {
+              icon.className = `fa-solid fa-hand text-2xl ${hIdx === 0 ? 'text-yellow-300' : 'text-cyan-300'}`;
+            }
+            if (label) {
+              label.textContent = 'AIMING ✋';
+              label.className = `absolute -bottom-6 px-2 py-0.5 rounded-full bg-slate-950/90 border ${hIdx === 0 ? 'border-yellow-300/60 text-yellow-300' : 'border-cyan-300/60 text-cyan-300'} text-[9px] font-black tracking-wider whitespace-nowrap shadow uppercase`;
+            }
+
+            const targetIdx = getHoveredOptionIndex(gloveX, gloveY);
+            if (targetIdx !== -1) {
+              hoveredIndices.add(targetIdx);
+            }
+          }
+
+          prevState.wasFist = isFist;
+        }
+      }
+
+      updatePlacardHoverVisuals(hoveredIndices);
+      gameState.fistDetected = fistCount > 0;
+
+      if (fistPill) {
+        if (fistCount >= 2) {
+          fistPill.textContent = '✊✊ DUAL CLENCH READY!';
+          fistPill.className = 'text-[10px] bg-emerald-400 text-slate-950 font-black px-2 py-0.5 rounded-md font-mono';
+        } else if (fistCount === 1) {
+          fistPill.textContent = '✊ 1 CLENCH READY!';
+          fistPill.className = 'text-[10px] bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded-md font-mono';
+        } else {
+          fistPill.textContent = `✋ PALM OPEN (AIMING)`;
+          fistPill.className = 'text-[10px] bg-slate-800 text-emerald-300 border border-emerald-600/40 px-2 py-0.5 rounded-md font-mono';
+        }
+      }
+
+      if (arenaFistPill) {
+        if (fistCount >= 2) {
+          arenaFistPill.textContent = '✊✊ DUAL CLENCH!';
+          arenaFistPill.className = 'bg-emerald-500 text-slate-950 px-2.5 py-0.5 rounded-lg font-black font-mono text-[10px] animate-pulse';
+        } else if (fistCount === 1) {
+          arenaFistPill.textContent = '✊ CLENCH READY!';
+          arenaFistPill.className = 'bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-lg font-black font-mono text-[10px]';
+        } else {
+          arenaFistPill.textContent = '✋ PALM OPEN (CLENCH TO GRAB)';
+          arenaFistPill.className = 'bg-slate-900 border border-slate-700 px-2.5 py-0.5 rounded-lg text-yellow-300 font-bold font-mono text-[10px]';
+        }
+      }
+    }
+
+    // Picks the NEAREST word, so neighbouring words never fight over the same hand
+    function getHoveredOptionIndex(x, y) {
+      const container = document.getElementById('arena-viewport');
+      if (!container) return -1;
+      const cr = container.getBoundingClientRect();
+      let best = -1, bestDist = Infinity;
+
+      for (let idx = 0; idx < gameState.currentOptions.length; idx++) {
+        const p = document.getElementById(`monster-placard-${idx}`);
+        if (!p) continue;
+        const r = p.getBoundingClientRect();
+        const L = r.left - cr.left, R = r.right - cr.left;
+        const T = r.top - cr.top, B = r.bottom - cr.top;
+        const d = Math.hypot(x - (L + R) / 2, y - (T + B) / 2);
+        const pad = Math.min(40, Math.min(cr.width, cr.height) * 0.07);
+        const inside = x >= L - pad && x <= R + pad && y >= T - pad && y <= B + pad;
+        if ((inside || d < Math.min(150, Math.min(cr.width, cr.height) * 0.25)) && d < bestDist) {
+          best = idx;
+          bestDist = d;
+        }
+      }
+      if (best === -1) best = getMonsterOptionIndex(x, y);
+      return best;
+    }
+
+    // Screen-space circle of a 3D monster body (used so clenching the MONSTER also counts)
+    function monsterScreenCircle(m, w, h) {
+      const c = new THREE.Vector3();
+      m.mesh.getWorldPosition(c);
+      const e = c.clone();
+      e.x += (m.bodyR || 3.7);
+      c.project(threeCamera);
+      e.project(threeCamera);
+      const cx = (c.x * 0.5 + 0.5) * w;
+      const cy = (-(c.y * 0.5) + 0.5) * h;
+      const ex = (e.x * 0.5 + 0.5) * w;
+      return { cx, cy, r: Math.abs(ex - cx) };
+    }
+
+    // Returns the option attached to the monster under (x, y), or -1
+    function getMonsterOptionIndex(x, y) {
+      if (gameState.isBossLevel || !threeCamera) return -1;
+      const container = document.getElementById('arena-viewport');
+      if (!container) return -1;
+      const w = container.clientWidth || 800;
+      const h = container.clientHeight || 450;
+      let best = -1, bestScore = Infinity;
+      gameState.currentOptions.forEach((opt, idx) => {
+        const m = monsters3D[opt.monsterIndex !== undefined ? opt.monsterIndex : idx];
+        if (!m || m.isKnockedOut || !m.mesh.visible) return;
+        const circ = monsterScreenCircle(m, w, h);
+        const score = Math.hypot(x - circ.cx, y - circ.cy) / (circ.r || 1);
+        if (score <= 1.08 && score < bestScore) {
+          best = idx;
+          bestScore = score;
+        }
+      });
+      return best;
+    }
+
+    function updatePlacardHoverVisuals(hoveredSet) {
+      gameState.currentOptions.forEach((opt, idx) => {
+        const placard = document.getElementById(`monster-placard-${idx}`);
+        if (!placard) return;
+        const box = placard.querySelector('.placard-box');
+        const hint = placard.querySelector('.placard-hint');
+
+        if (hoveredSet.has(idx)) {
+          if (box) {
+            box.classList.add('scale-110', 'border-amber-300', 'shadow-[0_0_30px_rgba(250,204,21,0.8)]');
+          }
+          if (hint) {
+            hint.textContent = '✊ CLENCH TO GRAB!';
+            hint.className = 'placard-hint text-[10px] font-black text-amber-300 bg-slate-950/90 px-2 py-0.5 rounded-full border border-amber-400 mt-1 animate-pulse';
+          }
+        } else {
+          if (box) {
+            box.classList.remove('scale-110', 'border-amber-300', 'shadow-[0_0_30px_rgba(250,204,21,0.8)]');
+          }
+          if (hint) {
+            hint.textContent = '';
+            hint.className = 'placard-hint hidden';
+          }
+        }
+      });
+    }
+
+    function clearPlacardHoverHighlights() {
+      updatePlacardHoverVisuals(new Set());
+    }
+
+    function checkHitCollision(x, y, handIndex = 0, isFist = false) {
+      if (!isFist || gameState.isHitCooldown) return;
+      const container = document.getElementById('arena-viewport');
+      if (!container) return;
+      const idx = getHoveredOptionIndex(x, y);
+      if (idx === -1) return;
+      const cr = container.getBoundingClientRect();
+      const r = document.getElementById(`monster-placard-${idx}`).getBoundingClientRect();
+      executePunchOnOption(idx, r.left - cr.left + r.width / 2, r.top - cr.top + r.height / 2);
+    }
+
+    function executePunchOnOption(optIndex, hitX, hitY) {
+      if (gameState.isHitCooldown) return;
+      if (gameState.isGameOver || gameState.isPaused) return;
+      if (!document.getElementById('feedback-modal').classList.contains('hidden')) return;
+
+      const opt = gameState.currentOptions[optIndex];
+      if (!opt) return;
+
+      gameState.isHitCooldown = true;
+      setTimeout(() => { gameState.isHitCooldown = false; }, 380);
+
+      createComicHitEffect(hitX, hitY, opt.isCorrect ? '#22c55e' : '#ef4444');
+
+      if (!gameState.isBossLevel && opt.monsterIndex !== undefined) {
+        triggerMonsterKnockout(opt.monsterIndex);
+      }
+
+      gameState.totalAnswered++;
+
+      if (gameState.isBossLevel) {
+        const prevPhase = bossPhase();
+        if (opt.power) {
+          applyPowerUp(opt.power, hitX, hitY);
+        } else if (opt.isCorrect) {
+          playSfx('correct');
+          playSfx('boss_hit');
+          gameState.totalCorrect++;
+          gameState.combo = (gameState.combo || 0) + 1;
+          const mult = Math.min(5, 1 + Math.floor(gameState.combo / 3));
+          gameState.score += 20 * mult * (performance.now() < (gameState.doubleUntil || 0) ? 2 : 1);
+          gameState.bossHP = Math.max(0, gameState.bossHP - 8);
+          bossHitFx();
+          if (gameState.combo % 3 === 0) createComicHitEffect(hitX, hitY - 50, '#fde047', `COMBO x${mult}!`);
+        } else {
+          playSfx('wrong');
+          gameState.combo = 0;
+          gameState.score = Math.max(0, gameState.score - 10);
+          gameState.shake = 0.2;
+        }
+        updateBossHUD();
+        updateHUD();
+        if (gameState.bossHP <= 0) {
+          handleVictory();
+          return;
+        }
+        if (bossPhase() > prevPhase) {
+          const bv = document.getElementById('arena-viewport');
+          createComicHitEffect(bv.clientWidth / 2, bv.clientHeight / 2, '#f87171', bossPhase() === 2 ? 'PHASE 2: RAGE!' : 'PHASE 3: FRENZY!');
+        }
+        setTimeout(() => {
+          if (!gameState.isGameOver && !gameState.isPaused) {
+            loadBossWave();
+          }
+        }, 220);
+      } else {
+        if (opt.isCorrect) {
+          playSfx('correct');
+          gameState.totalCorrect++;
+          gameState.streak++;
+          const bonus = gameState.streak > 3 ? 50 : 0;
+          gameState.score += (100 + bonus);
+          updateHUD();
+          showFeedbackModal(true, opt);
+        } else {
+          playSfx('wrong');
+          gameState.streak = 0;
+          gameState.lives--;
+          updateHUD();
+          showFeedbackModal(false, opt);
+        }
+      }
+    }
+
+    function createComicHitEffect(x, y, color, label) {
+      const container = document.getElementById('comic-hit-effects');
+      if (!container) return;
+      const pow = document.createElement('div');
+      pow.className = 'absolute pointer-events-none transform -translate-x-1/2 -translate-y-1/2 animate-pow font-arcade text-3xl sm:text-5xl stroke-black-lg font-black tracking-wider z-40';
+      pow.style.left = `${x}px`;
+      pow.style.top = `${y}px`;
+      pow.style.color = color || '#fde047';
+      const texts = ['CLENCH!', 'GOTCHA!', 'GRAB!', 'CAUGHT!', 'SUPER!'];
+      pow.textContent = label || texts[Math.floor(Math.random() * texts.length)];
+      container.appendChild(pow);
+      setTimeout(() => pow.remove(), 550);
+    }
+
+    function startMission() {
+      if (!gameState.cameraActive) {
+        startCameraDirect(true);
+      }
+
+      const nameInput = document.getElementById('input-student-name').value.trim();
+      const classInput = document.getElementById('input-student-class').value.trim();
+      const schoolInput = document.getElementById('input-student-school').value.trim();
+
+      if (nameInput) gameState.student.name = nameInput;
+      if (classInput) gameState.student.class = classInput;
+      if (schoolInput) gameState.student.school = schoolInput;
+
+      gameState.currentLevel = 1;
+      gameState.score = 0;
+      gameState.lives = 3;
+      gameState.streak = 0;
+      gameState.isGameOver = false;
+      gameState.isPaused = false;
+      gameState.totalAnswered = 0;
+      gameState.totalCorrect = 0;
+
+      document.getElementById('home-screen').classList.add('hidden');
+      document.getElementById('arena-screen').classList.remove('hidden');
+
+      if (!threeScene) {
+        initThreeJS();
+      } else {
+        fitCamera();
+      }
+
+      loadLevel(gameState.currentLevel);
+    }
+
+    function loadLevel(levelNum) {
+      gameState.currentLevel = levelNum;
+      updateHUD();
+
+      if (levelNum === 100) {
+        startBossFrenzy();
+      } else {
+        startStandardLevel();
+      }
+    }
+
+    function startStandardLevel() {
+      clearTimeout(gameState.bossWaveTimer);
+      gameState.isBossLevel = false;
+      if (titanBoss3D) titanBoss3D.visible = false;
+      monsters3D.forEach(m => m.mesh.visible = true);
+      document.getElementById('boss-hud-overlay').classList.add('hidden');
+
+      const cat = CURRICULUM[gameState.categoryKey];
+      document.getElementById('hud-category-name').textContent = cat.name.toUpperCase();
+      document.getElementById('hud-level-text').textContent = `LEVEL ${gameState.currentLevel} / 100`;
+      document.getElementById('question-text').textContent = `CLENCH THE MONSTER WITH THE ${cat.tag.toUpperCase()}!`;
+
+      const targetWord = cat.words[(gameState.currentLevel - 1) % cat.words.length];
+      const distractors = getUniqueDistractors(targetWord, gameState.categoryKey, 2);
+
+      const options = [
+        { ...targetWord, isCorrect: true, tag: cat.tag },
+        distractors[0],
+        distractors[1]
+      ];
+
+      options.sort(() => Math.random() - 0.5);
+      options.forEach((opt, idx) => opt.monsterIndex = idx);
+      gameState.currentOptions = options;
+
+      renderPlacards();
+
+      gameState.timerSec = 15;
+      gameState.timerMax = 15;
+      clearInterval(gameState.timerInterval);
+      updateTimerDisplay();
+
+      gameState.timerInterval = setInterval(() => {
+        if (gameState.isPaused) return;
+        gameState.timerSec--;
+        updateTimerDisplay();
+
+        if (gameState.timerSec <= 0) {
+          clearInterval(gameState.timerInterval);
+          handleTimeOut();
+        }
+      }, 1000);
+    }
+
+    function startBossFrenzy() {
+      gameState.isBossLevel = true;
+      gameState.bossHP = 100;
+      gameState.combo = 0;
+      gameState.freezeUntil = 0;
+      gameState.doubleUntil = 0;
+      gameState.revealUntil = 0;
+      gameState.bossClock = 0;
+      if (titanBoss3D) titanBoss3D.visible = true;
+      monsters3D.forEach(m => m.mesh.visible = false);
+      document.getElementById('boss-hud-overlay').classList.remove('hidden');
+
+      const cat = CURRICULUM[gameState.categoryKey];
+      document.getElementById('hud-category-name').textContent = "TITAN BOSS FRENZY";
+      document.getElementById('hud-level-text').textContent = "LEVEL 100 - FINAL BOSS";
+      document.getElementById('question-text').textContent = `CATCH THE MOVING ${cat.tag.toUpperCase()} - BUILD COMBOS!`;
+
+      updateBossHUD();
+      loadBossWave();
+
+      gameState.timerSec = 60;
+      gameState.timerMax = 60;
+      clearInterval(gameState.timerInterval);
+      updateTimerDisplay();
+
+      gameState.timerInterval = setInterval(() => {
+        if (gameState.isPaused || performance.now() < (gameState.freezeUntil || 0)) return;
+        gameState.timerSec--;
+        updateTimerDisplay();
+
+        if (gameState.timerSec <= 0) {
+          clearInterval(gameState.timerInterval);
+          if (gameState.bossHP <= 0) {
+            handleVictory();
+          } else {
+            handleGameOver("Time expired in Boss Frenzy!");
+          }
+        }
+      }, 1000);
+    }
+
+    function bossPhase() {
+      const hp = gameState.bossHP;
+      return hp > 66 ? 1 : (hp > 33 ? 2 : 3);
+    }
+
+    const POWERUPS = {
+      bonus: '⭐ BONUS',
+      freeze: '❄️ FREEZE',
+      bomb: '💣 BOMB',
+      double: '⚡ x2 SCORE',
+      reveal: '🔍 REVEAL'
+    };
+
+    function applyPowerUp(type, x, y) {
+      const now = performance.now();
+      playSfx('correct');
+      playSfx('boss_hit');
+      if (type === 'bonus') {
+        gameState.score += 100;
+        gameState.bossHP = Math.max(0, gameState.bossHP - 15);
+        gameState.timerSec = Math.min(gameState.timerMax + 10, gameState.timerSec + 5);
+        updateTimerDisplay();
+        bossHitFx();
+        createComicHitEffect(x, y - 50, '#fde047', 'BONUS! +5s');
+      } else if (type === 'freeze') {
+        gameState.freezeUntil = now + 5000;
+        createComicHitEffect(x, y - 50, '#67e8f9', 'FROZEN! 5s');
+      } else if (type === 'bomb') {
+        gameState.bossHP = Math.max(0, gameState.bossHP - 20);
+        gameState.score += 50;
+        bossHitFx();
+        gameState.shake = 0.5;
+        createComicHitEffect(x, y - 50, '#fb923c', 'KABOOM! -20%');
+      } else if (type === 'double') {
+        gameState.doubleUntil = now + 8000;
+        createComicHitEffect(x, y - 50, '#fde047', 'x2 SCORE 8s!');
+      } else if (type === 'reveal') {
+        gameState.revealUntil = now + 7000;
+        createComicHitEffect(x, y - 50, '#6ee7b7', 'REVEAL 7s!');
+      }
+    }
+
+    let lastPowerStatus = 0;
+    function updatePowerStatus(force) {
+      const now = performance.now();
+      if (!force && now - lastPowerStatus < 250) return;
+      lastPowerStatus = now;
+      const left = (t) => Math.max(0, Math.ceil(((t || 0) - now) / 1000));
+      const mult = Math.min(5, 1 + Math.floor((gameState.combo || 0) / 3));
+      let txt = `PHASE ${bossPhase()} | COMBO x${mult} (${gameState.combo || 0})`;
+      let any = false;
+      if (left(gameState.freezeUntil)) { txt += ` | ❄️ ${left(gameState.freezeUntil)}s`; any = true; }
+      if (left(gameState.doubleUntil)) { txt += ` | ⚡x2 ${left(gameState.doubleUntil)}s`; any = true; }
+      if (left(gameState.revealUntil)) { txt += ` | 🔍 ${left(gameState.revealUntil)}s`; any = true; }
+      if (!any) txt += ' | Grab power-ups!';
+      const info = document.getElementById('boss-info');
+      if (info) info.textContent = txt;
+      const vp = document.getElementById('arena-viewport');
+      if (vp) vp.style.boxShadow = left(gameState.freezeUntil) ? 'inset 0 0 90px rgba(103,232,249,0.6)' : '';
+    }
+
+    function bossHitFx() {
+      if (titanBoss3D) titanBoss3D.hitPulse = 1;
+      gameState.shake = 0.25;
+    }
+
+    function loadBossWave() {
+      clearTimeout(gameState.bossWaveTimer);
+      const cat = CURRICULUM[gameState.categoryKey];
+      const ph = bossPhase();
+      const targetWord = cat.words[Math.floor(Math.random() * cat.words.length)];
+      const distractors = getUniqueDistractors(targetWord, gameState.categoryKey, ph === 3 ? 3 : 2);
+
+      const options = [{ ...targetWord, isCorrect: true, tag: cat.tag }, ...distractors];
+      if (Math.random() < 0.35 && gameState.bossHP < 95) {
+        const types = Object.keys(POWERUPS);
+        const t = types[Math.floor(Math.random() * types.length)];
+        options.push({ w: POWERUPS[t], def: '', tag: 'Power-up', isCorrect: false, power: t });
+      }
+      options.sort(() => Math.random() - 0.5);
+      options.forEach((opt, idx) => { opt.monsterIndex = idx; opt.orbit = Math.random() * 6.28; });
+      gameState.currentOptions = options;
+      renderPlacards();
+
+      // Words refresh if you wait too long (faster in later phases) and a miss breaks the combo
+      gameState.bossWaveTimer = setTimeout(() => {
+        if (!gameState.isBossLevel || gameState.isGameOver) return;
+        if (performance.now() < (gameState.freezeUntil || 0)) {
+          gameState.bossWaveTimer = setTimeout(() => { if (gameState.isBossLevel && !gameState.isGameOver) loadBossWave(); }, (gameState.freezeUntil - performance.now()) + 1500);
+          return;
+        }
+        if (!gameState.isPaused) { gameState.combo = 0; updateBossHUD(); }
+        loadBossWave();
+      }, 5200 - ph * 900);
+    }
+
+    function renderPlacards() {
+      const layer = document.getElementById('monster-placards-layer');
+      if (!layer) return;
+      layer.innerHTML = '';
+
+      const container = document.getElementById('arena-viewport');
+      const width = container ? container.clientWidth : 800;
+      const height = container ? container.clientHeight : 450;
+      const portraitInit = width < height * 1.15;
+      const defaultXs = portraitInit ? [width * 0.5, width * 0.5, width * 0.5] : [width * 0.16, width * 0.50, width * 0.84];
+      const defaultYs = portraitInit ? [height * 0.2, height * 0.5, height * 0.8] : [height * 0.48, height * 0.48, height * 0.48];
+
+      // Words up to 2x bigger (72px max). Long words shrink just enough to never touch their neighbours.
+      const isBoss = gameState.isBossLevel;
+      const portrait = width < height * 1.15;
+      const slotW = portrait ? width * 0.88 : width * 0.31;
+      const maxFont = portrait ? Math.min(60, width * 0.15) : Math.min(72, height * 0.2);
+
+      gameState.currentOptions.forEach((opt, idx) => {
+        const placard = document.createElement('div');
+        placard.id = `monster-placard-${idx}`;
+        placard.className = 'absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-auto cursor-pointer transition-all duration-150';
+
+        const mi0 = opt.monsterIndex !== undefined ? opt.monsterIndex : idx;
+        placard.style.left = `${defaultXs[mi0] || width * 0.5}px`;
+        placard.style.top = `${defaultYs[mi0] || height * 0.48}px`;
+
+        const fontPx = isBoss
+          ? (width < 640 ? 22 : 36)
+          : Math.max(16, Math.min(maxFont, Math.floor(slotW / (0.8 + 0.66 * opt.w.length))));
+        const padX = Math.round(fontPx * 0.4);
+        const padY = Math.round(fontPx * 0.22);
+
+        const glow = (isBoss && opt.isCorrect && performance.now() < (gameState.revealUntil || 0))
+          ? 'border-emerald-300 shadow-[0_0_45px_rgba(52,211,153,0.95)] animate-pulse'
+          : (opt.power ? 'border-cyan-300 shadow-[0_0_35px_rgba(103,232,249,0.8)]' : 'border-yellow-400 shadow-[0_0_35px_rgba(0,0,0,0.95)]');
+        placard.innerHTML = `
+          <div class="placard-box rounded-3xl bg-slate-950/95 border-4 ${glow} text-center transition-all duration-150 active:scale-95 flex flex-col items-center backdrop-blur-md" style="padding:${padY}px ${padX}px;">
+            <span class="font-arcade stroke-black-lg uppercase tracking-wide font-black text-yellow-300 whitespace-nowrap" style="font-size:${fontPx}px;line-height:1.1;">${opt.w}</span>
+            <div class="placard-hint hidden"></div>
+          </div>
+        `;
+
+        placard.onclick = () => {
+          const rect = placard.getBoundingClientRect();
+          const containerRect = document.getElementById('arena-viewport').getBoundingClientRect();
+          executePunchOnOption(idx, rect.left - containerRect.left + rect.width / 2, rect.top - containerRect.top + rect.height / 2);
+        };
+
+        layer.appendChild(placard);
+      });
+
+      syncPlacardsTo3D();
+    }
+
+    function updateBossHUD() {
+      const bar = document.getElementById('boss-hp-bar');
+      const text = document.getElementById('boss-hp-text');
+      if (bar) bar.style.width = `${gameState.bossHP}%`;
+      if (text) text.textContent = `${gameState.bossHP}%`;
+      updatePowerStatus(true);
+    }
+
+    function updateTimerDisplay() {
+      const bar = document.getElementById('timer-bar');
+      const val = document.getElementById('timer-val');
+      if (val) val.textContent = `${gameState.timerSec}s`;
+      if (bar) {
+        const pct = (gameState.timerSec / gameState.timerMax) * 100;
+        bar.style.width = `${pct}%`;
+        bar.className = pct < 30 ? 'h-full bg-rose-500 transition-all duration-200' : 'h-full bg-gradient-to-r from-amber-400 to-yellow-300 transition-all duration-200';
+      }
+    }
+
+    function updateHUD() {
+      document.getElementById('hud-score').textContent = gameState.score.toLocaleString();
+      const heartsContainer = document.getElementById('hud-hearts');
+      if (heartsContainer) {
+        heartsContainer.innerHTML = '';
+        for (let i = 0; i < 3; i++) {
+          const heart = document.createElement('i');
+          heart.className = i < gameState.lives ? 'fa-solid fa-heart' : 'fa-regular fa-heart text-slate-600';
+          heartsContainer.appendChild(heart);
+        }
+      }
+    }
+
+    function handleTimeOut() {
+      gameState.lives--;
+      updateHUD();
+      playSfx('wrong');
+      if (gameState.lives <= 0) {
+        handleGameOver("Time ran out!");
+      } else {
+        loadLevel(gameState.currentLevel + 1);
+      }
+    }
+
+    function showFeedbackModal(isSuccess, option) {
+      const modal = document.getElementById('feedback-modal');
+      const card = document.getElementById('feedback-card');
+      const title = document.getElementById('feedback-title');
+      const subtitle = document.getElementById('feedback-subtitle');
+      const iconBox = document.getElementById('feedback-icon-box');
+
+      const tagEl = document.getElementById('feedback-word-tag');
+      if (tagEl) tagEl.textContent = option.tag || '';
+
+      const nameEl = document.getElementById('feedback-word-name');
+      if (nameEl) nameEl.textContent = `"${(option.w || '').toUpperCase()}"`;
+
+      const defEl = document.getElementById('feedback-def');
+      if (defEl) defEl.textContent = option.def || "English definition of the target word.";
+
+      const ms = MALAY_DEF[(option.w || '').toLowerCase()];
+      const msWordEl = document.getElementById('feedback-word-ms');
+      const msDefEl = document.getElementById('feedback-def-ms');
+      if (msWordEl) msWordEl.textContent = ms ? ms[0] : '';
+      if (msDefEl) msDefEl.textContent = ms ? ms[1] : 'Definisi Bahasa Melayu belum tersedia.';
+
+      if (isSuccess) {
+        card.className = 'w-full max-w-md bg-slate-900 border-2 border-emerald-400 rounded-3xl p-5 text-center shadow-2xl transition-all scale-100 opacity-100 relative overflow-hidden';
+        iconBox.className = 'w-14 h-14 mx-auto rounded-2xl flex items-center justify-center text-3xl mb-2 bg-emerald-500/20 text-emerald-400 border border-emerald-400/40';
+        iconBox.innerHTML = '<i class="fa-solid fa-check"></i>';
+        title.textContent = `SUPER CLENCH, ${gameState.student.name.toUpperCase()}!`;
+        title.className = 'font-arcade text-2xl stroke-black-sm mb-1 text-emerald-400';
+        subtitle.textContent = 'Great grab! You accurately identified the target word.';
+      } else {
+        card.className = 'w-full max-w-md bg-slate-900 border-2 border-rose-500 rounded-3xl p-5 text-center shadow-2xl transition-all scale-100 opacity-100 relative overflow-hidden';
+        iconBox.className = 'w-14 h-14 mx-auto rounded-2xl flex items-center justify-center text-3xl mb-2 bg-rose-500/20 text-rose-400 border border-rose-400/40';
+        iconBox.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+        title.textContent = 'MISSED TARGET!';
+        title.className = 'font-arcade text-2xl stroke-black-sm mb-1 text-rose-400';
+        subtitle.textContent = `That word is a ${option.tag}! Review the meaning below:`;
+      }
+
+      modal.classList.remove('hidden');
+
+      if (feedbackAutoTimer) clearTimeout(feedbackAutoTimer);
+      if (feedbackAutoInterval) clearInterval(feedbackAutoInterval);
+
+      const durationMs = isSuccess ? 3200 : 4200;
+      let remainingMs = durationMs;
+
+      const countdownPill = document.getElementById('feedback-countdown-pill');
+      const progressBar = document.getElementById('feedback-auto-bar');
+
+      if (progressBar) progressBar.style.width = '100%';
+      if (countdownPill) countdownPill.textContent = `(Auto in ${(remainingMs / 1000).toFixed(1)}s)`;
+
+      const tickInterval = 100;
+      feedbackAutoInterval = setInterval(() => {
+        remainingMs -= tickInterval;
+        if (remainingMs <= 0) {
+          clearInterval(feedbackAutoInterval);
+        } else {
+          if (countdownPill) countdownPill.textContent = `(Auto in ${Math.ceil(remainingMs / 1000)}s)`;
+          if (progressBar) progressBar.style.width = `${Math.max(0, (remainingMs / durationMs) * 100)}%`;
+        }
+      }, tickInterval);
+
+      feedbackAutoTimer = setTimeout(() => {
+        dismissFeedbackModal();
+      }, durationMs);
+    }
+
+    function dismissFeedbackModal() {
+      if (feedbackAutoTimer) {
+        clearTimeout(feedbackAutoTimer);
+        feedbackAutoTimer = null;
+      }
+      if (feedbackAutoInterval) {
+        clearInterval(feedbackAutoInterval);
+        feedbackAutoInterval = null;
+      }
+
+      document.getElementById('feedback-modal').classList.add('hidden');
+      if (gameState.lives <= 0) {
+        handleGameOver("Ran out of lives!");
+      } else {
+        if (gameState.currentLevel >= gameState.maxLevel) {
+          handleVictory();
+        } else {
+          loadLevel(gameState.currentLevel + 1);
+        }
+      }
+    }
+
+    function togglePauseGame() {
+      gameState.isPaused = !gameState.isPaused;
+      const pauseModal = document.getElementById('pause-modal');
+      if (gameState.isPaused) {
+        pauseModal.classList.remove('hidden');
+      } else {
+        pauseModal.classList.add('hidden');
+      }
+    }
+
+    function quitToHome() {
+      clearTimeout(gameState.bossWaveTimer);
+      const vpq = document.getElementById('arena-viewport');
+      if (vpq) vpq.style.boxShadow = '';
+      if (feedbackAutoTimer) clearTimeout(feedbackAutoTimer);
+      if (feedbackAutoInterval) clearInterval(feedbackAutoInterval);
+      clearInterval(gameState.timerInterval);
+      document.getElementById('pause-modal').classList.add('hidden');
+      document.getElementById('feedback-modal').classList.add('hidden');
+      document.getElementById('arena-screen').classList.add('hidden');
+      document.getElementById('endgame-modal').classList.add('hidden');
+      document.getElementById('home-screen').classList.remove('hidden');
+      renderBadgesContainer();
+    }
+
+    function handleVictory() {
+      clearInterval(gameState.timerInterval);
+      gameState.isGameOver = true;
+
+      if (!gameState.completedCategories.includes(gameState.categoryKey)) {
+        gameState.completedCategories.push(gameState.categoryKey);
+        localStorage.setItem('saufi_completed_cats', JSON.stringify(gameState.completedCategories));
+      }
+
+      showEndgameScreen(true);
+      logGameSessionToGoogleSheet();
+    }
+
+    function handleGameOver(reason) {
+      clearInterval(gameState.timerInterval);
+      gameState.isGameOver = true;
+      showEndgameScreen(false, reason);
+      logGameSessionToGoogleSheet();
+    }
+
+    function showEndgameScreen(isVictory, reason = "") {
+      const modal = document.getElementById('endgame-modal');
+      const title = document.getElementById('endgame-title');
+      const subtitle = document.getElementById('endgame-subtitle');
+      const icon = document.getElementById('endgame-badge-icon');
+
+      document.getElementById('endgame-student-name').textContent = gameState.student.name;
+      document.getElementById('endgame-student-meta').textContent = `(${gameState.student.class} - ${gameState.student.school})`;
+      document.getElementById('endgame-cat-tag').textContent = CURRICULUM[gameState.categoryKey].tag;
+      document.getElementById('endgame-score').textContent = gameState.score.toLocaleString();
+
+      const acc = gameState.totalAnswered > 0 ? Math.round((gameState.totalCorrect / gameState.totalAnswered) * 100) : 100;
+      document.getElementById('endgame-accuracy').textContent = `${acc}%`;
+      document.getElementById('endgame-lives').textContent = `${Math.max(0, gameState.lives)}/3`;
+
+      if (isVictory) {
+        title.textContent = 'STAGE CLEARED!';
+        title.className = 'font-arcade text-3xl sm:text-4xl text-yellow-300 stroke-black-sm mb-1';
+        subtitle.textContent = 'Congratulations! You mastered all 100 levels and defeated the Titan Boss!';
+        icon.className = 'w-16 h-16 mx-auto bg-gradient-to-tr from-amber-500 to-yellow-400 text-slate-950 rounded-2xl flex items-center justify-center text-4xl mb-3 shadow-lg';
+        icon.innerHTML = '<i class="fa-solid fa-crown"></i>';
+        document.getElementById('endgame-praise').textContent = '🌟 Congratulations! You have officially earned the Category Master Badge!';
+      } else {
+        title.textContent = 'GAME OVER';
+        title.className = 'font-arcade text-3xl sm:text-4xl text-rose-500 stroke-black-sm mb-1';
+        subtitle.textContent = reason || 'Keep practicing! Review your grammar words and try again.';
+        icon.className = 'w-16 h-16 mx-auto bg-slate-800 text-rose-400 rounded-2xl flex items-center justify-center text-4xl mb-3 border border-slate-700';
+        icon.innerHTML = '<i class="fa-solid fa-heart-crack"></i>';
+        document.getElementById('endgame-praise').textContent = '💪 Practice makes perfect! Do not give up, try again!';
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    async function logGameSessionToGoogleSheet() {
+      if (!gameState.sheetWebhookUrl) return;
+      try {
+        const payload = {
+          timestamp: new Date().toLocaleString(),
+          name: gameState.student.name || 'Anonymous',
+          class: gameState.student.class || '-',
+          school: gameState.student.school || '-',
+          category: CURRICULUM[gameState.categoryKey]?.name || gameState.categoryKey,
+          score: gameState.score,
+          livesLeft: Math.max(0, gameState.lives)
+        };
+        await fetch(gameState.sheetWebhookUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (err) {
+        console.warn("Google Sheet dispatch error:", err);
+      }
+    }
+
+    function renderCategoryMenu() {
+      const grid = document.getElementById('category-grid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      Object.keys(CURRICULUM).forEach(key => {
+        const cat = CURRICULUM[key];
+        const isSelected = gameState.categoryKey === key;
+        const isCompleted = gameState.completedCategories.includes(key);
+
+        const card = document.createElement('div');
+        card.className = `p-2 rounded-xl cursor-pointer border-2 transition-all duration-150 flex flex-col justify-between ${
+          isSelected
+            ? 'bg-gradient-to-br ' + cat.color + ' border-white text-slate-950 shadow-lg shadow-amber-500/30 scale-[1.03] ring-2 ring-yellow-300'
+            : 'bg-slate-950/80 border-slate-800 hover:border-emerald-500 hover:bg-slate-900/90 text-white'
+        }`;
+        card.onclick = () => selectCategory(key);
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between mb-1">
+            <div class="w-6 h-6 rounded-lg ${isSelected ? 'bg-slate-950/20 text-slate-950' : 'bg-gradient-to-tr ' + cat.color + ' text-slate-950'} flex items-center justify-center text-xs shadow-sm font-black">
+              <i class="fa-solid ${cat.icon}"></i>
+            </div>
+            ${isCompleted
+              ? `<span class="text-xs ${isSelected ? 'text-slate-950' : 'text-yellow-400'}"><i class="fa-solid fa-medal"></i></span>`
+              : `<span class="text-[9px] font-black uppercase px-1.5 py-0.2 rounded ${isSelected ? 'bg-slate-950/20 text-slate-950' : 'bg-slate-800 text-slate-400'}">${cat.tag}</span>`}
+          </div>
+          <div>
+            <h4 class="font-arcade text-xs sm:text-[13px] leading-snug truncate ${isSelected ? 'text-slate-950' : 'text-white stroke-black-sm'}">${cat.name}</h4>
+            <span class="text-[9px] font-extrabold uppercase tracking-tight block ${isSelected ? 'text-slate-900/80' : 'text-slate-400'}">100 Levels</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function selectCategory(key) {
+      gameState.categoryKey = key;
+      renderCategoryMenu();
+    }
+
+    function renderBadgesContainer() {
+      const container = document.getElementById('badges-container');
+      const countText = document.getElementById('badges-count-text');
+      if (!container) return;
+
+      container.innerHTML = '';
+      const totalKeys = Object.keys(CURRICULUM);
+      countText.textContent = gameState.completedCategories.length;
+
+      totalKeys.forEach(key => {
+        const cat = CURRICULUM[key];
+        const isDone = gameState.completedCategories.includes(key);
+
+        const badge = document.createElement('div');
+        badge.className = `p-1 rounded-xl flex flex-col items-center justify-center border ${
+          isDone ? 'bg-amber-500/20 border-amber-400 text-yellow-300' : 'bg-slate-950/60 border-slate-800 text-slate-600'
+        }`;
+        badge.innerHTML = `
+          <i class="fa-solid ${cat.icon} text-xs mb-0.5"></i>
+          <span class="text-[8px] font-black truncate max-w-full uppercase">${cat.badge || cat.name}</span>
+        `;
+        container.appendChild(badge);
+      });
+    }
+
+    function openCertificateModal() {
+      drawCertificate();
+      document.getElementById('cert-modal').classList.remove('hidden');
+    }
+
+    function closeCertificateModal() {
+      document.getElementById('cert-modal').classList.add('hidden');
+    }
+
+    function drawCertificate() {
+      const canvas = document.getElementById('cert-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = 1200;
+      canvas.height = 750;
+
+      const grad = ctx.createLinearGradient(0, 0, 1200, 750);
+      grad.addColorStop(0, '#064e3b');
+      grad.addColorStop(1, '#022c22');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1200, 750);
+
+      ctx.lineWidth = 14;
+      ctx.strokeStyle = '#f59e0b';
+      ctx.strokeRect(25, 25, 1150, 700);
+
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#fef08a';
+      ctx.strokeRect(38, 38, 1124, 674);
+
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = 'bold 36px "Lilita One", sans-serif';
+      ctx.fillText('CERTIFICATE OF EXCELLENCE & ACHIEVEMENT', 600, 120);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '22px "Nunito", sans-serif';
+      ctx.fillText('SUPER SAUFI 3D GESTURE GRAMMAR ARCADE', 600, 160);
+
+      ctx.fillStyle = '#a7f3d0';
+      ctx.font = 'italic 18px "Nunito", sans-serif';
+      ctx.fillText('This certificate is proudly presented to:', 600, 240);
+
+      ctx.fillStyle = '#fde047';
+      ctx.font = 'bold 50px "Lilita One", sans-serif';
+      ctx.fillText((gameState.student.name || 'Saufi Aiman').toUpperCase(), 600, 310);
+
+      ctx.fillStyle = '#6ee7b7';
+      ctx.font = 'bold 24px "Nunito", sans-serif';
+      ctx.fillText(`CLASS: ${gameState.student.class || '5 Jujur'}  |  SCHOOL: ${gameState.student.school || 'SK Seri Saujana'}`, 600, 360);
+
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = '20px "Nunito", sans-serif';
+      const earnedCount = gameState.completedCategories.length;
+      ctx.fillText(`Successfully conquered ${earnedCount} of 12 English Grammar Missions and defeated the Titan Boss!`, 600, 440);
+      ctx.fillText(`Demonstrated exceptional agility, vocabulary mastery, and swift reflex coordination.`, 600, 475);
+
+      const today = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '16px "Nunito", sans-serif';
+      ctx.fillText(`Date: ${today}`, 120, 620);
+
+      ctx.textAlign = 'right';
+      ctx.fillText('Super Saufi Academic Director', 1080, 620);
+      ctx.fillText('Official Seal & Signature', 1080, 645);
+    }
+
+    function downloadCertificate() {
+      const canvas = document.getElementById('cert-canvas');
+      if (!canvas) return;
+      const link = document.createElement('a');
+      link.download = `Certificate_Super_Saufi_${gameState.student.name.replace(/\s+/g, '_')}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    function openAdminModal() {
+      document.getElementById('admin-modal').classList.remove('hidden');
+      document.getElementById('admin-login-view').classList.remove('hidden');
+      document.getElementById('admin-config-view').classList.add('hidden');
+      document.getElementById('admin-user-input').value = '';
+      document.getElementById('admin-pass-input').value = '';
+    }
+
+    function closeAdminModal() {
+      document.getElementById('admin-modal').classList.add('hidden');
+    }
+
+    function authenticateAdmin() {
+      const u = document.getElementById('admin-user-input').value.trim();
+      const p = document.getElementById('admin-pass-input').value.trim();
+      if (u === 'admin' && p === 'adminkacak') {
+        document.getElementById('admin-login-view').classList.add('hidden');
+        document.getElementById('admin-config-view').classList.remove('hidden');
+        document.getElementById('admin-sheet-url').value = gameState.sheetWebhookUrl;
+      }
+    }
+
+    function saveAdminConfig() {
+      const url = document.getElementById('admin-sheet-url').value.trim();
+      gameState.sheetWebhookUrl = url;
+      localStorage.setItem('saufi_sheet_webhook', url);
+      closeAdminModal();
+    }
+
+    function testAdminSheet() {
+      const url = document.getElementById('admin-sheet-url').value.trim();
+      if (!url) return;
+      fetch(url, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ test: true, timestamp: new Date().toLocaleString() })
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderCategoryMenu();
+      renderBadgesContainer();
+      initCameraAndHands();
+    });
+  </script>
+</body>
+</html>
